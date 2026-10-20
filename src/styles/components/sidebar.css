@@ -1,0 +1,1126 @@
+/* Sidebar Pitter Pan — componente independente v0.5.0 */
+:root {
+  --sidebar-size: clamp(15.5rem, 17.7vw, 18.5rem);
+  --sidebar-inline: clamp(1rem, 1.2vw, 1.25rem);
+  --sidebar-content-right: clamp(1.7rem, 2vw, 2.15rem);
+  --sidebar-item-h: clamp(3.35rem, 3.6vw, 3.75rem);
+  --sidebar-radius: clamp(1rem, 1.2vw, 1.3rem);
+}
+
+.sidebar {
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 40;
+  padding: clamp(1.2rem, 1.8vw, 1.8rem) var(--sidebar-content-right)
+    clamp(1.15rem, 1.55vw, 1.55rem) var(--sidebar-inline);
+  border: 0;
+  background: transparent url("/assets/decor/sidebar-organic.svg") center/100%
+    100% no-repeat;
+  overflow: hidden;
+}
+.sidebar::before {
+  content: "";
+  position: absolute;
+  inset: auto 2.8rem 8.7rem 1rem;
+  height: 7.5rem;
+  z-index: -1;
+  opacity: 0.52;
+  background:
+    radial-gradient(
+      circle at 8% 25%,
+      var(--pp-pink) 0 0.12rem,
+      transparent 0.14rem
+    ),
+    radial-gradient(
+      circle at 31% 68%,
+      var(--pp-blue) 0 0.11rem,
+      transparent 0.13rem
+    ),
+    radial-gradient(
+      circle at 63% 23%,
+      var(--pp-yellow) 0 0.1rem,
+      transparent 0.12rem
+    ),
+    radial-gradient(
+      circle at 86% 72%,
+      var(--pp-green) 0 0.1rem,
+      transparent 0.12rem
+    ),
+    radial-gradient(
+      circle at 50% 88%,
+      var(--pp-orange) 0 0.09rem,
+      transparent 0.11rem
+    );
+  pointer-events: none;
+}
+.sidebar::after {
+  content: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.15rem clamp(0.7rem, 0.85vw, 0.9rem);
+  margin: 0 0 clamp(2rem, 2.8vw, 2.8rem);
+}
+.brand img {
+  width: clamp(9.4rem, 10.7vw, 11.4rem);
+  max-height: none;
+}
+
+.sidebar-nav {
+  min-width: 0;
+}
+.nav-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 clamp(0.72rem, 0.85vw, 0.9rem) 0.8rem;
+  color: #9aa5b4;
+  font-size: clamp(0.66rem, 0.62rem + 0.08vw, 0.72rem);
+  font-weight: 760;
+  letter-spacing: 0.16em;
+}
+.nav-label::before {
+  content: "";
+  width: 0.3rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--pp-pink);
+  box-shadow: 0 0 0 0.2rem rgba(255, 61, 141, 0.09);
+}
+.catalog-nav-list {
+  display: grid;
+  gap: clamp(0.32rem, 0.42vw, 0.48rem);
+}
+.catalog-nav-item {
+  --item-accent: var(--pp-orange);
+  position: relative;
+  min-height: var(--sidebar-item-h);
+  width: 100%;
+  padding: 0 clamp(0.72rem, 0.9vw, 0.95rem);
+  border: 1px solid transparent;
+  border-radius: var(--sidebar-radius);
+  background: transparent;
+  color: #d7dee7;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) 1.1rem;
+  align-items: center;
+  gap: clamp(0.65rem, 0.75vw, 0.8rem);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease),
+    transform var(--duration-base) var(--ease),
+    box-shadow var(--duration-base) var(--ease),
+    color var(--duration-base) var(--ease);
+}
+.catalog-nav-item::after {
+  content: "›";
+  position: static;
+  width: auto;
+  background: none;
+  color: var(--item-accent);
+  font-size: 1.45rem;
+  line-height: 1;
+  opacity: 0;
+  transform: translateX(-0.35rem);
+  transition:
+    opacity var(--duration-fast) ease,
+    transform var(--duration-fast) ease;
+}
+.catalog-nav-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.018)
+  );
+  pointer-events: none;
+}
+.catalog-nav-item:hover {
+  background: rgba(255, 255, 255, 0.035);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+.catalog-nav-item:hover::after {
+  opacity: 0.7;
+  transform: none;
+}
+.catalog-nav-item.is-active {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--item-accent) 68%, transparent);
+  background: linear-gradient(
+    95deg,
+    color-mix(in srgb, var(--item-accent) 11%, transparent),
+    rgba(255, 255, 255, 0.025)
+  );
+  box-shadow:
+    0 12px 32px color-mix(in srgb, var(--item-accent) 12%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--item-accent) 10%, transparent);
+}
+.catalog-nav-item.is-active::before {
+  opacity: 1;
+}
+.catalog-nav-item.is-active::after {
+  opacity: 1;
+  transform: none;
+}
+.nav-icon {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.72rem;
+  background: rgba(255, 255, 255, 0.035);
+  transition:
+    transform var(--duration-base) var(--ease),
+    background var(--duration-base) var(--ease);
+}
+.nav-icon img {
+  display: block;
+  width: 1.55rem;
+  height: 1.55rem;
+  object-fit: contain;
+}
+.catalog-nav-item.is-active .nav-icon {
+  background: color-mix(in srgb, var(--item-accent) 12%, transparent);
+  transform: scale(1.04);
+}
+.nav-name {
+  font-size: clamp(0.84rem, 0.79rem + 0.13vw, 0.94rem);
+  font-weight: 670;
+  letter-spacing: -0.01em;
+}
+
+.sidebar-signature {
+  margin-top: auto;
+  position: relative;
+  padding: clamp(1rem, 1.35vw, 1.35rem) clamp(0.8rem, 0.95vw, 1rem) 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+.signature-mark {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.85rem;
+  border-radius: 1rem;
+  display: grid;
+  place-items: center;
+  color: var(--pp-blue);
+  background: linear-gradient(
+    135deg,
+    rgba(39, 154, 255, 0.13),
+    rgba(255, 61, 141, 0.07)
+  );
+  border: 1px solid rgba(39, 154, 255, 0.18);
+}
+.signature-mark svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sidebar-signature p {
+  margin: 0;
+  max-width: 12.5rem;
+  color: #f4f7fb;
+  font-size: clamp(0.84rem, 0.78rem + 0.16vw, 0.94rem);
+  line-height: 1.45;
+  font-weight: 620;
+}
+.sidebar-signature p strong {
+  font-weight: 760;
+  background: linear-gradient(
+    90deg,
+    var(--pp-pink),
+    var(--pp-orange),
+    var(--pp-blue)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sidebar-signature small {
+  display: block;
+  margin-top: 0.45rem;
+  color: #7f8b9a;
+  font-size: clamp(0.66rem, 0.63rem + 0.08vw, 0.72rem);
+}
+
+/* Estrutura principal: sidebar à esquerda + catálogo à direita. */
+.catalog-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-size) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 100dvh;
+}
+
+@media (max-width: 980px) {
+  :root {
+    --sidebar-size: min(87vw, 19rem);
+  }
+  .catalog-shell {
+    display: block;
+  }
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--sidebar-size);
+    height: 100%;
+    padding-right: clamp(1.8rem, 7vw, 2.4rem);
+    transform: translateX(-108%);
+    transition: transform 0.3s var(--ease);
+    box-shadow: none;
+  }
+  .catalog-shell.menu-open .sidebar {
+    transform: none;
+  }
+  .brand {
+    margin-bottom: clamp(1.7rem, 7vw, 2.2rem);
+  }
+  .sidebar-signature {
+    padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --sidebar-size: min(91vw, 18.5rem);
+  }
+  .sidebar {
+    padding-left: clamp(0.8rem, 4vw, 1rem);
+    padding-right: clamp(1.8rem, 8vw, 2.25rem);
+  }
+  .catalog-nav-item {
+    min-height: 3.35rem;
+  }
+  .brand img {
+    width: 9.7rem;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .catalog-nav-item:hover {
+    transform: translateX(0.18rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .catalog-nav-item,
+  .catalog-nav-item::after,
+  .nav-icon,
+  .sidebar {
+    transition: none !important;
+  }
+}
+
+/* v0.5.5 — Sidebar recolhível desktop */
+:root {
+  --sidebar-expanded-size: clamp(15.5rem, 17.7vw, 18.5rem);
+  --sidebar-collapsed-size: clamp(5.25rem, 5.7vw, 6.15rem);
+  --sidebar-current-size: var(--sidebar-expanded-size);
+}
+.catalog-shell {
+  --sidebar-current-size: var(--sidebar-expanded-size);
+  grid-template-columns: var(--sidebar-current-size) minmax(0, 1fr);
+  transition: grid-template-columns 0.34s var(--ease);
+}
+.catalog-shell.sidebar-collapsed {
+  --sidebar-current-size: var(--sidebar-collapsed-size);
+}
+
+.sidebar-collapse {
+  position: absolute;
+  z-index: 5;
+  top: clamp(1.2rem, 1.8vw, 1.8rem);
+  right: clamp(1.45rem, 1.75vw, 1.9rem);
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.045);
+  color: #dfe7f2;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.3s var(--ease);
+}
+.sidebar-collapse svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sidebar-collapse:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+@media (min-width: 981px) {
+  .sidebar {
+    width: var(--sidebar-current-size);
+    transition:
+      width 0.34s var(--ease),
+      padding 0.34s var(--ease),
+      background-size 0.34s var(--ease);
+  }
+  .sidebar-collapsed .sidebar {
+    padding-left: 0.75rem;
+    padding-right: clamp(0.75rem, 0.9vw, 1rem);
+  }
+  .sidebar-collapsed .brand {
+    justify-content: center;
+    padding-inline: 0;
+    margin-bottom: clamp(2rem, 2.5vw, 2.5rem);
+  }
+  .sidebar-collapsed .brand img {
+    width: clamp(3.7rem, 4.2vw, 4.4rem);
+  }
+  .sidebar-collapsed .sidebar-collapse {
+    right: 0.5rem;
+    transform: rotate(180deg);
+  }
+  .sidebar-collapsed .nav-label,
+  .sidebar-collapsed .nav-name,
+  .sidebar-collapsed .sidebar-signature p,
+  .sidebar-collapsed .sidebar-signature small {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+  .sidebar-collapsed .catalog-nav-item {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding-inline: 0.35rem;
+  }
+  .sidebar-collapsed .catalog-nav-item::after {
+    display: none;
+  }
+  .sidebar-collapsed .nav-icon {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+  .sidebar-collapsed .nav-icon img {
+    width: 1.72rem;
+    height: 1.72rem;
+  }
+  .sidebar-collapsed .sidebar-signature {
+    display: grid;
+    place-items: center;
+    border-top-color: rgba(255, 255, 255, 0.06);
+    padding-inline: 0;
+  }
+  .sidebar-collapsed .signature-mark {
+    margin: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .sidebar-collapse {
+    display: none;
+  }
+}
+
+/* ============================================================
+   v0.5.6 — Toggle premium integrado à marca
+   Aberto: ao lado da logo
+   Recolhido: abaixo da logo
+   ============================================================ */
+
+.sidebar-brandbar {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.55rem, 0.75vw, 0.8rem);
+  margin: 0 0 clamp(2rem, 2.8vw, 2.8rem);
+  padding: 0 clamp(0.15rem, 0.3vw, 0.3rem) 0 clamp(0.5rem, 0.65vw, 0.7rem);
+  min-width: 0;
+}
+.sidebar-brandbar .brand {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  justify-content: flex-start;
+}
+.sidebar-brandbar .brand img {
+  width: min(100%, clamp(8.8rem, 10.1vw, 10.8rem));
+}
+
+/* Botão autoral: pequeno "orbital" da identidade Pitter Pan */
+.sidebar-collapse {
+  --toggle-size: clamp(2.55rem, 2.75vw, 2.9rem);
+  position: relative;
+  inset: auto;
+  z-index: 6;
+  width: var(--toggle-size);
+  height: var(--toggle-size);
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 42% 58% 54% 46% / 48% 44% 56% 52%;
+  background:
+    linear-gradient(#111820, #111820) padding-box,
+    conic-gradient(
+        from 210deg,
+        var(--pp-pink),
+        var(--pp-orange),
+        var(--pp-yellow),
+        var(--pp-green),
+        var(--pp-blue),
+        var(--pp-pink)
+      )
+      border-box;
+  color: #f7fbff;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  overflow: hidden;
+  transform: none;
+  transition:
+    transform 0.32s var(--ease),
+    border-radius 0.32s var(--ease),
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+.sidebar-collapse::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      circle at 30% 22%,
+      rgba(255, 255, 255, 0.1),
+      transparent 36%
+    ),
+    rgba(10, 15, 21, 0.96);
+  z-index: 0;
+}
+.sidebar-collapse::after {
+  content: "";
+  position: absolute;
+  width: 38%;
+  aspect-ratio: 1;
+  right: -5%;
+  bottom: -7%;
+  border-radius: 50%;
+  background: var(--pp-pink);
+  filter: blur(8px);
+  opacity: 0.3;
+  z-index: 0;
+}
+.sidebar-collapse__halo {
+  position: absolute;
+  inset: 5px;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.sidebar-collapse svg {
+  position: relative;
+  z-index: 2;
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.34s var(--ease);
+}
+.sidebar-collapse:hover {
+  transform: translateY(-2px) rotate(-2deg);
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.3),
+    0 0 0 4px rgba(255, 61, 141, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.sidebar-collapse:focus-visible {
+  outline: 2px solid var(--pp-yellow);
+  outline-offset: 4px;
+}
+
+@media (min-width: 981px) {
+  .sidebar-collapsed .sidebar-brandbar {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: clamp(0.75rem, 1vw, 1rem);
+    margin-bottom: clamp(1.65rem, 2vw, 2rem);
+    padding-inline: 0;
+  }
+  .sidebar-collapsed .sidebar-brandbar .brand {
+    justify-content: center;
+    width: 100%;
+  }
+  .sidebar-collapsed .sidebar-brandbar .brand img {
+    width: clamp(3.75rem, 4.15vw, 4.35rem);
+  }
+  .sidebar-collapsed .sidebar-collapse {
+    right: auto;
+    top: auto;
+    transform: none;
+    --toggle-size: clamp(2.45rem, 2.65vw, 2.75rem);
+    border-radius: 50% 50% 44% 56% / 48% 52% 48% 52%;
+  }
+  .sidebar-collapsed .sidebar-collapse svg {
+    transform: rotate(180deg);
+  }
+  .sidebar-collapsed .sidebar-collapse:hover {
+    transform: translateY(-2px) rotate(2deg);
+  }
+}
+
+/* Mobile usa o drawer; o toggle de recolher desktop não aparece. */
+@media (max-width: 980px) {
+  .sidebar-brandbar {
+    grid-template-columns: 1fr;
+    margin-bottom: clamp(1.7rem, 7vw, 2.2rem);
+    padding-right: clamp(0.5rem, 2vw, 0.8rem);
+  }
+  .sidebar-brandbar .brand img {
+    width: 9.7rem;
+  }
+  .sidebar-collapse {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-collapse,
+  .sidebar-collapse svg {
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   v0.7.0 — Mobile sidebar corrigida e integrada
+   ============================================================ */
+
+.sidebar-mobilebar,
+.sidebar-panel-close,
+.sidebar-backdrop {
+  display: none;
+}
+
+/* Cliente usa a mesma sidebar global e completa. */
+.client-sidebar .nav-label::before {
+  background: var(--pp-pink);
+}
+
+@media (max-width: 980px) {
+  :root {
+    --sidebar-size: min(88vw, 19rem);
+  }
+
+  .catalog-shell {
+    display: block;
+  }
+  .catalog-workspace {
+    padding-top: clamp(5.65rem, 13vw, 6.25rem) !important;
+  }
+
+  /* Barra superior aparece SOMENTE quando drawer está fechado. */
+  .sidebar-mobilebar {
+    position: fixed;
+    z-index: 72;
+    top: max(0.7rem, env(safe-area-inset-top));
+    left: clamp(0.7rem, 2.6vw, 0.95rem);
+    right: clamp(0.7rem, 2.6vw, 0.95rem);
+    min-height: 4.15rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.5rem 0.56rem 0.5rem 0.72rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.15rem;
+    background: linear-gradient(
+      110deg,
+      rgba(12, 18, 25, 0.96),
+      rgba(9, 15, 22, 0.94)
+    );
+    box-shadow:
+      0 18px 42px rgba(0, 0, 0, 0.23),
+      inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition:
+      opacity 0.22s ease,
+      visibility 0.22s ease,
+      transform 0.24s var(--ease);
+  }
+  .sidebar-mobilebar::after {
+    content: "";
+    position: absolute;
+    left: 1.05rem;
+    right: 1.05rem;
+    bottom: -1px;
+    height: 1px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      var(--pp-pink),
+      var(--pp-orange),
+      var(--pp-yellow),
+      var(--pp-green),
+      var(--pp-blue),
+      transparent 94%
+    );
+    opacity: 0.72;
+  }
+  .menu-open .sidebar-mobilebar {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-0.65rem);
+  }
+
+  .sidebar-mobilebrand {
+    width: 3.55rem;
+    min-width: 3.55rem;
+    aspect-ratio: 1.08;
+    display: grid;
+    place-items: center;
+    padding: 0.32rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.035);
+  }
+  .sidebar-mobilebrand img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .sidebar-mobilecontext {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #eef3f8;
+    font-size: clamp(0.74rem, 2.8vw, 0.88rem);
+    font-weight: 720;
+    letter-spacing: -0.012em;
+  }
+  .sidebar-mobilecontext::before {
+    content: "Catálogo";
+    display: block;
+    margin-bottom: 0.18rem;
+    color: #778797;
+    font-size: 0.56rem;
+    line-height: 1;
+    font-weight: 820;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* Toggle mobile: duas barras simples e perfeitas; nada de seta diagonal. */
+  .sidebar-toggle {
+    --mobile-toggle-size: 3rem;
+    position: relative;
+    inset: auto;
+    z-index: 2;
+    width: var(--mobile-toggle-size);
+    height: var(--mobile-toggle-size);
+    min-height: 0;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: 46% 54% 52% 48% / 48% 46% 54% 52%;
+    background:
+      linear-gradient(#111820, #111820) padding-box,
+      conic-gradient(
+          from 210deg,
+          var(--pp-pink),
+          var(--pp-orange),
+          var(--pp-yellow),
+          var(--pp-green),
+          var(--pp-blue),
+          var(--pp-pink)
+        )
+        border-box;
+    color: #fff;
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.26),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    cursor: pointer;
+    transition:
+      transform 0.25s var(--ease),
+      box-shadow 0.22s ease,
+      border-radius 0.25s var(--ease);
+  }
+  .sidebar-toggle::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: inherit;
+    background:
+      radial-gradient(
+        circle at 30% 22%,
+        rgba(255, 255, 255, 0.1),
+        transparent 36%
+      ),
+      rgba(10, 15, 21, 0.97);
+    z-index: 0;
+  }
+  .sidebar-toggle__halo {
+    position: absolute;
+    z-index: 1;
+    inset: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: inherit;
+  }
+  .sidebar-toggle__lines {
+    position: relative;
+    z-index: 2;
+    width: 1.05rem;
+    height: 0.78rem;
+    display: block;
+  }
+  .sidebar-toggle__lines i {
+    position: absolute;
+    left: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: #f7fbff;
+    transform: none;
+  }
+  .sidebar-toggle__lines i:first-child {
+    top: 0.18rem;
+    width: 100%;
+  }
+  .sidebar-toggle__lines i:last-child {
+    top: 0.52rem;
+    width: 72%;
+  }
+
+  /* Drawer ocupa sua própria camada, sem ficar debaixo da mobilebar. */
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: var(--sidebar-size);
+    height: 100%;
+    padding: max(1rem, env(safe-area-inset-top)) clamp(1.8rem, 7vw, 2.35rem)
+      max(0.8rem, env(safe-area-inset-bottom)) clamp(0.85rem, 4vw, 1rem);
+    transform: translateX(-105%);
+    transition: transform 0.3s var(--ease);
+    box-shadow: 18px 0 50px rgba(0, 0, 0, 0.24);
+  }
+  .catalog-shell.menu-open .sidebar {
+    transform: translateX(0);
+  }
+
+  /* Topo real da sidebar no mobile: logo + botão fechar. */
+  .sidebar-brandbar {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 4rem;
+    margin: 0 0 clamp(1.5rem, 5vw, 2rem);
+    padding: 0 0.15rem 0 0.35rem;
+  }
+  .sidebar-brandbar .brand {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    justify-content: flex-start;
+  }
+  .sidebar-brandbar .brand img {
+    width: clamp(8.7rem, 30vw, 10.1rem);
+  }
+
+  .sidebar-collapse {
+    display: none !important;
+  }
+
+  .sidebar-panel-close {
+    position: relative;
+    width: 2.8rem;
+    height: 2.8rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 0.95rem;
+    background: rgba(255, 255, 255, 0.045);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  .sidebar-panel-close::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      var(--pp-pink),
+      var(--pp-orange),
+      var(--pp-blue)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .sidebar-panel-close span {
+    position: absolute;
+    width: 1rem;
+    height: 2px;
+    border-radius: 999px;
+    background: #f7fbff;
+  }
+  .sidebar-panel-close span:first-child {
+    transform: rotate(45deg);
+  }
+  .sidebar-panel-close span:last-child {
+    transform: rotate(-45deg);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    z-index: 50;
+    inset: 0;
+    display: block;
+    border: 0;
+    padding: 0;
+    background: rgba(2, 6, 10, 0.6);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition:
+      opacity 0.24s ease,
+      visibility 0.24s ease;
+  }
+  .menu-open .sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  body.sidebar-is-open {
+    overflow: hidden;
+  }
+
+  .catalog-nav-item {
+    min-height: 3.35rem;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --sidebar-size: min(91vw, 18.5rem);
+  }
+  .catalog-workspace {
+    padding-top: 5.45rem !important;
+  }
+  .sidebar-mobilebar {
+    min-height: 4rem;
+    gap: 0.65rem;
+    padding: 0.46rem 0.5rem 0.46rem 0.62rem;
+    border-radius: 1rem;
+  }
+  .sidebar-mobilebrand {
+    width: 3.35rem;
+    min-width: 3.35rem;
+  }
+  .sidebar-toggle {
+    --mobile-toggle-size: 2.8rem;
+  }
+  .sidebar-panel-close {
+    width: 2.65rem;
+    height: 2.65rem;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (max-width: 980px) {
+  .sidebar-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 14px 30px rgba(0, 0, 0, 0.3),
+      0 0 0 4px rgba(255, 61, 141, 0.055),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .sidebar-panel-close:hover {
+    background: rgba(255, 255, 255, 0.075);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-mobilebar,
+  .sidebar-toggle,
+  .sidebar,
+  .sidebar-backdrop {
+    transition: none !important;
+  }
+}
+
+/* v0.7.5 — Logo oficial global, igual à identidade do gestor */
+.sidebar .brand img,
+.sidebar-mobilebrand img {
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(45, 63, 145, 0.14)) !important;
+}
+.sidebar .brand {
+  isolation: isolate;
+}
+.sidebar .brand::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  z-index: -1;
+  border-radius: 50%;
+  background: rgba(45, 63, 145, 0.07);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+/* v0.7.8 — Logo oficial das categorias: cor original preservada */
+.sidebar .brand img[src*="pitter-pan-logo-categorias"],
+.sidebar-mobilebrand img[src*="pitter-pan-logo-categorias"] {
+  filter: drop-shadow(0 10px 18px rgba(45, 63, 145, 0.14)) !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+
+/* v0.7.9 — Logo SVG oficial única em todo o projeto */
+.sidebar .brand img[src*="pitter-pan-logo.svg"],
+.sidebar-mobilebrand img[src*="pitter-pan-logo.svg"] {
+  filter: drop-shadow(0 10px 18px rgba(45, 63, 145, 0.14)) !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  object-fit: contain !important;
+}
+
+/* ============================================================
+   v0.8.0 — posicionamento correto do fechar/toggle no mobile
+   ============================================================ */
+@media (max-width: 980px) {
+  .sidebar-brandbar {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    padding-left: 0.35rem !important;
+    padding-right: clamp(1.7rem, 7vw, 2.2rem) !important;
+  }
+  .sidebar-panel-close {
+    position: relative !important;
+    inset: auto !important;
+    justify-self: end !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+}
+@media (max-width: 560px) {
+  .sidebar-brandbar {
+    padding-right: clamp(1.5rem, 7.5vw, 1.9rem) !important;
+  }
+  .sidebar-panel-close {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+}
+
+/* ============================================================
+   v0.8.1 — Ajuste definitivo do fechar no drawer responsivo
+   ============================================================ */
+@media (max-width: 980px) {
+  .sidebar {
+    --drawer-safe-right: clamp(2.8rem, 11vw, 3.7rem);
+  }
+
+  .sidebar-brandbar {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.7rem !important;
+    padding: max(0.15rem, env(safe-area-inset-top)) var(--drawer-safe-right) 0
+      0.35rem !important;
+  }
+
+  .sidebar-brandbar .brand {
+    min-width: 0;
+    justify-content: flex-start !important;
+  }
+
+  .sidebar-brandbar .brand img {
+    width: clamp(8.2rem, 29vw, 9.8rem) !important;
+    max-width: 100%;
+  }
+
+  .sidebar-panel-close {
+    position: relative !important;
+    inset: auto !important;
+    justify-self: end !important;
+    align-self: center !important;
+    margin: 0 !important;
+    flex: none !important;
+    z-index: 8 !important;
+    width: 2.72rem !important;
+    height: 2.72rem !important;
+    transform: none !important;
+  }
+
+  .sidebar-panel-close span {
+    left: 50% !important;
+    top: 50% !important;
+    transform-origin: center !important;
+  }
+
+  .sidebar-panel-close span:first-child {
+    transform: translate(-50%, -50%) rotate(45deg) !important;
+  }
+
+  .sidebar-panel-close span:last-child {
+    transform: translate(-50%, -50%) rotate(-45deg) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .sidebar {
+    --drawer-safe-right: clamp(2.55rem, 12vw, 3.2rem);
+  }
+  .sidebar-panel-close {
+    width: 2.6rem !important;
+    height: 2.6rem !important;
+  }
+}

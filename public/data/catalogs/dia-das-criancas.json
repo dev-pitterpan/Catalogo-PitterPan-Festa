@@ -1,0 +1,187 @@
+{
+  "name": "Dia das Crianças",
+  "slug": "dia-das-criancas",
+  "eyebrow": "Coleção",
+  "description": "Uma seleção colorida e especial para criar festas cheias de alegria e imaginação.",
+  "banner": "../assets/images/catalogs/dia-das-criancas/banner.webp",
+  "products": [
+    {
+      "id": "KID-001",
+      "name": "Kit Festa Colorida",
+      "category": "Kits",
+      "description": "Composição alegre com elementos coloridos para uma mesa infantil completa.",
+      "image": "../assets/images/catalogs/dia-das-criancas/produto-1.webp",
+      "keywords": [
+        "kit festa",
+        "conjunto",
+        "combo",
+        "festa completa",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-002",
+      "name": "Arco de Balões Kids",
+      "category": "Balões",
+      "description": "Arco vibrante para entradas, painéis e cenários infantis cheios de energia.",
+      "image": "../assets/images/catalogs/dia-das-criancas/produto-2.webp",
+      "keywords": [
+        "balao",
+        "baloes",
+        "arco de balao",
+        "decoração com balões",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-003",
+      "name": "Mesa Diversão Premium",
+      "category": "Decoração",
+      "description": "Composição lúdica pensada para destacar o espaço principal da comemoração.",
+      "image": "../assets/images/catalogs/dia-das-criancas/produto-3.webp",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-004",
+      "name": "Doces Festa Kids",
+      "category": "Doces e Kits",
+      "description": "Seleção temática para deixar a mesa mais divertida e visualmente marcante.",
+      "image": "../assets/images/catalogs/dia-das-criancas/produto-4.webp",
+      "keywords": [
+        "doces",
+        "kit doces",
+        "guloseimas",
+        "mesa de doces",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-005",
+      "name": "Kit Balões Divertidos",
+      "category": "Balões",
+      "description": "Conjunto de balões para criar composições leves, alegres e cheias de cor.",
+      "image": "../assets/images/admin/products/kids-baloes.svg",
+      "keywords": [
+        "balao",
+        "baloes",
+        "arco de balao",
+        "decoração com balões",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-006",
+      "name": "Copos Festa Kids",
+      "category": "Mesa",
+      "description": "Copos decorativos para complementar a identidade visual da festa infantil.",
+      "image": "../assets/images/admin/products/kids-copos.svg",
+      "keywords": [
+        "mesa decorada",
+        "mesa temática",
+        "composição de mesa",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-007",
+      "name": "Caixa Surpresa Kids",
+      "category": "Lembranças",
+      "description": "Caixinha temática para lembrancinhas, doces e pequenos presentes da comemoração.",
+      "image": "../assets/images/admin/products/kids-caixa.svg",
+      "keywords": [
+        "lembrancinha",
+        "brinde",
+        "recordacao",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-008",
+      "name": "Kit Diversão Completo",
+      "category": "Kits",
+      "description": "Seleção coordenada de peças para montar uma decoração infantil completa.",
+      "image": "../assets/images/admin/products/kids-kit.svg",
+      "keywords": [
+        "kit festa",
+        "conjunto",
+        "combo",
+        "festa completa",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-009",
+      "name": "Painel Colorido Premium",
+      "category": "Painéis",
+      "description": "Painel alegre com linguagem visual moderna para valorizar fotos e momentos especiais.",
+      "image": "../assets/images/catalogs/dia-das-criancas/produto-1.webp",
+      "keywords": [
+        "painel",
+        "fundo de festa",
+        "backdrop",
+        "cenario",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    },
+    {
+      "id": "KID-010",
+      "name": "Cenário Kids Especial",
+      "category": "Decoração",
+      "description": "Ambientação lúdica para criar um espaço acolhedor, divertido e inesquecível.",
+      "image": "../assets/images/catalogs/dia-das-criancas/produto-2.webp",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "dia das criancas",
+        "festa infantil",
+        "kids",
+        "crianca",
+        "infantil"
+      ]
+    }
+  ]
+}

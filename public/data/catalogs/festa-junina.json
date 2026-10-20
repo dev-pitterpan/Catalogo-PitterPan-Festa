@@ -1,0 +1,203 @@
+{
+  "name": "Festa Junina",
+  "slug": "festa-junina",
+  "eyebrow": "Coleção",
+  "description": "Tradição, cor e aconchego em uma seleção criada para transformar o arraiá.",
+  "banner": "../assets/images/catalogs/festa-junina/banner.webp",
+  "products": [
+    {
+      "id": "JUN-001",
+      "name": "Kit Arraiá Premium",
+      "category": "Kits",
+      "description": "Composição completa para criar um arraiá colorido, acolhedor e marcante.",
+      "image": "../assets/images/catalogs/festa-junina/produto-1.webp",
+      "keywords": [
+        "kit festa",
+        "conjunto",
+        "combo",
+        "festa completa",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira"
+      ]
+    },
+    {
+      "id": "JUN-002",
+      "name": "Mesa Festa Junina",
+      "category": "Mesa",
+      "description": "Mesa temática com elementos tradicionais e acabamento contemporâneo.",
+      "image": "../assets/images/catalogs/festa-junina/produto-2.webp",
+      "keywords": [
+        "mesa decorada",
+        "mesa temática",
+        "composição de mesa",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira"
+      ]
+    },
+    {
+      "id": "JUN-003",
+      "name": "Painel Arraiá Especial",
+      "category": "Painéis",
+      "description": "Cenário junino para destacar fotos, mesa principal e momentos especiais.",
+      "image": "../assets/images/catalogs/festa-junina/produto-3.webp",
+      "keywords": [
+        "painel",
+        "fundo de festa",
+        "backdrop",
+        "cenario",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira"
+      ]
+    },
+    {
+      "id": "JUN-004",
+      "name": "Decoração Junina Completa",
+      "category": "Decoração",
+      "description": "Seleção de peças para preencher o ambiente com identidade e tradição.",
+      "image": "../assets/images/catalogs/festa-junina/produto-4.webp",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira"
+      ]
+    },
+    {
+      "id": "JUN-005",
+      "name": "Bandeirinhas Premium",
+      "category": "Decoração",
+      "description": "Conjunto de bandeirinhas para criar ritmo visual e cor no ambiente.",
+      "image": "../assets/images/admin/products/junina-bandeiras.svg",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira",
+        "bandeira",
+        "bandeirinhas",
+        "decoracao junina"
+      ]
+    },
+    {
+      "id": "JUN-006",
+      "name": "Chapéu Junino Decorativo",
+      "category": "Acessórios",
+      "description": "Elemento temático para mesas, painéis e cenários de Festa Junina.",
+      "image": "../assets/images/admin/products/junina-chapeu.svg",
+      "keywords": [
+        "acessorio",
+        "adereço",
+        "complemento",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira",
+        "chapeu",
+        "acessorio de cabeça"
+      ]
+    },
+    {
+      "id": "JUN-007",
+      "name": "Kit Junino Especial",
+      "category": "Kits",
+      "description": "Seleção coordenada para montar uma decoração completa e prática.",
+      "image": "../assets/images/admin/products/junina-kit.svg",
+      "keywords": [
+        "kit festa",
+        "conjunto",
+        "combo",
+        "festa completa",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira"
+      ]
+    },
+    {
+      "id": "JUN-008",
+      "name": "Mesa Junina Decorativa",
+      "category": "Mesa",
+      "description": "Composição de mesa com linguagem tradicional e acabamento premium.",
+      "image": "../assets/images/admin/products/junina-mesa.svg",
+      "keywords": [
+        "mesa decorada",
+        "mesa temática",
+        "composição de mesa",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira"
+      ]
+    },
+    {
+      "id": "JUN-009",
+      "name": "Cenário São João",
+      "category": "Cenografia",
+      "description": "Ambientação especial para fotos e momentos inesquecíveis.",
+      "image": "../assets/images/catalogs/festa-junina/produto-1.webp",
+      "keywords": [
+        "cenografia",
+        "cenario",
+        "ambientacao",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira"
+      ]
+    },
+    {
+      "id": "JUN-010",
+      "name": "Painel Bandeirinhas",
+      "category": "Painéis",
+      "description": "Painel temático para valorizar o espaço principal do arraiá.",
+      "image": "../assets/images/catalogs/festa-junina/produto-2.webp",
+      "keywords": [
+        "painel",
+        "fundo de festa",
+        "backdrop",
+        "cenario",
+        "festa junina",
+        "junina",
+        "arraia",
+        "arraial",
+        "sao joao",
+        "caipira",
+        "bandeira",
+        "bandeirinhas",
+        "decoracao junina"
+      ]
+    }
+  ]
+}

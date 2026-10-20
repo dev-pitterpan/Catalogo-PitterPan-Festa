@@ -1,0 +1,39 @@
+{
+  "catalogs": [
+    {
+      "name": "Halloween",
+      "slug": "halloween",
+      "cardClass": "halloween",
+      "description": "Decorações e acessórios para arrepiar!",
+      "accent": "#ff7900"
+    },
+    {
+      "name": "Dia das Crianças",
+      "slug": "dia-das-criancas",
+      "cardClass": "kids",
+      "description": "Diversão, cores e alegria para os pequenos!",
+      "accent": "#279aff"
+    },
+    {
+      "name": "Natal",
+      "slug": "natal",
+      "cardClass": "natal",
+      "description": "Tudo para um Natal mágico e inesquecível!",
+      "accent": "#22c55e"
+    },
+    {
+      "name": "Festa Junina",
+      "slug": "festa-junina",
+      "cardClass": "junina",
+      "description": "Arraiá completo para sua festa bombar!",
+      "accent": "#ffbd00"
+    },
+    {
+      "name": "Páscoa",
+      "slug": "pascoa",
+      "cardClass": "pascoa",
+      "description": "Delicadeza, cor e encanto para celebrar.",
+      "accent": "#bd5cf6"
+    }
+  ]
+}

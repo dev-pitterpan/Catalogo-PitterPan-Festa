@@ -1,0 +1,172 @@
+.theme-kids-root {
+  background: #eaf7ff;
+}
+.theme-kids {
+  --catalog-accent: #087fdb;
+  --catalog-accent-rgb: 8, 127, 219;
+  --catalog-accent-dark: #0667b2;
+  --catalog-secondary: #f4b82f;
+  --catalog-secondary-rgb: 244, 184, 47;
+  --catalog-bg: #eaf7ff;
+  --catalog-surface: #ffffff;
+  --catalog-surface-2: #dff3ff;
+  --catalog-line: rgba(28, 116, 173, 0.16);
+  --catalog-text: #10283a;
+  --catalog-muted: #60788b;
+  --banner-font: "Trebuchet MS", "Arial Rounded MT Bold", Arial, sans-serif;
+  background:
+    radial-gradient(
+      circle at 8% 12%,
+      rgba(255, 61, 141, 0.12),
+      transparent 19rem
+    ),
+    radial-gradient(
+      circle at 88% 4%,
+      rgba(39, 154, 255, 0.2),
+      transparent 28rem
+    ),
+    radial-gradient(
+      circle at 84% 48%,
+      rgba(255, 218, 0, 0.15),
+      transparent 24rem
+    ),
+    linear-gradient(180deg, #effaff 0%, #e4f6ff 52%, #f7fcff 100%);
+  color: var(--catalog-text);
+}
+.theme-kids .catalog-workspace {
+  background: transparent;
+}
+.theme-kids .owner-link,
+.theme-kids .owner-action {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(24, 116, 174, 0.14);
+  box-shadow: 0 10px 28px rgba(28, 101, 145, 0.06);
+  color: #16334a;
+}
+.theme-kids .owner-link strong {
+  color: #16334a;
+}
+.theme-kids .owner-link svg {
+  stroke: #087fdb;
+}
+.theme-kids .owner-kicker,
+.theme-kids .search-kicker {
+  color: #087fdb;
+}
+.theme-kids .owner-action--share {
+  color: #fff;
+  border-color: #087fdb;
+  background: linear-gradient(135deg, #087fdb, #26a5f2);
+  box-shadow: 0 12px 26px rgba(8, 127, 219, 0.2);
+}
+.theme-kids .catalog-hero--premium {
+  background: #4eb8f4;
+}
+.theme-kids .catalog-hero--premium::before {
+  background: linear-gradient(
+    90deg,
+    rgba(8, 69, 112, 0.88) 0%,
+    rgba(8, 69, 112, 0.72) calc(var(--sidebar-current-size, 0px) + 3rem),
+    rgba(8, 69, 112, 0.35) calc(var(--sidebar-current-size, 0px) + 16rem),
+    rgba(8, 69, 112, 0.03) 68%,
+    transparent
+  );
+}
+.theme-kids .catalog-hero__veil {
+  background:
+    radial-gradient(
+      circle at 78% 24%,
+      rgba(255, 218, 0, 0.2),
+      transparent 20rem
+    ),
+    radial-gradient(
+      circle at 58% 76%,
+      rgba(255, 61, 141, 0.12),
+      transparent 20rem
+    );
+}
+.theme-kids .catalog-hero__content--premium h1 {
+  font-weight: 850;
+  letter-spacing: -0.065em;
+  color: #fff;
+}
+.theme-kids .catalog-hero__meta {
+  color: rgba(255, 255, 255, 0.86);
+}
+.theme-kids .catalog-eyebrow {
+  color: #ffda00;
+}
+.theme-kids .catalog-hero__line {
+  background: linear-gradient(90deg, #ffda00, #ff8a00, #ff3d8d);
+}
+.theme-kids .catalog-hero__monogram-ring {
+  background: rgba(255, 255, 255, 0.17);
+  border-color: rgba(255, 255, 255, 0.34);
+}
+.theme-kids .catalog-hero__monogram::before {
+  border-color: rgba(255, 218, 0, 0.65);
+}
+.theme-kids .catalog-hero__monogram::after {
+  border-color: rgba(255, 255, 255, 0.38);
+}
+.theme-kids .catalog-hero__monogram img,
+.theme-kids .result-count__icon img {
+  filter: none;
+}
+.theme-kids .catalog-search-heading .search-hint {
+  color: #66869c;
+}
+.theme-kids .catalog-toolbar--theme {
+  border-color: rgba(24, 116, 174, 0.16);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 14px 34px rgba(28, 101, 145, 0.07);
+}
+.theme-kids .catalog-toolbar--theme:focus-within {
+  border-color: rgba(8, 127, 219, 0.48);
+  box-shadow:
+    0 0 0 4px rgba(8, 127, 219, 0.08),
+    0 14px 34px rgba(28, 101, 145, 0.07);
+}
+.theme-kids .catalog-toolbar--theme .search-box input {
+  color: #17334a;
+}
+.theme-kids .catalog-toolbar--theme .search-box input::placeholder {
+  color: #7690a4;
+}
+.theme-kids .catalog-toolbar--theme .search-box svg {
+  stroke: #087fdb;
+}
+.theme-kids .catalog-toolbar--theme .result-count {
+  color: #5f788d;
+}
+.theme-kids .catalog-toolbar--theme .result-count::before {
+  background: linear-gradient(
+    transparent,
+    rgba(8, 127, 219, 0.35),
+    rgba(244, 184, 47, 0.55),
+    transparent
+  );
+}
+.theme-kids .result-count__copy strong {
+  color: #16334a;
+}
+.theme-kids .result-count__icon {
+  background: #e5f6ff;
+  border-color: rgba(8, 127, 219, 0.16);
+}
+.theme-kids .product-card {
+  background: #fff;
+  border-color: rgba(26, 116, 174, 0.14);
+  box-shadow: 0 14px 32px rgba(30, 98, 137, 0.08);
+}
+.theme-kids .product-card__body h2 {
+  color: #142f43;
+}
+.theme-kids .product-card__body p {
+  color: #617a8d;
+}
+.theme-kids .product-code {
+  background: rgba(12, 72, 111, 0.82);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}

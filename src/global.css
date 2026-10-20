@@ -1,0 +1,28 @@
+@import "./styles/reset.css";
+@import "./styles/variables.css";
+@import "./styles/components/sidebar.css";
+@import "./styles/catalog/catalog-base.css";
+@import "./styles/catalog/themes/halloween.css";
+@import "./styles/catalog/themes/dia-das-criancas.css";
+@import "./styles/catalog/themes/natal.css";
+@import "./styles/catalog/themes/festa-junina.css";
+@import "./styles/catalog/themes/pascoa.css";
+@import "./styles/pages/gestor-home.css";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@source './';
+@theme {
+  --color-pitter-blue: #2f3f91;
+  --color-pitter-red: #f21f26;
+  --color-pitter-yellow: #ffd51a;
+  --color-pitter-ice: #f6faff;
+}
+.owner-action {
+  text-decoration: none;
+  cursor: pointer;
+}
+.owner-action svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}

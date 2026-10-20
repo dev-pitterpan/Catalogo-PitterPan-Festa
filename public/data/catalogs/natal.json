@@ -1,0 +1,190 @@
+{
+  "name": "Natal",
+  "slug": "natal",
+  "eyebrow": "Coleção",
+  "description": "Uma seleção especial para criar celebrações acolhedoras, elegantes e cheias de magia.",
+  "banner": "../assets/images/catalogs/natal/banner.webp",
+  "products": [
+    {
+      "id": "NAT-001",
+      "name": "Kit Natal Encantado",
+      "category": "Kits",
+      "description": "Composição natalina completa para criar uma ambientação acolhedora e sofisticada.",
+      "image": "../assets/images/catalogs/natal/produto-1.webp",
+      "keywords": [
+        "kit festa",
+        "conjunto",
+        "combo",
+        "festa completa",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina"
+      ]
+    },
+    {
+      "id": "NAT-002",
+      "name": "Árvore Natal Premium",
+      "category": "Decoração",
+      "description": "Árvore decorativa para compor espaços elegantes e cenários marcantes.",
+      "image": "../assets/images/catalogs/natal/produto-2.webp",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina",
+        "arvore de natal",
+        "pinheiro"
+      ]
+    },
+    {
+      "id": "NAT-003",
+      "name": "Mesa Natalina Especial",
+      "category": "Mesa",
+      "description": "Seleção coordenada para uma mesa de Natal harmônica e memorável.",
+      "image": "../assets/images/catalogs/natal/produto-3.webp",
+      "keywords": [
+        "mesa decorada",
+        "mesa temática",
+        "composição de mesa",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina"
+      ]
+    },
+    {
+      "id": "NAT-004",
+      "name": "Luzes de Natal Decorativas",
+      "category": "Iluminação",
+      "description": "Iluminação decorativa para valorizar ambientes, painéis e composições.",
+      "image": "../assets/images/catalogs/natal/produto-4.webp",
+      "keywords": [
+        "iluminacao",
+        "luzes",
+        "luz decorativa",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina"
+      ]
+    },
+    {
+      "id": "NAT-005",
+      "name": "Árvore Decorativa",
+      "category": "Decoração",
+      "description": "Elemento cenográfico para complementar a ambientação natalina.",
+      "image": "../assets/images/admin/products/natal-arvore.svg",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina",
+        "arvore de natal",
+        "pinheiro"
+      ]
+    },
+    {
+      "id": "NAT-006",
+      "name": "Bolas de Natal Premium",
+      "category": "Acessórios",
+      "description": "Conjunto de bolas decorativas para árvores, painéis e arranjos.",
+      "image": "../assets/images/admin/products/natal-bolas.svg",
+      "keywords": [
+        "acessorio",
+        "adereço",
+        "complemento",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina"
+      ]
+    },
+    {
+      "id": "NAT-007",
+      "name": "Guirlanda Natalina",
+      "category": "Decoração",
+      "description": "Guirlanda temática para entradas e pontos de destaque da festa.",
+      "image": "../assets/images/admin/products/natal-guirlanda.svg",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina",
+        "guirlanda",
+        "enfeite de porta"
+      ]
+    },
+    {
+      "id": "NAT-008",
+      "name": "Kit Luzes Festivas",
+      "category": "Iluminação",
+      "description": "Conjunto de luzes para criar uma atmosfera quente e convidativa.",
+      "image": "../assets/images/admin/products/natal-luzes.svg",
+      "keywords": [
+        "iluminacao",
+        "luzes",
+        "luz decorativa",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina"
+      ]
+    },
+    {
+      "id": "NAT-009",
+      "name": "Cenário Natal Completo",
+      "category": "Cenografia",
+      "description": "Ambientação completa para fotos e momentos especiais.",
+      "image": "../assets/images/catalogs/natal/produto-1.webp",
+      "keywords": [
+        "cenografia",
+        "cenario",
+        "ambientacao",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina"
+      ]
+    },
+    {
+      "id": "NAT-010",
+      "name": "Painel Natal Elegante",
+      "category": "Painéis",
+      "description": "Painel temático para destacar o espaço principal da celebração.",
+      "image": "../assets/images/catalogs/natal/produto-2.webp",
+      "keywords": [
+        "painel",
+        "fundo de festa",
+        "backdrop",
+        "cenario",
+        "natal",
+        "natalino",
+        "natalina",
+        "fim de ano",
+        "festa natalina"
+      ]
+    }
+  ]
+}

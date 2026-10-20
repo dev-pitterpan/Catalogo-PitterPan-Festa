@@ -1,0 +1,140 @@
+.theme-junina-root {
+  background: #fff0cf;
+}
+.theme-junina {
+  --catalog-accent: #b84d16;
+  --catalog-accent-rgb: 184, 77, 22;
+  --catalog-accent-dark: #913a11;
+  --catalog-secondary: #d49a00;
+  --catalog-secondary-rgb: 212, 154, 0;
+  --catalog-bg: #fff0cf;
+  --catalog-surface: #fff9ec;
+  --catalog-surface-2: #f9dfaa;
+  --catalog-line: rgba(137, 66, 25, 0.16);
+  --catalog-text: #4d2c18;
+  --catalog-muted: #7f654f;
+  --banner-font: Rockwell, Roboto Slab, Georgia, serif;
+  background:
+    radial-gradient(
+      circle at 86% 5%,
+      rgba(255, 189, 0, 0.2),
+      transparent 28rem
+    ),
+    radial-gradient(
+      circle at 12% 38%,
+      rgba(232, 116, 24, 0.12),
+      transparent 24rem
+    ),
+    linear-gradient(180deg, #fff3d8 0%, #ffe7b9 52%, #fff7e5 100%);
+  color: var(--catalog-text);
+}
+.theme-junina .owner-link,
+.theme-junina .owner-action {
+  background: rgba(255, 249, 236, 0.9);
+  border-color: rgba(137, 66, 25, 0.14);
+  color: #58321d;
+}
+.theme-junina .owner-link strong {
+  color: #58321d;
+}
+.theme-junina .owner-link svg {
+  stroke: #b84d16;
+}
+.theme-junina .owner-kicker,
+.theme-junina .search-kicker {
+  color: #b84d16;
+}
+.theme-junina .owner-link::after {
+  background: linear-gradient(90deg, #b84d16, #d49a00, transparent 82%);
+}
+.theme-junina .owner-action--share {
+  color: #fff;
+  border-color: #b84d16;
+  background: linear-gradient(135deg, #a33f12, #e7751e);
+  box-shadow: 0 12px 26px rgba(184, 77, 22, 0.18);
+}
+.theme-junina .catalog-hero--premium {
+  background: #dc721d;
+}
+.theme-junina .catalog-hero--premium::before {
+  background: linear-gradient(
+    90deg,
+    rgba(102, 42, 13, 0.86) 0%,
+    rgba(102, 42, 13, 0.72) calc(var(--sidebar-current-size, 0px) + 8rem),
+    rgba(102, 42, 13, 0.25) 65%,
+    rgba(102, 42, 13, 0.03) 76%,
+    transparent
+  );
+}
+.theme-junina .catalog-hero__veil {
+  background:
+    radial-gradient(
+      circle at 78% 28%,
+      rgba(255, 218, 0, 0.2),
+      transparent 20rem
+    ),
+    radial-gradient(
+      circle at 60% 80%,
+      rgba(45, 138, 98, 0.12),
+      transparent 18rem
+    );
+}
+.theme-junina .catalog-hero__content--premium h1 {
+  color: #fffaf0;
+  font-weight: 850;
+  letter-spacing: -0.045em;
+}
+.theme-junina .catalog-hero__meta {
+  color: rgba(255, 250, 240, 0.84);
+}
+.theme-junina .catalog-eyebrow {
+  color: #ffda00;
+}
+.theme-junina .catalog-hero__line {
+  background: linear-gradient(90deg, #ffda00, #fff1a3);
+}
+.theme-junina .catalog-hero__monogram img,
+.theme-junina .result-count__icon img {
+  filter: none;
+}
+.theme-junina .search-hint {
+  color: #8a6d54;
+}
+.theme-junina .catalog-toolbar--theme {
+  background: rgba(255, 249, 236, 0.94);
+  border-color: rgba(137, 66, 25, 0.15);
+}
+.theme-junina .catalog-toolbar--theme:focus-within {
+  border-color: rgba(184, 77, 22, 0.44);
+  box-shadow: 0 0 0 4px rgba(184, 77, 22, 0.07);
+}
+.theme-junina .catalog-toolbar--theme .search-box input {
+  color: #58321d;
+}
+.theme-junina .catalog-toolbar--theme .search-box input::placeholder {
+  color: #9b806b;
+}
+.theme-junina .catalog-toolbar--theme .search-box svg {
+  stroke: #b84d16;
+}
+.theme-junina .catalog-toolbar--theme .result-count {
+  color: #7f654f;
+}
+.theme-junina .result-count__copy strong {
+  color: #4d2c18;
+}
+.theme-junina .result-count__icon {
+  background: #fff1cc;
+  border-color: rgba(184, 77, 22, 0.14);
+}
+.theme-junina .product-card {
+  background: #fff9ec;
+  border-color: rgba(137, 66, 25, 0.14);
+  box-shadow: 0 14px 32px rgba(111, 65, 31, 0.07);
+}
+.theme-junina .product-card__body h2 {
+  color: #4d2c18;
+}
+.theme-junina .product-card__body p {
+  color: #7f654f;
+}

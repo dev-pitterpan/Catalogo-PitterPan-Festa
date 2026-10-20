@@ -1,0 +1,196 @@
+{
+  "name": "Halloween",
+  "slug": "halloween",
+  "eyebrow": "Coleção",
+  "description": "Decorações que transformam sua festa em uma experiência inesquecível.",
+  "banner": "../assets/images/catalogs/halloween/banner.webp",
+  "products": [
+    {
+      "id": "HAL-001",
+      "name": "Kit Decoração Clássica",
+      "category": "Decoração",
+      "description": "Composição temática completa para criar um cenário marcante de Halloween.",
+      "image": "../assets/images/catalogs/halloween/produto-1.webp",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa"
+      ]
+    },
+    {
+      "id": "HAL-002",
+      "name": "Arco de Balões Halloween",
+      "category": "Balões",
+      "description": "Arco em tons de laranja e preto para entradas, painéis e ambientes temáticos.",
+      "image": "../assets/images/catalogs/halloween/produto-2.webp",
+      "keywords": [
+        "balao",
+        "baloes",
+        "arco de balao",
+        "decoração com balões",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa"
+      ]
+    },
+    {
+      "id": "HAL-003",
+      "name": "Fantasia Bruxinha",
+      "category": "Fantasias",
+      "description": "Visual infantil temático para completar a experiência da comemoração.",
+      "image": "../assets/images/catalogs/halloween/produto-3.webp",
+      "keywords": [
+        "fantasia",
+        "roupa",
+        "traje",
+        "vestimenta",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa",
+        "bruxinha",
+        "fantasia de bruxa"
+      ]
+    },
+    {
+      "id": "HAL-004",
+      "name": "Doces Temáticos Halloween",
+      "category": "Doces e Kits",
+      "description": "Doces decorados para compor a mesa com acabamento divertido e assustador.",
+      "image": "../assets/images/catalogs/halloween/produto-4.webp",
+      "keywords": [
+        "doces",
+        "kit doces",
+        "guloseimas",
+        "mesa de doces",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa"
+      ]
+    },
+    {
+      "id": "HAL-005",
+      "name": "Balde Abóbora Premium",
+      "category": "Acessórios",
+      "description": "Balde decorativo em estilo abóbora para lembranças, doces e composição da festa.",
+      "image": "../assets/images/admin/products/halloween-balde.svg",
+      "keywords": [
+        "acessorio",
+        "adereço",
+        "complemento",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa",
+        "abobora",
+        "pumpkin"
+      ]
+    },
+    {
+      "id": "HAL-006",
+      "name": "Chapéu de Bruxa Decorativo",
+      "category": "Decoração",
+      "description": "Peça decorativa temática para mesas, painéis e cenários de Halloween.",
+      "image": "../assets/images/admin/products/halloween-chapeu.svg",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa",
+        "chapeu",
+        "acessorio de cabeça",
+        "bruxinha",
+        "fantasia de bruxa"
+      ]
+    },
+    {
+      "id": "HAL-007",
+      "name": "Kit Halloween Especial",
+      "category": "Kits",
+      "description": "Conjunto de elementos coordenados para uma ambientação rápida e sofisticada.",
+      "image": "../assets/images/admin/products/halloween-kit.svg",
+      "keywords": [
+        "kit festa",
+        "conjunto",
+        "combo",
+        "festa completa",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa"
+      ]
+    },
+    {
+      "id": "HAL-008",
+      "name": "Balões Halloween Premium",
+      "category": "Balões",
+      "description": "Seleção de balões temáticos para complementar arcos, mesas e painéis.",
+      "image": "../assets/images/admin/products/halloween-balao.svg",
+      "keywords": [
+        "balao",
+        "baloes",
+        "arco de balao",
+        "decoração com balões",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa"
+      ]
+    },
+    {
+      "id": "HAL-009",
+      "name": "Mesa Halloween Completa",
+      "category": "Decoração",
+      "description": "Composição de mesa com elementos cenográficos para uma apresentação completa.",
+      "image": "../assets/images/catalogs/halloween/produto-1.webp",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa"
+      ]
+    },
+    {
+      "id": "HAL-010",
+      "name": "Painel Halloween Noturno",
+      "category": "Painéis",
+      "description": "Composição visual em tons escuros e laranja para destacar o espaço principal.",
+      "image": "../assets/images/catalogs/halloween/produto-2.webp",
+      "keywords": [
+        "painel",
+        "fundo de festa",
+        "backdrop",
+        "cenario",
+        "halloween",
+        "dia das bruxas",
+        "terror",
+        "assustador",
+        "bruxa"
+      ]
+    }
+  ]
+}

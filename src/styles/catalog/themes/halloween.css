@@ -1,0 +1,51 @@
+.theme-halloween-root {
+  background: #07090d;
+}
+
+/* Halloween — identidade exclusiva */
+.theme-halloween {
+  --catalog-accent: #ff6a00;
+  --catalog-accent-rgb: 255, 106, 0;
+  --catalog-accent-dark: #e85100;
+  --catalog-secondary: #7c3aed;
+  --catalog-secondary-rgb: 124, 58, 237;
+  --catalog-bg: #07090d;
+  --catalog-surface: #10151c;
+  --catalog-surface-2: #151c26;
+  --catalog-line: rgba(255, 255, 255, 0.09);
+  --catalog-text: #f8f7fb;
+  --catalog-muted: #aaa4b3;
+  --banner-font: Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(
+      circle at 78% 0%,
+      rgba(124, 58, 237, 0.16),
+      transparent 31rem
+    ),
+    radial-gradient(
+      circle at 56% 24%,
+      rgba(255, 106, 0, 0.055),
+      transparent 22rem
+    ),
+    #07090d;
+}
+.theme-halloween .catalog-hero__content--premium h1 {
+  font-weight: 500;
+  letter-spacing: -0.055em;
+}
+.theme-halloween .catalog-hero__veil {
+  background:
+    radial-gradient(
+      circle at 76% 42%,
+      rgba(124, 58, 237, 0.2),
+      transparent 22rem
+    ),
+    radial-gradient(
+      circle at 58% 72%,
+      rgba(255, 106, 0, 0.15),
+      transparent 20rem
+    );
+}
+.theme-halloween .product-card {
+  background: #10151c;
+}

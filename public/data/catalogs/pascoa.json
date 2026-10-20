@@ -1,0 +1,177 @@
+{
+  "name": "Páscoa",
+  "slug": "pascoa",
+  "eyebrow": "Coleção",
+  "description": "Uma experiência delicada, acolhedora e cheia de detalhes para celebrar momentos especiais.",
+  "banner": "../assets/images/catalogs/pascoa/banner.webp",
+  "products": [
+    {
+      "id": "PAS-001",
+      "name": "Kit Páscoa Encantada",
+      "category": "Kits",
+      "description": "Composição temática delicada para uma celebração visualmente encantadora.",
+      "image": "../assets/images/catalogs/pascoa/produto-1.webp",
+      "keywords": [
+        "kit festa",
+        "conjunto",
+        "combo",
+        "festa completa",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    },
+    {
+      "id": "PAS-002",
+      "name": "Mesa Páscoa Premium",
+      "category": "Mesa",
+      "description": "Ambientação elegante com elementos suaves e identidade própria.",
+      "image": "../assets/images/catalogs/pascoa/produto-2.webp",
+      "keywords": [
+        "mesa decorada",
+        "mesa temática",
+        "composição de mesa",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    },
+    {
+      "id": "PAS-003",
+      "name": "Cenário Coelhinho",
+      "category": "Cenografia",
+      "description": "Cenário lúdico para fotos e momentos especiais em família.",
+      "image": "../assets/images/catalogs/pascoa/produto-3.webp",
+      "keywords": [
+        "cenografia",
+        "cenario",
+        "ambientacao",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    },
+    {
+      "id": "PAS-004",
+      "name": "Doces Temáticos Páscoa",
+      "category": "Doces",
+      "description": "Seleção decorativa para complementar mesas e kits especiais.",
+      "image": "../assets/images/catalogs/pascoa/produto-4.webp",
+      "keywords": [
+        "doces",
+        "guloseimas",
+        "mesa de doces",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    },
+    {
+      "id": "PAS-005",
+      "name": "Cesta de Páscoa",
+      "category": "Lembranças",
+      "description": "Cesta decorativa para presentes, doces e composições temáticas.",
+      "image": "../assets/images/admin/products/pascoa-cesta.svg",
+      "keywords": [
+        "lembrancinha",
+        "brinde",
+        "recordacao",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    },
+    {
+      "id": "PAS-006",
+      "name": "Kit Páscoa Especial",
+      "category": "Kits",
+      "description": "Seleção coordenada de elementos para uma decoração completa.",
+      "image": "../assets/images/admin/products/pascoa-kit.svg",
+      "keywords": [
+        "kit festa",
+        "conjunto",
+        "combo",
+        "festa completa",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    },
+    {
+      "id": "PAS-007",
+      "name": "Ovos Decorativos",
+      "category": "Decoração",
+      "description": "Elementos temáticos para mesas, painéis e ambientes de Páscoa.",
+      "image": "../assets/images/admin/products/pascoa-ovos.svg",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa",
+        "ovo de pascoa",
+        "ovos"
+      ]
+    },
+    {
+      "id": "PAS-008",
+      "name": "Tags Páscoa Premium",
+      "category": "Papelaria",
+      "description": "Detalhes personalizados para presentes, lembranças e kits.",
+      "image": "../assets/images/admin/products/pascoa-tag.svg",
+      "keywords": [
+        "papelaria",
+        "tag",
+        "etiqueta",
+        "personalizado",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    },
+    {
+      "id": "PAS-009",
+      "name": "Painel Páscoa Delicado",
+      "category": "Painéis",
+      "description": "Painel temático com linguagem suave para o espaço principal.",
+      "image": "../assets/images/catalogs/pascoa/produto-1.webp",
+      "keywords": [
+        "painel",
+        "fundo de festa",
+        "backdrop",
+        "cenario",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    },
+    {
+      "id": "PAS-010",
+      "name": "Composição Jardim de Páscoa",
+      "category": "Decoração",
+      "description": "Ambientação inspirada em jardim para uma experiência acolhedora.",
+      "image": "../assets/images/catalogs/pascoa/produto-2.webp",
+      "keywords": [
+        "decoracao",
+        "enfeite",
+        "ornamentacao",
+        "cenário decorativo",
+        "pascoa",
+        "coelho",
+        "coelhinho",
+        "festa de pascoa"
+      ]
+    }
+  ]
+}

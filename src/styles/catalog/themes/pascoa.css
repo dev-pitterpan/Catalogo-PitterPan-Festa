@@ -1,0 +1,129 @@
+.theme-pascoa-root {
+  background: #fff3fa;
+}
+.theme-pascoa {
+  --catalog-accent: #9944c8;
+  --catalog-accent-rgb: 153, 68, 200;
+  --catalog-accent-dark: #74319a;
+  --catalog-secondary: #df8eac;
+  --catalog-secondary-rgb: 223, 142, 172;
+  --catalog-bg: #fff3fa;
+  --catalog-surface: #fffafd;
+  --catalog-surface-2: #f6e7f7;
+  --catalog-line: rgba(139, 77, 155, 0.14);
+  --catalog-text: #4b2751;
+  --catalog-muted: #826b86;
+  --banner-font: Didot, Bodoni MT, Georgia, serif;
+  background:
+    radial-gradient(
+      circle at 84% 4%,
+      rgba(189, 92, 246, 0.13),
+      transparent 27rem
+    ),
+    radial-gradient(
+      circle at 18% 45%,
+      rgba(231, 169, 189, 0.18),
+      transparent 24rem
+    ),
+    linear-gradient(180deg, #fff7fc 0%, #f9eff9 55%, #fffafd 100%);
+  color: var(--catalog-text);
+}
+.theme-pascoa .owner-link,
+.theme-pascoa .owner-action {
+  background: rgba(255, 250, 253, 0.9);
+  border-color: rgba(139, 77, 155, 0.14);
+  color: #55305b;
+}
+.theme-pascoa .owner-link strong {
+  color: #55305b;
+}
+.theme-pascoa .owner-link svg {
+  stroke: #9944c8;
+}
+.theme-pascoa .owner-kicker,
+.theme-pascoa .search-kicker {
+  color: #9944c8;
+}
+.theme-pascoa .owner-link::after {
+  background: linear-gradient(90deg, #9944c8, #df8eac, transparent 82%);
+}
+.theme-pascoa .owner-action--share {
+  color: #fff;
+  background: linear-gradient(135deg, #8b3eb7, #c967b1);
+  border-color: #9944c8;
+}
+.theme-pascoa .catalog-hero--premium {
+  background: #b661b5;
+}
+.theme-pascoa .catalog-hero--premium::before {
+  background: linear-gradient(
+    90deg,
+    rgba(91, 37, 102, 0.84),
+    rgba(91, 37, 102, 0.68) calc(var(--sidebar-current-size, 0px) + 9rem),
+    rgba(91, 37, 102, 0.18) 65%,
+    transparent
+  );
+}
+.theme-pascoa .catalog-hero__veil {
+  background:
+    radial-gradient(
+      circle at 78% 24%,
+      rgba(255, 214, 229, 0.2),
+      transparent 20rem
+    ),
+    radial-gradient(
+      circle at 60% 78%,
+      rgba(189, 92, 246, 0.16),
+      transparent 18rem
+    );
+}
+.theme-pascoa .catalog-hero__content--premium h1 {
+  color: #fff;
+  font-weight: 500;
+}
+.theme-pascoa .catalog-hero__meta {
+  color: rgba(255, 255, 255, 0.84);
+}
+.theme-pascoa .catalog-eyebrow {
+  color: #ffd6e5;
+}
+.theme-pascoa .catalog-hero__line {
+  background: linear-gradient(90deg, #ffd6e5, #d89bff);
+}
+.theme-pascoa .catalog-hero__monogram img,
+.theme-pascoa .result-count__icon img {
+  filter: none;
+}
+.theme-pascoa .search-hint {
+  color: #927a95;
+}
+.theme-pascoa .catalog-toolbar--theme {
+  background: rgba(255, 250, 253, 0.92);
+  border-color: rgba(139, 77, 155, 0.14);
+}
+.theme-pascoa .catalog-toolbar--theme .search-box input {
+  color: #55305b;
+}
+.theme-pascoa .catalog-toolbar--theme .search-box input::placeholder {
+  color: #9d86a0;
+}
+.theme-pascoa .catalog-toolbar--theme .search-box svg {
+  stroke: #9944c8;
+}
+.theme-pascoa .catalog-toolbar--theme .result-count {
+  color: #826b86;
+}
+.theme-pascoa .result-count__copy strong {
+  color: #4b2751;
+}
+.theme-pascoa .product-card {
+  background: #fffafd;
+  border-color: rgba(139, 77, 155, 0.13);
+  box-shadow: 0 14px 32px rgba(104, 61, 111, 0.06);
+}
+.theme-pascoa .product-card__body h2 {
+  color: #522d59;
+}
+.theme-pascoa .product-card__body p {
+  color: #826b86;
+}

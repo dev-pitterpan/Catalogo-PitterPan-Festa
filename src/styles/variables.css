@@ -1,0 +1,53 @@
+:root {
+  /* Core palette */
+  --bg: #0d0d12;
+  --surface: #15151d;
+  --text: #f7f7fb;
+  --muted: #aaa8b8;
+  --brand: #7a2cff;
+  --brand-2: #ff7a00;
+  --success: #22c55e;
+
+  /* Pitter Pan brand system */
+  --pp-pink: #ff3d8d;
+  --pp-orange: #ff8a00;
+  --pp-blue: #279aff;
+  --pp-yellow: #ffda00;
+  --pp-green: #22c55e;
+  --pp-ink: #07101a;
+  --pp-ink-soft: #0c1724;
+
+  /* Layout scale */
+  --container: clamp(68rem, 82vw, 92rem);
+  --sidebar-width: clamp(14rem, 16.5vw, 15.5rem);
+  --page-gutter: clamp(0.75rem, 1.7vw, 1.625rem);
+  --content-gap: clamp(0.75rem, 1.15vw, 1.125rem);
+
+  /* Fluid spacing */
+  --space-1: clamp(0.35rem, 0.3rem + 0.15vw, 0.5rem);
+  --space-2: clamp(0.5rem, 0.43rem + 0.22vw, 0.7rem);
+  --space-3: clamp(0.75rem, 0.63rem + 0.35vw, 1rem);
+  --space-4: clamp(1rem, 0.82rem + 0.55vw, 1.35rem);
+  --space-5: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+  --space-6: clamp(1.75rem, 1.35rem + 1.25vw, 2.5rem);
+
+  /* Fluid typography */
+  --text-xs: clamp(0.68rem, 0.64rem + 0.12vw, 0.75rem);
+  --text-sm: clamp(0.76rem, 0.71rem + 0.16vw, 0.84rem);
+  --text-base: clamp(0.84rem, 0.79rem + 0.18vw, 0.94rem);
+  --text-lg: clamp(1rem, 0.91rem + 0.28vw, 1.15rem);
+  --text-xl: clamp(1.25rem, 1.08rem + 0.55vw, 1.55rem);
+  --text-2xl: clamp(1.55rem, 1.3rem + 0.8vw, 1.95rem);
+  --text-display: clamp(2.1rem, 1.6rem + 1.7vw, 3.625rem);
+
+  /* Shape */
+  --radius: clamp(1rem, 0.9rem + 0.35vw, 1.25rem);
+  --radius-sm: clamp(0.75rem, 0.68rem + 0.22vw, 0.9rem);
+  --radius-lg: clamp(1.05rem, 0.9rem + 0.45vw, 1.4rem);
+  --radius-pill: 999px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration-fast: 160ms;
+  --duration-base: 240ms;
+}

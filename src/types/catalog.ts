@@ -7,6 +7,8 @@ export interface Product {
   image: string;
   keywords?: string[];
   siteUrl?: string;
+  /** ID numérico da variante Shopify, diferente do SKU e do ID do produto. */
+  shopifyVariantId?: string;
 }
 export interface CatalogSummary {
   name: string;

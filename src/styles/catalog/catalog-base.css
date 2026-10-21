@@ -3415,3 +3415,48 @@ body:not(.client-page) .quote-cart-root {
   font-size: 0.72rem;
   line-height: 1.5;
 }
+
+/* Compra e orçamento compartilham a seleção; ações permanecem legíveis no celular. */
+.quote-cart__checkout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 3.2rem;
+  padding: 0.85rem 1rem;
+  border: 0;
+  border-radius: 1rem;
+  background: var(--pp-blue);
+  color: #07101a;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.quote-cart__checkout svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+.quote-cart__checkout:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.quote-cart__checkout:focus-visible {
+  outline: 3px solid var(--pp-blue);
+  outline-offset: 3px;
+}
+.quote-cart__checkout-error {
+  color: #9a2034;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.quote-cart__footer {
+  flex-shrink: 0;
+  max-height: 55%;
+  overflow-y: auto;
+}
+.quote-cart__checkout {
+  margin-bottom: 0.7rem;
+}

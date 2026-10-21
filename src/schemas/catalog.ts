@@ -9,6 +9,10 @@ export const productSchema = z.object({
   image: z.string(),
   keywords: z.array(z.string()).optional(),
   siteUrl: z.string().optional(),
+  shopifyVariantId: z
+    .string()
+    .regex(/^[1-9]\d*$/)
+    .optional(),
 });
 export const summarySchema = z.object({
   name: z.string(),

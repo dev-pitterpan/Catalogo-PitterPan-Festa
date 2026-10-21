@@ -1,26 +1,26 @@
 # Manutenção
 
-| Mudança | Arquivo/pasta |
-| --- | --- |
-| Rotas e documento raiz | `src/app/` |
-| Tela compartilhada do catálogo | `src/components/CatalogApp.tsx` |
-| Produtos da coleção | `public/data/catalogs/<slug>.json` |
-| Lista de coleções | `public/data/catalogs/manifest.json` |
-| Contato e domínio padrão | `public/data/config/site.json` |
-| Fotos e banners | `public/assets/images/catalogs/` |
-| Card e quantidade | `src/components/ProductCard.tsx` |
-| Painel de orçamento | `src/components/QuoteCart.tsx` |
-| Busca | `src/lib/search.ts` |
-| Texto do WhatsApp | `src/lib/quote.ts` |
-| Persistência da seleção | `src/hooks/useQuote.ts` |
-| Leitura no servidor | `src/server/catalogs.ts` |
-| Consultas no navegador | `src/services/catalog.ts` |
-| Validação | `src/schemas/catalog.ts` |
-| Contratos | `src/types/catalog.ts` |
-| Cache | `src/config/query-client.ts` |
-| Cores Tailwind e imports de CSS | `src/global.css` |
-| Temas | `src/styles/catalog/themes/` |
-| Inicialização e ambiente | `scripts/run-next.ts` e `.env` |
+| Mudança                         | Arquivo/pasta                        |
+| ------------------------------- | ------------------------------------ |
+| Rotas e documento raiz          | `src/app/`                           |
+| Tela compartilhada do catálogo  | `src/components/CatalogApp.tsx`      |
+| Produtos da coleção             | `public/data/catalogs/<slug>.json`   |
+| Lista de coleções               | `public/data/catalogs/manifest.json` |
+| Contato e domínio padrão        | `public/data/config/site.json`       |
+| Fotos e banners                 | `public/assets/images/catalogs/`     |
+| Card e quantidade               | `src/components/ProductCard.tsx`     |
+| Painel de orçamento             | `src/components/QuoteCart.tsx`       |
+| Busca                           | `src/lib/search.ts`                  |
+| Texto do WhatsApp               | `src/lib/quote.ts`                   |
+| Persistência da seleção         | `src/hooks/useQuote.ts`              |
+| Leitura no servidor             | `src/server/catalogs.ts`             |
+| Consultas no navegador          | `src/services/catalog.ts`            |
+| Validação                       | `src/schemas/catalog.ts`             |
+| Contratos                       | `src/types/catalog.ts`               |
+| Cache                           | `src/config/query-client.ts`         |
+| Cores Tailwind e imports de CSS | `src/global.css`                     |
+| Temas                           | `src/styles/catalog/themes/`         |
+| Inicialização e ambiente        | `scripts/run-next.ts` e `.env`       |
 
 ## Adicionar uma coleção
 
@@ -41,3 +41,13 @@ Execute `npm run typecheck`, `npm test`, `npm run build` e `npm run test:server`
 ## Evolução do painel
 
 Crie endpoints de escrita autenticados, serviços de banco e armazenamento de mídia no servidor. Não grave uploads em `.next`, pois a compilação recria essa pasta. Invalide as consultas do TanStack Query após salvar. Mantenha segredos em variáveis sem prefixo público. A área do gestor atual é de visualização e compartilhamento e não tem autenticação.
+
+## Compra na Shopify
+
+O carrinho oferece “Comprar no site” e mantém o orçamento pelo WhatsApp. O POST `/api/checkout/` recebe somente códigos e quantidades, consulta todos os catálogos atuais e gera um permalink Shopify com as variantes. Seleções antigas também funcionam, pois o vínculo é resolvido no servidor. A seleção permanece salva ao sair para a loja.
+
+Para habilitar um produto, preencha `shopifyVariantId` com o ID numérico da variante (como string) e `siteUrl` com a página pública do produto. SKU, ID do produto e ID da variante são diferentes. O SKU 8936 está vinculado à variante 45465265963062. Itens sem vínculo bloqueiam o envio completo e são identificados na mensagem; nenhum item é omitido silenciosamente. Quantidades permitidas: 1 a 999 por variante, até 100 linhas.
+
+Esta primeira integração usa permalinks, sem token/API autenticada. Preços, estoque, frete e disponibilidade final são confirmados pela Shopify; não existe reserva ou validação de estoque ao clicar no catálogo. O cliente pode precisar informar contato, endereço e frete. Produtos com planos de assinatura exigem outra integração.
+
+Referência: https://shopify.dev/docs/apps/build/checkout/create-cart-permalinks

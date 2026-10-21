@@ -17,7 +17,7 @@ interface Props {
   onClear: () => void;
   onSend: () => void;
 }
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Quantity, asset } from "./ProductCard";
 import { totalQuantity } from "../lib/quote";
 export default function QuoteCart({
@@ -30,6 +30,38 @@ export default function QuoteCart({
   onClear,
   onSend,
 }: Props) {
+  const [buying, setBuying] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  // Resolve os IDs atuais no servidor: carrinhos antigos podem não ter a variante salva.
+  async function buyOnSite() {
+    if (buying || !selected.length) return;
+    setBuying(true);
+    setCheckoutError("");
+    try {
+      const response = await fetch("/api/checkout/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: selected.map(({ id, quantity }) => ({ id, quantity })),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Não foi possível preparar a compra.");
+      window.location.assign(result.checkoutUrl);
+    } catch (error) {
+      setCheckoutError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível preparar a compra. Tente novamente.",
+      );
+    } finally {
+      setBuying(false);
+    }
+  }
+  useEffect(() => {
+    setCheckoutError("");
+  }, [selected]);
   const count = totalQuantity(selected),
     panelRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -110,7 +142,7 @@ export default function QuoteCart({
       <strong>Comece sua seleção</strong>
       <p>
         Escolha os itens que combinam com a sua festa. Eles aparecerão aqui para
-        você pedir um orçamento completo.
+        você comprar no site ou pedir um orçamento completo.
       </p>
     </div>
   );
@@ -121,7 +153,7 @@ export default function QuoteCart({
         type="button"
         onClick={onOpen}
         data-cart-open
-        aria-label="Abrir orçamento"
+        aria-label="Abrir carrinho"
       >
         <span className="quote-cart-trigger__icon">
           <ShoppingBag aria-hidden="true" />
@@ -130,7 +162,7 @@ export default function QuoteCart({
           </span>
         </span>
         <span className="quote-cart-trigger__copy">
-          <small>Meu orçamento</small>
+          <small>Meu carrinho</small>
           <strong>Ver seleção</strong>
         </span>
       </button>
@@ -151,7 +183,7 @@ export default function QuoteCart({
         aria-modal={open || undefined}
         inert={!open}
         data-cart
-        aria-label="Orçamento Pitter Pan"
+        aria-label="Carrinho Pitter Pan"
       >
         <header className="quote-cart__header">
           <div className="quote-cart__brand">
@@ -163,7 +195,7 @@ export default function QuoteCart({
             </span>
             <div>
               <p className="quote-cart__eyebrow">Pitter Pan Festas</p>
-              <h2 className="quote-cart__title">Meu orçamento</h2>
+              <h2 className="quote-cart__title">Meu carrinho</h2>
             </div>
           </div>
 
@@ -178,7 +210,8 @@ export default function QuoteCart({
           </button>
 
           <p className="quote-cart__subtitle">
-            Revise seus itens e envie para solicitar um orçamento pelo WhatsApp.
+            Revise seus itens para comprar no site ou pedir orçamento pelo
+            WhatsApp.
           </p>
 
           <div className="quote-cart__summary">
@@ -188,7 +221,7 @@ export default function QuoteCart({
             </div>
             <div>
               <span>Próximo passo</span>
-              <strong>Solicitar orçamento</strong>
+              <strong>Comprar ou pedir orçamento</strong>
             </div>
           </div>
         </header>
@@ -201,9 +234,26 @@ export default function QuoteCart({
           <div className="quote-cart__footer-copy">
             <span>Sem preços no catálogo</span>
             <strong>
-              Envie sua seleção e receba o orçamento pelo WhatsApp.
+              Preços, estoque e frete serão confirmados na Shopify.
             </strong>
           </div>
+
+          {checkoutError && (
+            <p className="quote-cart__checkout-error" role="alert">
+              {checkoutError}
+            </p>
+          )}
+          <button
+            className="quote-cart__checkout"
+            type="button"
+            onClick={buyOnSite}
+            disabled={!count || buying}
+            aria-busy={buying}
+          >
+            <ShoppingBag aria-hidden="true" />
+            <span>{buying ? "Preparando compra…" : "Comprar no site"}</span>
+            <ArrowUpRight aria-hidden="true" />
+          </button>
 
           <button
             className="quote-cart__whatsapp"
@@ -216,7 +266,7 @@ export default function QuoteCart({
               <MessageCircle aria-hidden="true" />
             </span>
             <span>
-              <small>Finalizar pedido</small>
+              <small>Atendimento pelo WhatsApp</small>
               <strong>Pedir orçamento no WhatsApp</strong>
             </span>
             <ArrowUpRight aria-hidden="true" />
@@ -229,7 +279,7 @@ export default function QuoteCart({
             disabled={!count}
             data-cart-clear
           >
-            Limpar orçamento
+            Limpar carrinho
           </button>
         </footer>
       </aside>

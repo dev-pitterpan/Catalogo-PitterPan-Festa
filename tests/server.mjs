@@ -88,6 +88,34 @@ try {
     (await fetch(base + "/api/health/", { method: "POST" })).status,
     405,
   );
+  const checkout = (items) =>
+    fetch(base + "/api/checkout/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    });
+  const purchase = await checkout([{ id: "8936", quantity: 3 }]);
+  assert.equal(purchase.status, 200);
+  assert.equal(
+    (await purchase.json()).checkoutUrl,
+    "https://www.pitterpan.com.br/cart/45465265963062:3",
+  );
+  const partial = await checkout([
+    { id: "8936", quantity: 1 },
+    { id: "HAL-001", quantity: 2 },
+  ]);
+  assert.equal(partial.status, 422);
+  assert.match((await partial.json()).error, /HAL-001/);
+  assert.equal((await checkout([{ id: "8936", quantity: 0 }])).status, 400);
+  const malformed = await fetch(base + "/api/checkout/", {
+    method: "POST",
+    body: "{",
+  });
+  assert.equal(malformed.status, 400);
+  assert.equal((await fetch(base + "/api/checkout/")).status, 405);
+  console.log(
+    "Checkout OK: quantidades, seleção parcial, entrada inválida e método.",
+  );
   console.log("HTTP OK: SSR de 12 rotas, diagnóstico, assets, 404 e 405.");
 } finally {
   child.kill("SIGTERM");

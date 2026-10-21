@@ -61,7 +61,7 @@ test("WhatsApp agrupa coleções e mantém quantidades e links específicos", ()
     false,
   );
 });
-test("50 produtos, cinco catálogos e imagens originais preservados", async () => {
+test("51 produtos, cinco catálogos e imagens preservados", async () => {
   const manifest = JSON.parse(
     await readFile(
       new URL("../public/data/catalogs/manifest.json", import.meta.url),
@@ -97,5 +97,5 @@ test("50 produtos, cinco catálogos e imagens originais preservados", async () =
       ),
     );
   }
-  assert.equal(ids.size, 50);
+  assert.equal(ids.size, 51);
 });

@@ -11,7 +11,8 @@
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:server": "node tests/server.mjs",
     "format": "prettier --write src scripts tests *.json *.ts *.mjs",
-    "format:check": "prettier --check src scripts tests *.json *.ts *.mjs"
+    "format:check": "prettier --check src scripts tests *.json *.ts *.mjs",
+    "env:setup": "node scripts/setup-env.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.5",

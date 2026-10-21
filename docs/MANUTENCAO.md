@@ -69,3 +69,5 @@ O botão “Efeitos ativados/desativados” salva a preferência no navegador. A
 As decorações ignoram ponteiro e leitores de tela. As aranhas ficam ancoradas somente na foto do card, por portais React; os controles e textos do produto não são usados como área de animação. O celular reduz tamanho e quantidade dos elementos.
 
 Para revisar visualmente: visite cada coleção pública, aguarde 5 segundos, confira desktop/celular e o desaparecimento em 12 segundos; teste o botão, a preferência de movimento reduzido, a troca de coleção e a abertura de carrinho/menu. Não é necessário configurar .env para este recurso.
+
+As cenas alternam quatro composições, com alturas diferentes e espelhamento entre os lados. A primeira composição varia a cada visita. O voo e as teias acompanham o espelhamento; o botão permanece na posição original. As aranhas escolhem fotos visíveis distribuídas pela grade e também alternam sua orientação.

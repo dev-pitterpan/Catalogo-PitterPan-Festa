@@ -76,6 +76,7 @@ export default function SeasonalEffects({
     } catch {
       /* Sem storage, a preferência vale nesta visita. */
     }
+    cycle.current = Math.floor(Math.random() * 4);
     const media = matchMedia("(prefers-reduced-motion: reduce)");
     const syncMotion = () => setReduced(media.matches);
     const syncVisibility = () => setVisible(!document.hidden);
@@ -109,10 +110,17 @@ export default function SeasonalEffects({
           const bounds = card.getBoundingClientRect();
           return bounds.bottom > 80 && bounds.top < innerHeight - 100;
         });
+        // Escolhe fotos distribuídas pela área visível, em vez de cards sempre adjacentes.
+        const count = Math.min(shown.length, innerWidth < 640 ? 1 : 2);
+        const first = Math.floor(Math.random() * Math.max(1, shown.length));
         setTargets(
-          shown.slice(
-            next % Math.max(1, shown.length),
-            (next % Math.max(1, shown.length)) + (innerWidth < 640 ? 1 : 2),
+          Array.from(
+            { length: count },
+            (_, index) =>
+              shown[
+                (first + index * Math.max(1, Math.floor(shown.length / 2))) %
+                  shown.length
+              ],
           ),
         );
       }
@@ -159,6 +167,14 @@ export default function SeasonalEffects({
       {active && (
         <div
           className={`seasonal-stage seasonal-stage--${scene % 2}`}
+          style={
+            {
+              "--scene-mirror": scene % 2 ? -1 : 1,
+              "--hero-top": `${[48, 64, 38, 57][scene % 4]}%`,
+              "--companion-bottom": `${[16, 35, 24, 46][scene % 4]}%`,
+              "--particle-shift": `${(scene % 4) * 7}%`,
+            } as CSSProperties
+          }
           aria-hidden="true"
           key={`${slug}-${scene}`}
         >
@@ -195,7 +211,7 @@ export default function SeasonalEffects({
         targets.map((target, index) =>
           createPortal(
             <span
-              className="seasonal-card-spider"
+              className={`seasonal-card-spider ${(scene + index) % 2 ? "seasonal-card-spider--mirrored" : ""}`}
               style={{ "--spider-delay": `${index * 1.6}s` } as CSSProperties}
               aria-hidden="true"
             >

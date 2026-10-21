@@ -4,6 +4,9 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Sparkles } from "lucide-react";
 import { SeasonalArt, type Motif } from "./SeasonalArt";
+import WalkingSpider from "./WalkingSpider";
+import CardCharacter from "./CardCharacter";
+import SantaSleigh from "./SantaSleigh";
 
 const themes: Record<
   string,
@@ -99,8 +102,8 @@ export default function SeasonalEffects({
     const start = () => {
       if (cancelled) return;
       const next = cycle.current++;
-      // Portais ancoram as aranhas na área da foto; não cobrem títulos ou botões.
-      if (slug === "halloween") {
+      // Portais ancoram os personagens na foto; textos e botões ficam fora da cena.
+      {
         const cards = [
           ...(rootRef.current
             ?.closest(".catalog-page")
@@ -188,14 +191,22 @@ export default function SeasonalEffects({
               </div>
             </>
           )}
-          <div className={`seasonal-hero seasonal-hero--${theme.hero}`}>
-            <SeasonalArt motif={theme.hero} />
-          </div>
-          <div
-            className={`seasonal-companion seasonal-companion--${theme.companion}`}
-          >
-            <SeasonalArt motif={theme.companion} />
-          </div>
+          {slug === "natal" ? (
+            <div className="seasonal-sleigh">
+              <SantaSleigh />
+            </div>
+          ) : (
+            <>
+              <div className={`seasonal-hero seasonal-hero--${theme.hero}`}>
+                <SeasonalArt motif={theme.hero} />
+              </div>
+              <div
+                className={`seasonal-companion seasonal-companion--${theme.companion}`}
+              >
+                <SeasonalArt motif={theme.companion} />
+              </div>
+            </>
+          )}
           {Array.from({ length: slug === "natal" ? 9 : 4 }, (_, index) => (
             <div
               key={index}
@@ -210,13 +221,15 @@ export default function SeasonalEffects({
       {active &&
         targets.map((target, index) =>
           createPortal(
-            <span
-              className={`seasonal-card-spider ${(scene + index) % 2 ? "seasonal-card-spider--mirrored" : ""}`}
-              style={{ "--spider-delay": `${index * 1.6}s` } as CSSProperties}
-              aria-hidden="true"
-            >
-              <SeasonalArt motif="spider" />
-            </span>,
+            slug === "halloween" ? (
+              <WalkingSpider mirrored={(scene + index) % 2 === 1} />
+            ) : (
+              <CardCharacter
+                motif={(scene + index) % 2 === 0 ? theme.hero : theme.companion}
+                mirrored={(scene + index) % 2 === 1}
+                delay={index * 0.6}
+              />
+            ),
             target,
             `${slug}-${scene}-${index}`,
           ),

@@ -71,3 +71,11 @@ As decorações ignoram ponteiro e leitores de tela. As aranhas ficam ancoradas 
 Para revisar visualmente: visite cada coleção pública, aguarde 5 segundos, confira desktop/celular e o desaparecimento em 12 segundos; teste o botão, a preferência de movimento reduzido, a troca de coleção e a abertura de carrinho/menu. Não é necessário configurar .env para este recurso.
 
 As cenas alternam quatro composições, com alturas diferentes e espelhamento entre os lados. A primeira composição varia a cada visita. O voo e as teias acompanham o espelhamento; o botão permanece na posição original. As aranhas escolhem fotos visíveis distribuídas pela grade e também alternam sua orientação.
+
+### Personagens interagindo com produtos
+
+`WalkingSpider.tsx` articula oito pernas em pares alternados e movimenta o corpo durante a caminhada. A aranha desce pela teia, cruza a foto, para no centro atrás do produto e reaparece antes de sair. `CardCharacter.tsx` usa percursos de espiar, saltar ou flutuar para Papai Noel, rena, coelho, ovo, pipa, balão, lanterna e bandeirinhas. São escolhidos até dois cards visíveis no desktop e um no celular.
+
+A área da foto tem um contexto de camadas isolado: fundo, personagem atrás, foto do produto, personagem na frente e etiqueta do código. A alternância de profundidade é discreta e sincronizada com o percurso. O contorno real do produto só esconde o personagem quando a imagem tem canal alfa transparente. Uma imagem com fundo branco ou outro fundo opaco esconde a camada de trás inteira. O código não remove fundos nem altera os arquivos de imagem.
+
+`SantaSleigh.tsx` compõe Papai Noel, trenó, duas renas com patas articuladas, arreios e pequenos brilhos. No Natal essa composição substitui os personagens soltos das margens e atravessa a página de uma ponta à outra; o sentido alterna entre as cenas. No celular o trenó é menor. Os personagens dos cards continuam independentes, com entradas desencontradas.

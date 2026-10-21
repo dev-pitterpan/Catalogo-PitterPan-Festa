@@ -2,6 +2,7 @@
 
 import type { CatalogPageData } from "../types/catalog";
 import LoadingState from "./LoadingState";
+import SeasonalEffects from "./seasonal/SeasonalEffects";
 import { useCatalogPage } from "../hooks/useCatalogPage";
 import { publicCatalogUrl } from "../lib/routes";
 import { useEffect, useMemo, useState } from "react";
@@ -109,6 +110,13 @@ export default function CatalogApp({
     <div
       className={`catalog-page theme-${catalog.slug}${isClient ? " client-page" : ""}`}
     >
+      {isClient && (
+        <SeasonalEffects
+          key={catalog.slug}
+          slug={catalog.slug}
+          suspended={cartOpen || menuOpen}
+        />
+      )}
       {quote.storageError && (
         <p role="alert">
           Não foi possível salvar o carrinho neste navegador. A seleção atual

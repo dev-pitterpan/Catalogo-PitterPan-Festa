@@ -8,6 +8,7 @@
 @import "./styles/catalog/themes/festa-junina.css";
 @import "./styles/catalog/themes/pascoa.css";
 @import "./styles/pages/gestor-home.css";
+@import "./styles/catalog/seasonal-effects.css";
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 @source './';

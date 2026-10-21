@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getCatalog, getConfig, getManifest } from "../../../server/catalogs";
+import { getSelectedProducts, getConfig } from "../../../server/catalogs";
 import { CheckoutError, prepareCheckout } from "../../../lib/checkout";
 
 export const runtime = "nodejs";
@@ -35,13 +35,13 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   try {
-    const [manifest, config] = await Promise.all([getManifest(), getConfig()]);
-    const catalogs = await Promise.all(
-      manifest.map(({ slug }) => getCatalog(slug)),
-    );
+    const [products, config] = await Promise.all([
+      getSelectedProducts(parsed.data.items.map((item) => item.id)),
+      getConfig(),
+    ]);
     const checkoutUrl = prepareCheckout(
       parsed.data.items,
-      catalogs.flatMap((catalog) => catalog?.products || []),
+      products,
       config.brand.website,
     );
     return Response.json(

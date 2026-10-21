@@ -16,7 +16,11 @@ export default function ManagerHome({
       >
         <img
           className="catalog-card__image"
-          src={`/assets/images/catalogs/${slug}/banner.webp`}
+          src={
+            slug === "todos"
+              ? "/assets/images/brand/catalog-banner.svg"
+              : `/assets/images/catalogs/${slug}/banner.webp`
+          }
           alt=""
         />
         <div className="catalog-card__content">

@@ -1,8 +1,16 @@
 import { z } from "zod";
 
 // Valida os JSONs na entrada. TypeScript sozinho não valida dados recebidos em runtime.
+const money = z.string().regex(/^\d{1,10}(\.\d{1,2})?$/);
 export const productSchema = z.object({
   id: z.string(),
+  price: money.optional(),
+  compareAtPrice: money.optional(),
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .optional(),
+  vendor: z.string().optional(),
   name: z.string(),
   category: z.string().optional(),
   description: z.string(),
@@ -28,6 +36,18 @@ export const catalogSchema = z.object({
   description: z.string(),
   banner: z.string(),
   products: z.array(productSchema),
+  pagination: z
+    .object({
+      page: z.number().int(),
+      pageSize: z.number().int(),
+      total: z.number().int(),
+      pages: z.number().int(),
+      vendors: z.array(z.string()).default([]),
+      categories: z.array(
+        z.object({ name: z.string(), count: z.number().int() }),
+      ),
+    })
+    .optional(),
 });
 export const configSchema = z.object({
   brand: z.object({ name: z.string(), website: z.url() }),

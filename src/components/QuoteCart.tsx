@@ -1,3 +1,4 @@
+import { formatMoney, formatMinor, moneyToMinor } from "../lib/money";
 // O painel restaura o foco ao fechar e mantém o teclado dentro dele enquanto está aberto.
 import {
   Trash2,
@@ -6,7 +7,7 @@ import {
   MessageCircle,
   ArrowUpRight,
 } from "lucide-react";
-import type { QuoteItem } from "../types/catalog";
+import type { Product, QuoteItem } from "../types/catalog";
 interface Props {
   selected: QuoteItem[];
   open: boolean;
@@ -30,6 +31,60 @@ export default function QuoteCart({
   onClear,
   onSend,
 }: Props) {
+  const [currentPrices, setCurrentPrices] = useState<Record<string, Product>>(
+    {},
+  );
+  const [priceStatus, setPriceStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
+  const selectedIds = JSON.stringify(selected.map((item) => item.id));
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    setPriceStatus("loading");
+    setCurrentPrices({});
+    fetch("/api/cart/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: JSON.parse(selectedIds) }),
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error();
+        return response.json();
+      })
+      .then((result: { products: Product[] }) => {
+        setCurrentPrices(
+          Object.fromEntries(
+            result.products.map((product) => [product.id, product]),
+          ),
+        );
+        setPriceStatus("ready");
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setPriceStatus("error");
+      });
+    return () => controller.abort();
+  }, [open, selectedIds]);
+  const hasTotal =
+    selected.length > 0 &&
+    priceStatus === "ready" &&
+    selected.every(
+      (item) =>
+        currentPrices[item.id]?.price !== undefined &&
+        currentPrices[item.id]?.currency === "BRL",
+    );
+  const computedSubtotal = hasTotal
+    ? selected.reduce(
+        (sum, item) =>
+          sum + moneyToMinor(currentPrices[item.id].price!) * item.quantity,
+        0,
+      )
+    : null;
+  const subtotal =
+    computedSubtotal !== null && Number.isSafeInteger(computedSubtotal)
+      ? computedSubtotal
+      : null;
   const [buying, setBuying] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   // Resolve os IDs atuais no servidor: carrinhos antigos podem não ter a variante salva.
@@ -117,6 +172,16 @@ export default function QuoteCart({
                 <span className="quote-item__code">{item.id}</span>
                 <strong>{item.name}</strong>
                 <small>{item.category}</small>
+                {priceStatus === "ready" &&
+                  currentPrices[item.id]?.price !== undefined && (
+                    <small>
+                      {formatMoney(
+                        currentPrices[item.id].price!,
+                        currentPrices[item.id].currency,
+                      )}{" "}
+                      por unidade
+                    </small>
+                  )}
                 <Quantity
                   cart
                   name={item.name}
@@ -232,9 +297,19 @@ export default function QuoteCart({
 
         <footer className="quote-cart__footer">
           <div className="quote-cart__footer-copy">
-            <span>Sem preços no catálogo</span>
+            <span>
+              {priceStatus === "loading"
+                ? "Consultando valores…"
+                : priceStatus === "error"
+                  ? "Não foi possível consultar os valores"
+                  : "Valores da última sincronização"}
+            </span>
+            {subtotal !== null && (
+              <strong>Subtotal estimado: {formatMinor(subtotal)}</strong>
+            )}
             <strong>
-              Preços, estoque e frete serão confirmados na Shopify.
+              Preços, descontos, estoque e frete serão confirmados no checkout
+              Shopify.
             </strong>
           </div>
 

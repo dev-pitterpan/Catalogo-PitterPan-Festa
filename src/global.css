@@ -27,3 +27,119 @@
   height: 20px;
   flex-shrink: 0;
 }
+
+.catalog-filters,
+.catalog-pagination {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  flex-wrap: wrap;
+}
+.catalog-filters label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.catalog-filters select,
+.catalog-pagination button {
+  border: 1px solid var(--catalog-line);
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--catalog-surface);
+  color: var(--catalog-text);
+  font: inherit;
+}
+.catalog-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.catalog-pagination button:focus-visible,
+.catalog-filters select:focus-visible {
+  outline: 2px solid var(--catalog-accent);
+  outline-offset: 3px;
+}
+
+.product-card__media > img {
+  object-fit: contain;
+}
+
+.category-navigation {
+  padding: 0.9rem 0.7rem;
+  border-top: 1px solid #ffffff1a;
+  margin-top: 0.8rem;
+}
+.category-navigation button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.6rem 0.4rem;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  font-size: 0.75rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 0.45rem;
+}
+.category-navigation button[aria-pressed="true"] {
+  background: #279aff22;
+  color: #9ed6ff;
+}
+.category-navigation button:focus-visible {
+  outline: 2px solid #279aff;
+}
+.category-navigation input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.6rem;
+  border: 1px solid #ffffff25;
+  border-radius: 0.5rem;
+  background: #0e1824;
+  color: #fff;
+  margin: 0.6rem 0;
+}
+.category-navigation ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 45vh;
+  overflow: auto;
+}
+.category-navigation__pages {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.category-navigation__heading {
+  font-weight: 700 !important;
+}
+.product-price {
+  display: grid;
+  gap: 0.2rem;
+  margin-bottom: 0.8rem;
+}
+.product-price del {
+  font-size: 0.7rem;
+  opacity: 0.65;
+}
+.product-price strong {
+  font-size: 1.2rem;
+  color: var(--catalog-text);
+}
+.product-price small {
+  font-size: 0.65rem;
+  color: var(--catalog-muted);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

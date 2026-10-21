@@ -16,7 +16,9 @@ try {
 // Preserva os valores existentes e acrescenta somente chaves ausentes.
 // Não imprime credenciais nem modifica o arquivo de exemplo.
 const keys = new Set(
-  [...existing.matchAll(/^\s*(?:export\s+)?([A-Z][A-Z0-9_]*)\s*=/gm)].map((match) => match[1]),
+  [...existing.matchAll(/^\s*(?:export\s+)?([A-Z][A-Z0-9_]*)\s*=/gm)].map(
+    (match) => match[1],
+  ),
 );
 const missing: string[] = [];
 let comments: string[] = [];
@@ -33,7 +35,10 @@ for (const line of template.split(/\r?\n/)) {
   comments = [];
 }
 if (missing.length) {
-  await appendFile(envPath, "\n# Variáveis acrescentadas pelo env:setup\n" + missing.join("\n") + "\n");
+  await appendFile(
+    envPath,
+    "\n# Variáveis acrescentadas pelo env:setup\n" + missing.join("\n") + "\n",
+  );
   console.log(".env atualizado sem substituir os valores existentes.");
 } else {
   console.log(".env já contém todas as variáveis do modelo.");

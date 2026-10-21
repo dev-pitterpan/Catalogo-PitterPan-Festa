@@ -88,6 +88,35 @@ try {
     (await fetch(base + "/api/health/", { method: "POST" })).status,
     405,
   );
+  const pageResponse = await fetch(base + "/api/catalogs/halloween/?q=8936");
+  assert.equal(pageResponse.status, 200);
+  const pageData = await pageResponse.json();
+  assert.ok(pageData.catalog.products.some((product) => product.id === "8936"));
+  assert.ok(pageData.catalog.products.length <= 48);
+  assert.equal(
+    (await fetch(base + "/api/catalogs/halloween/?page=-1")).status,
+    400,
+  );
+  assert.equal(
+    (await fetch(base + "/api/categories/halloween/?q=mascara")).status,
+    200,
+  );
+  const cart = await fetch(base + "/api/cart/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids: ["8936"] }),
+  });
+  assert.equal(cart.status, 200);
+  assert.equal((await cart.json()).products[0].id, "8936");
+  assert.equal(
+    (
+      await fetch(
+        base +
+          "/_next/image/?url=%2Fassets%2Fimages%2Fcatalogs%2Fhalloween%2F8936.webp&w=640&q=75",
+      )
+    ).status,
+    200,
+  );
   const checkout = (items) =>
     fetch(base + "/api/checkout/", {
       method: "POST",

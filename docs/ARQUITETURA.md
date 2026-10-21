@@ -39,3 +39,9 @@ A próxima fase deve separar autenticação, permissões, produtos, coleções e
 A escolha do banco depende do uso: SQLite para um único servidor local, ou PostgreSQL para operação compartilhada. Uploads precisam validar formato/tamanho e usar um diretório próprio de mídia, fora de `.next` e do código. Não há login, upload ou gravação nesta versão.
 
 A validação de existência do catálogo ocorre antes da resposta da página, sem boundary global de carregamento que antecipe o streaming. Isso preserva o status HTTP 404 para slugs inexistentes. O estado de carregamento é um componente de interface.
+
+## Catálogo com milhares de itens
+
+A fonte configurável em `src/server/catalogs.ts` mantém os JSONs como modo inicial e usa PostgreSQL quando `CATALOG_DATA_SOURCE=postgres`. `src/server/database/` concentra schema, consultas indexadas, departamentos e troca transacional de versão. `src/server/shopify/` contém cliente Admin, validação de mídia e normalização de variantes. Os scripts `shopify-sync`, `shopify-report` e `shopify-publish` separam importação, auditoria e ativação. Consulte [SHOPIFY.md](SHOPIFY.md) antes de ativar.
+
+Os endpoints GET de catálogo/categorias devolvem páginas limitadas; a API de carrinho lê apenas os SKUs selecionados. Credenciais e acesso ao banco permanecem no servidor. Importação e migração são comandos locais, não rotas públicas. Não há painel de escrita autenticado implementado. O número de cards renderizados fica limitado a 48, inclusive com efeitos sazonais ligados.

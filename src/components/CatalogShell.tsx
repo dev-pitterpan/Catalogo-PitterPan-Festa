@@ -1,3 +1,4 @@
+import CategoryNavigation from "./navigation/CategoryNavigation";
 import { ChevronLeft, MessageCircle, Search } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
@@ -14,6 +15,8 @@ interface Props {
   query: string;
   onSearch: (query: string) => void;
   count: number;
+  selectedCategory: string;
+  onCategorySelect: (category: string) => void;
   sharebar: ReactNode;
   children: ReactNode;
 }
@@ -29,6 +32,8 @@ export default function CatalogShell({
   query,
   onSearch,
   count,
+  selectedCategory,
+  onCategorySelect,
   sharebar,
   children,
 }: Props) {
@@ -134,8 +139,14 @@ export default function CatalogShell({
         </div>
 
         <nav className="sidebar-nav" aria-label="Escolha um catálogo">
-          <p className="nav-label">Catálogos sazonais</p>
+          <p className="nav-label">Coleções e catálogo geral</p>
           <div className="catalog-nav-list">{navigation}</div>
+          <CategoryNavigation
+            key={slug}
+            slug={slug}
+            selected={selectedCategory}
+            onSelect={onCategorySelect}
+          />
         </nav>
 
         <footer className="sidebar-signature">

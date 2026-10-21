@@ -79,3 +79,7 @@ As cenas alternam quatro composições, com alturas diferentes e espelhamento en
 A área da foto tem um contexto de camadas isolado: fundo, personagem atrás, foto do produto, personagem na frente e etiqueta do código. A alternância de profundidade é discreta e sincronizada com o percurso. O contorno real do produto só esconde o personagem quando a imagem tem canal alfa transparente. Uma imagem com fundo branco ou outro fundo opaco esconde a camada de trás inteira. O código não remove fundos nem altera os arquivos de imagem.
 
 `SantaSleigh.tsx` compõe Papai Noel, trenó, duas renas com patas articuladas, arreios e pequenos brilhos. No Natal essa composição substitui os personagens soltos das margens e atravessa a página de uma ponta à outra; o sentido alterna entre as cenas. No celular o trenó é menor. Os personagens dos cards continuam independentes, com entradas desencontradas.
+
+## Importação e preços
+
+Para catálogos em PostgreSQL, siga [SHOPIFY.md](SHOPIFY.md): `shopify:sync` prepara, `shopify:report` permite revisar e `shopify:publish` ativa. JSONs locais não atualizam a fonte PostgreSQL. Departamentos ficam em `config/catalog-departments.json` e associações sazonais em `config/shopify-collections.json`. Atualizações da configuração exigem deploy; alterações no mapeamento de coleções exigem nova importação. Faça backup do banco e monitore armazenamento, latência e custos de imagem.

@@ -9,6 +9,10 @@ export interface Product {
   siteUrl?: string;
   /** ID numérico da variante Shopify, diferente do SKU e do ID do produto. */
   shopifyVariantId?: string;
+  price?: string;
+  compareAtPrice?: string;
+  currency?: string;
+  vendor?: string;
 }
 export interface CatalogSummary {
   name: string;
@@ -24,6 +28,14 @@ export interface Catalog {
   description: string;
   banner: string;
   products: Product[];
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    pages: number;
+    categories: { name: string; count: number }[];
+    vendors: string[];
+  };
 }
 export interface SiteConfig {
   brand: { name: string; website: string };

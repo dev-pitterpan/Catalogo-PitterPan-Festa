@@ -5,14 +5,13 @@ import LoadingState from "./LoadingState";
 import SeasonalEffects from "./seasonal/SeasonalEffects";
 import { useCatalogPage } from "../hooks/useCatalogPage";
 import { publicCatalogUrl } from "../lib/routes";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import CatalogShell from "../components/CatalogShell";
 import ProductCard from "../components/ProductCard";
 import QuoteCart from "../components/QuoteCart";
 import ShareBar from "../components/ShareBar";
 import ManagerHome from "./manager/ManagerHome";
 import { useQuote } from "../hooks/useQuote";
-import { productSearchScore } from "../lib/search";
 import { whatsappUrl } from "../lib/quote";
 
 export default function CatalogApp({
@@ -20,9 +19,35 @@ export default function CatalogApp({
 }: {
   initialData: CatalogPageData;
 }) {
-  const { pathname, isClient, catalogs, catalog, config, loading, error } =
-    useCatalogPage(initialData);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
+  const [vendor, setVendor] = useState("");
+  const [sort, setSort] = useState<"name" | "price-asc" | "price-desc">("name");
+  const {
+    pathname,
+    isClient,
+    catalogs,
+    catalog,
+    config,
+    loading,
+    error,
+    fetching,
+  } = useCatalogPage(initialData, {
+    q: debouncedQuery,
+    category,
+    page,
+    vendor,
+    sort,
+  });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -39,6 +64,11 @@ export default function CatalogApp({
   }, []);
   useEffect(() => {
     setQuery("");
+    setDebouncedQuery("");
+    setCategory("");
+    setVendor("");
+    setSort("name");
+    setPage(1);
     setMenuOpen(false);
     setCartOpen(false);
   }, [pathname]);
@@ -71,18 +101,7 @@ export default function CatalogApp({
       window.removeEventListener("resize", resize);
     };
   }, []);
-  const products = useMemo(
-    () =>
-      (catalog?.products || [])
-        .map((product) => ({
-          product,
-          score: productSearchScore(product, query, catalog?.name),
-        }))
-        .filter((item) => item.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .map((item) => item.product),
-    [catalog, query],
-  );
+  const products = catalog?.products || [];
   if (loading) return <LoadingState />;
   if (error)
     return (
@@ -134,13 +153,78 @@ export default function CatalogApp({
         onCollapse={() => {
           if (innerWidth > 980) setCollapsed((value) => !value);
         }}
+        onCategorySelect={(value) => {
+          setCategory(value);
+          setPage(1);
+          setMenuOpen(false);
+        }}
+        selectedCategory={category}
         query={query}
         onSearch={setQuery}
-        count={products.length}
+        count={catalog.pagination?.total ?? products.length}
         sharebar={
           isClient ? null : <ShareBar catalog={catalog} url={publicUrl} />
         }
       >
+        <div className="catalog-filters">
+          <label>
+            Categoria
+            <select
+              value={category}
+              onChange={(event) => {
+                setCategory(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Todas as categorias</option>
+              {category &&
+                !catalog.pagination?.categories.some(
+                  (item) => item.name === category,
+                ) && <option value={category}>{category}</option>}
+              {catalog.pagination?.categories.map((item) => (
+                <option key={item.name} value={item.name}>
+                  {item.name} ({item.count})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Marca
+            <select
+              value={vendor}
+              onChange={(event) => {
+                setVendor(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Todas as marcas</option>
+              {catalog.pagination?.vendors.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Ordenar
+            <select
+              value={sort}
+              onChange={(event) => {
+                setSort(event.target.value as typeof sort);
+                setPage(1);
+              }}
+            >
+              <option value="name">Nome</option>
+              <option value="price-asc">Menor preço</option>
+              <option value="price-desc">Maior preço</option>
+            </select>
+          </label>
+          <span role="status">
+            {fetching
+              ? "Atualizando produtos…"
+              : `${catalog.pagination?.total ?? products.length} produtos encontrados`}
+          </span>
+        </div>
         {products.length ? (
           products.map((product) => (
             <ProductCard
@@ -162,6 +246,29 @@ export default function CatalogApp({
             <strong>Nenhum item encontrado.</strong>
             <span>Tente outro nome, categoria ou uma palavra parecida.</span>
           </div>
+        )}
+        {catalog.pagination && (
+          <nav className="catalog-pagination" aria-label="Páginas de produtos">
+            <button
+              type="button"
+              disabled={fetching || catalog.pagination.page <= 1}
+              onClick={() => setPage(catalog.pagination!.page - 1)}
+            >
+              Anterior
+            </button>
+            <span>
+              Página {catalog.pagination.page} de {catalog.pagination.pages}
+            </span>
+            <button
+              type="button"
+              disabled={
+                fetching || catalog.pagination.page >= catalog.pagination.pages
+              }
+              onClick={() => setPage(catalog.pagination!.page + 1)}
+            >
+              Próxima
+            </button>
+          </nav>
         )}
       </CatalogShell>
       {isClient && (

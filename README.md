@@ -17,7 +17,7 @@ Abra `http://127.0.0.1:3000/`. O ZIP inclui `.env` com valores locais e `.env.ex
 Copy-Item .env.example .env
 ```
 
-A instalação inicial requer internet para baixar os pacotes npm. Depois de instaladas as dependências, a aplicação, os estilos, ícones e imagens são servidos localmente, sem CDN e sem fontes remotas. Site da loja e WhatsApp continuam sendo links externos.
+A instalação inicial requer internet para baixar os pacotes npm. Depois de instaladas as dependências, o código, os estilos e ícones são servidos pela aplicação, sem bibliotecas via CDN e sem fontes remotas. No modo JSON, as fotos são locais; no modo Shopify, as fotos são obtidas pelo servidor da origem Shopify e servidas com cache. Site da loja e WhatsApp continuam sendo links externos.
 
 ## Compilar e executar a versão de produção local
 
@@ -30,16 +30,16 @@ O Next.js gera `.next/`, e o processo Node atende a aplicação. Não abra arqui
 
 ## Tecnologias implementadas
 
-| Tecnologia | Uso |
-| --- | --- |
-| Next.js App Router | Páginas, layouts, metadados e renderização no servidor |
-| React + TypeScript estrito | Interface e contratos tipados |
-| Tailwind CSS + PostCSS | Estilos compilados localmente e tokens da marca |
-| Lucide React | Ícones de interface locais |
-| TanStack Query | Consultas e cache da interface |
-| Zod | Validação de JSON e ambiente |
-| Node.js | Execução local e servidor do Next.js |
-| Prettier | Formatação do projeto |
+| Tecnologia                 | Uso                                                    |
+| -------------------------- | ------------------------------------------------------ |
+| Next.js App Router         | Páginas, layouts, metadados e renderização no servidor |
+| React + TypeScript estrito | Interface e contratos tipados                          |
+| Tailwind CSS + PostCSS     | Estilos compilados localmente e tokens da marca        |
+| Lucide React               | Ícones de interface locais                             |
+| TanStack Query             | Consultas e cache da interface                         |
+| Zod                        | Validação de JSON e ambiente                           |
+| Node.js                    | Execução local e servidor do Next.js                   |
+| Prettier                   | Formatação do projeto                                  |
 
 Vite e React Router foram removidos. A navegação usa `next/link` e `next/navigation`.
 
@@ -79,12 +79,12 @@ docs/                      Arquitetura e manutenção
 
 ## Configuração de ambiente
 
-| Variável | Função | Padrão |
-| --- | --- | --- |
-| `HOST` | Endereço local para desenvolvimento e produção | `127.0.0.1` |
-| `PORT` | Porta do servidor | `3000` |
-| `NEXT_PUBLIC_CATALOG_URL` | Domínio público para compartilhamento | Configuração em JSON |
-| `NEXT_TELEMETRY_DISABLED` | Desativa telemetria do framework | `1` |
+| Variável                  | Função                                         | Padrão               |
+| ------------------------- | ---------------------------------------------- | -------------------- |
+| `HOST`                    | Endereço local para desenvolvimento e produção | `127.0.0.1`          |
+| `PORT`                    | Porta do servidor                              | `3000`               |
+| `NEXT_PUBLIC_CATALOG_URL` | Domínio público para compartilhamento          | Configuração em JSON |
+| `NEXT_TELEMETRY_DISABLED` | Desativa telemetria do framework               | `1`                  |
 
 O launcher carrega `.env` e valida endereço e porta. O Next.js também tem suporte aos arquivos de ambiente. Variáveis do sistema têm prioridade sobre `.env`. Reinicie após alterar o ambiente. Variáveis `NEXT_PUBLIC_` são públicas e incorporadas à compilação do navegador; mudanças na produção exigem recompilar. Nunca use esse prefixo para senhas ou tokens. `.env` é ignorado pelo Git; `.env.example` é versionável.
 
@@ -92,16 +92,16 @@ Não foram criados segredos fictícios de banco ou autenticação. O painel de e
 
 ## Comandos
 
-| Comando | Função |
-| --- | --- |
-| `npm run dev` | Servidor Next.js de desenvolvimento |
-| `npm run build` | Compilação de produção com verificação de tipos |
-| `npm start` | Servidor Next.js da versão compilada |
-| `npm run typecheck` | Verificação TypeScript |
-| `npm test` | Busca, orçamento, compatibilidade e dados |
-| `npm run test:server` | Verificação HTTP e HTML das 12 rotas após compilar |
-| `npm run format` | Formatação do código |
-| `npm run format:check` | Conferência de formatação |
+| Comando                | Função                                             |
+| ---------------------- | -------------------------------------------------- |
+| `npm run dev`          | Servidor Next.js de desenvolvimento                |
+| `npm run build`        | Compilação de produção com verificação de tipos    |
+| `npm start`            | Servidor Next.js da versão compilada               |
+| `npm run typecheck`    | Verificação TypeScript                             |
+| `npm test`             | Busca, orçamento, compatibilidade e dados          |
+| `npm run test:server`  | Verificação HTTP e HTML das 12 rotas após compilar |
+| `npm run format`       | Formatação do código                               |
+| `npm run format:check` | Conferência de formatação                          |
 
 ## Dados e imagens
 
@@ -113,6 +113,10 @@ As imagens originais permanecem em `public/assets/images/catalogs/`. Substitua-a
 
 Catálogos públicos, gestor de visualização/compartilhamento, busca, quantidades, orçamento persistido e mensagem agrupada para WhatsApp. O carrinho antigo continua compatível quando acessado na mesma origem (protocolo, domínio e porta). Mudar a porta não transporta automaticamente dados do navegador.
 
-A próxima etapa é o painel autenticado para editar produtos e trocar fotos, com API de gravação, banco e armazenamento de mídia. Esses recursos ainda não fazem parte desta entrega. O catálogo atual continua usando JSON como fonte.
+O painel autenticado para editar produtos e trocar fotos ainda será implementado. O banco e a importação Shopify já são opcionais; JSON é a fonte inicial até a configuração descrita abaixo.
 
 A inspeção visual e as interações completas no navegador devem ser conferidas localmente; o navegador automatizado não estava disponível neste ambiente.
+
+## Catálogo em escala e Shopify
+
+A estrutura opcional de PostgreSQL inclui importação Shopify em lotes, versões com publicação transacional, preços por variante, busca/filtros no servidor, grade de 48 itens e navegação de categorias por departamento com pesquisa/paginação. O modo inicial continua usando os JSONs existentes. A ativação depende de banco e credenciais reais; consulte [docs/SHOPIFY.md](docs/SHOPIFY.md) para a sequência completa e os limites. `npm run test:scale` valida 13.518 variantes simuladas, sem chamar a loja real.

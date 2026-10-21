@@ -1,0 +1,6 @@
+{
+  "departments": [
+    {"id":"confeitaria","label":"Confeitaria","categories":["SUBSTITUA pelo tipo exato de produto da Shopify"]},
+    {"id":"baloes","label":"Balões","categories":[]}
+  ]
+}

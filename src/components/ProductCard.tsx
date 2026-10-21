@@ -1,3 +1,5 @@
+import { formatMoney, moneyToMinor } from "../lib/money";
+import Image from "next/image";
 import { ShoppingCart, ArrowUpRight } from "lucide-react";
 import type { Product } from "../types/catalog";
 export const asset = (path?: string) =>
@@ -61,7 +63,14 @@ export default function ProductCard({
       className={`product-card ${isClient ? "product-card--selectable" : ""} ${quantity ? "is-selected" : ""}`}
     >
       <div className="product-card__media">
-        <img src={asset(product.image)} alt={product.name} loading="lazy" />
+        <Image
+          src={asset(product.image)}
+          alt={product.name}
+          width={640}
+          height={640}
+          sizes="(max-width: 760px) 50vw, (max-width: 980px) 33vw, 20vw"
+          loading="lazy"
+        />
         <span className="product-code">{product.id}</span>
       </div>
       <div className="product-card__body">
@@ -70,6 +79,19 @@ export default function ProductCard({
         </span>
         <h2>{product.name}</h2>
         <p>{product.description}</p>
+        {product.price !== undefined && (
+          <div className="product-price">
+            {product.compareAtPrice &&
+              moneyToMinor(product.compareAtPrice) >
+                moneyToMinor(product.price) && (
+                <del>
+                  {formatMoney(product.compareAtPrice, product.currency)}
+                </del>
+              )}
+            <strong>{formatMoney(product.price, product.currency)}</strong>
+            <small>Preço por unidade / variante</small>
+          </div>
+        )}
         {isClient ? (
           <div className="product-card__actions">
             {quantity ? (

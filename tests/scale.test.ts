@@ -67,14 +67,14 @@ test("13.518 registros: paginação, separação de coleções, busca, checkout 
     await publishSnapshot(db, first);
     const query = catalogQuerySchema.parse({});
     const page = await findPage(db, "todos", query);
-    assert.equal(page.products.length, 48);
+    assert.equal(page.products.length, 20);
     assert.equal(page.pagination.total, 13518);
-    assert.equal(page.pagination.pages, 282);
+    assert.equal(page.pagination.pages, 676);
     const next = await findPage(db, "todos", { ...query, page: 2 });
     assert.equal(
       new Set([...page.products, ...next.products].map((product) => product.id))
         .size,
-      96,
+      40,
     );
     const cheap = await findPage(db, "todos", { ...query, sort: "price-asc" });
     const expensive = await findPage(db, "todos", {
@@ -104,8 +104,8 @@ test("13.518 registros: paginação, separação de coleções, busca, checkout 
     assert.equal(selected.length, 2);
     assert.equal(selected[1].shopifyVariantId !== undefined, true);
     const last = await findPage(db, "todos", { ...query, page: 999 });
-    assert.equal(last.pagination.page, 282);
-    assert.equal(last.products.length, 30);
+    assert.equal(last.pagination.page, 676);
+    assert.equal(last.products.length, 18);
     await assert.rejects(() => stageItems(db, first, [make(1)]));
     await db.query(
       "INSERT INTO catalog_imports(id,status,store_domain) VALUES($1,'ready','test.myshopify.com')",
@@ -129,7 +129,7 @@ test("13.518 registros: paginação, separação de coleções, busca, checkout 
     await publishSnapshot(db, second, true);
     assert.equal((await findPage(db, "todos", query)).pagination.total, 1);
     console.log(
-      "Base simulada: 13.518 variantes, 282 páginas, 48 itens por resposta; publicação incompleta bloqueada.",
+      "Base simulada: 13.518 variantes, 676 páginas, 20 itens por resposta; publicação incompleta bloqueada.",
     );
   } finally {
     await db.close();

@@ -4,6 +4,13 @@ import { z } from "zod";
 const money = z.string().regex(/^\d{1,10}(\.\d{1,2})?$/);
 export const productSchema = z.object({
   id: z.string(),
+  shopifyProductId: z.string().optional(),
+  sku: z.string().optional(),
+  handle: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  collections: z.array(z.string()).optional(),
+  inventoryQuantity: z.number().int().nullable().optional(),
+  availableForSale: z.boolean().optional(),
   price: money.optional(),
   compareAtPrice: money.optional(),
   currency: z

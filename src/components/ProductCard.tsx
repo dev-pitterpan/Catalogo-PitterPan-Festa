@@ -2,8 +2,11 @@ import { formatMoney, moneyToMinor } from "../lib/money";
 import Image from "next/image";
 import { ShoppingCart, ArrowUpRight } from "lucide-react";
 import type { Product } from "../types/catalog";
+import { useState } from "react";
 export const asset = (path?: string) =>
-  "/" + String(path || "").replace(/^(\.\.\/|\.\/|\/)+/, "");
+  path?.startsWith("https://")
+    ? path
+    : "/" + String(path || "").replace(/^(\.\.\/|\.\/|\/)+/, "");
 export function Quantity({
   name,
   quantity,
@@ -58,6 +61,29 @@ export default function ProductCard({
   onChange: (delta: number) => void;
   website: string;
 }) {
+  const [buying, setBuying] = useState(false);
+  const [buyError, setBuyError] = useState("");
+  async function buyNow() {
+    if (buying) return;
+    setBuying(true);
+    setBuyError("");
+    try {
+      const response = await fetch("/api/checkout/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: [{ id: product.id, quantity: Math.max(1, quantity) }],
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Não foi possível preparar a compra.");
+      window.location.assign(result.checkoutUrl);
+    } catch (error) {
+      setBuyError(error instanceof Error ? error.message : "Tente novamente.");
+      setBuying(false);
+    }
+  }
   return (
     <article
       className={`product-card ${isClient ? "product-card--selectable" : ""} ${quantity ? "is-selected" : ""}`}
@@ -65,13 +91,14 @@ export default function ProductCard({
       <div className="product-card__media">
         <Image
           src={asset(product.image)}
+          unoptimized={product.image.startsWith("https://")}
           alt={product.name}
           width={640}
           height={640}
           sizes="(max-width: 760px) 50vw, (max-width: 980px) 33vw, 20vw"
           loading="lazy"
         />
-        <span className="product-code">{product.id}</span>
+        <span className="product-code">{product.sku || product.id}</span>
       </div>
       <div className="product-card__body">
         <span className="product-category">
@@ -91,6 +118,23 @@ export default function ProductCard({
             <strong>{formatMoney(product.price, product.currency)}</strong>
             <small>Preço por unidade / variante</small>
           </div>
+        )}
+        {product.shopifyVariantId && (
+          <button
+            type="button"
+            className="product-buy-button"
+            disabled={buying}
+            onClick={buyNow}
+          >
+            <ShoppingCart size={16} aria-hidden="true" />
+            {buying ? "Preparando checkout…" : "Comprar no site"}
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </button>
+        )}
+        {buyError && (
+          <p className="product-buy-error" role="alert">
+            {buyError}
+          </p>
         )}
         {isClient ? (
           <div className="product-card__actions">

@@ -1,5 +1,7 @@
 import { UserRound } from "lucide-react";
 import Link from "next/link";
+import CatalogIcon, { seasonalSlugs } from "../navigation/CatalogIcon";
+import { catalogVisual } from "../../lib/catalog/visual";
 import type { CatalogSummary } from "../../types/catalog";
 export default function ManagerHome({
   catalogs,
@@ -17,15 +19,15 @@ export default function ManagerHome({
         <img
           className="catalog-card__image"
           src={
-            slug === "todos"
-              ? "/assets/images/brand/catalog-banner.svg"
+            !seasonalSlugs.has(slug)
+              ? catalogVisual(slug).banner
               : `/assets/images/catalogs/${slug}/banner.webp`
           }
           alt=""
         />
         <div className="catalog-card__content">
           <span className="catalog-card__icon">
-            <img src={`/assets/icons/catalogs/${slug}.svg`} alt="" />
+            <CatalogIcon slug={slug} />
           </span>
           <h2>{catalog.name}</h2>
           <p>{catalog.description}</p>

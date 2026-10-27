@@ -1,0 +1,663 @@
+{
+  "checkedAt": "2026-10-27T20:40:28.370Z",
+  "pages": 136,
+  "scannedVariants": 13515,
+  "publicProducts": 11007,
+  "publicVariants": 11007,
+  "excludedVariants": 2508,
+  "duplicateVariantIds": 0,
+  "emptySkus": 0,
+  "repeatedSkus": 622,
+  "missingImages": 0,
+  "categories": {
+    "Artesanato": 581,
+    "Festas": 5048,
+    "Embalagens": 511,
+    "Adornos": 576,
+    "Utilidades": 972,
+    "Guloseimas": 1143,
+    "Confeitaria": 688,
+    "Festa Junina": 199,
+    "Halloween": 467,
+    "Natal": 140,
+    "Chocolates": 177,
+    "Pascoa": 411,
+    "Copa Do Mundo": 42,
+    "St Patrick": 9,
+    "Carnaval": 14,
+    "Sem categoria": 4,
+    "Fantasias": 25
+  },
+  "vendors": {
+    "Acrilex": 109,
+    "Aluminios Vulcao": 2,
+    "Aquarela": 71,
+    "Ponto Das Festas": 836,
+    "Kitok": 50,
+    "Amendoim Andreia": 13,
+    "Adams": 40,
+    "Amendupa": 37,
+    "Popper": 315,
+    "Pic Pic": 100,
+    "Arcolor": 24,
+    "Amor Az": 1,
+    "Bazar": 25,
+    "Barry Callebaut": 68,
+    "Embrast": 41,
+    "Alumiformas": 1,
+    "Arcor": 27,
+    "Ydh": 145,
+    "Art Latex": 141,
+    "Biatex": 17,
+    "Chamex": 1,
+    "Neugebauer": 65,
+    "Santa Fe": 26,
+    "Piffer": 186,
+    "Nyr": 33,
+    "Mult Epocas": 29,
+    "Argila Catarinense": 1,
+    "Delfix": 6,
+    "Beija Flor Doces": 3,
+    "Comercial Wei": 222,
+    "Bel": 13,
+    "Bluestar": 162,
+    "Klf Festas": 54,
+    "Bpg": 27,
+    "Bonus": 3,
+    "Panda": 23,
+    "Silver Plastic": 666,
+    "Hero Fun": 2,
+    "Qfesta": 16,
+    "Br Festas": 15,
+    "Aluminios Santa Catarina": 96,
+    "Florestal": 52,
+    "Real Seda": 30,
+    "Plumacor": 5,
+    "Brasilflex": 112,
+    "Bwb Embalagens": 534,
+    "Brinsilios": 50,
+    "Buschle": 19,
+    "Riclan": 33,
+    "Off Paper": 24,
+    "Cromus": 282,
+    "Compre Util": 17,
+    "Cacau Foods": 45,
+    "Copozan": 23,
+    "Regina": 910,
+    "Festcolor": 719,
+    "Garoto": 44,
+    "Junco": 103,
+    "Masquerade": 1,
+    "In Loco Foods": 3,
+    "Carber": 5,
+    "Partiu Festas": 207,
+    "Tres Triangulos": 49,
+    "Curifest": 44,
+    "Darnel": 21,
+    "Quero Mais": 20,
+    "Decora": 135,
+    "Doces Oliveira": 15,
+    "Doces Ouro De Minas": 11,
+    "Docile": 69,
+    "Ki Kakau": 10,
+    "Dori": 67,
+    "Eticol": 8,
+    "Mix": 244,
+    "Ct Box": 41,
+    "Vabene": 3,
+    "Emfesta": 10,
+    "Equipesca": 1,
+    "Estilo": 7,
+    "Ferrero": 42,
+    "Fini": 114,
+    "Fleishmann": 10,
+    "Fama": 5,
+    "Neotrentina": 11,
+    "Gitex": 127,
+    "Floc": 96,
+    "Pullman": 14,
+    "Simonetto": 15,
+    "Prime Cheff": 118,
+    "Golden Festas": 70,
+    "Jazam": 27,
+    "Isobox": 28,
+    "Harald": 145,
+    "Supper": 11,
+    "Grinfest": 18,
+    "Stock Embalagens": 2,
+    "Dalegria": 2,
+    "Injetemp": 2,
+    "Mago": 231,
+    "Lacta": 52,
+    "Lc Embalagens": 70,
+    "Prafesta": 26,
+    "Mili": 11,
+    "Santa Helena": 28,
+    "Lela Festa": 2,
+    "Mavalerio": 61,
+    "Makri": 1,
+    "Plasutil": 66,
+    "Brilharte": 1,
+    "Neoplas": 144,
+    "Mms": 19,
+    "Montevergine": 12,
+    "Festachic": 82,
+    "New Party": 29,
+    "Perfetti": 22,
+    "Nestle": 56,
+    "Peccin": 64,
+    "Prodac": 83,
+    "Produfest": 29,
+    "Warna": 8,
+    "Tabuleiros Uno": 10,
+    "Realce Papeis": 13,
+    "Pulo Do Gato": 2,
+    "Quimidrol": 1,
+    "Rendicolla": 10,
+    "Santa Rita": 16,
+    "Simas": 18,
+    "Sao Roque": 23,
+    "Sipel": 1,
+    "Soberano Barbantes": 1,
+    "Semalo": 22,
+    "Speciale": 2,
+    "Starhouse": 18,
+    "Strawplast": 63,
+    "Trik Trik": 61,
+    "Tasil": 35,
+    "Sul Formas": 28,
+    "Ultrafest": 50,
+    "Sulamericana": 1,
+    "Suspense": 2,
+    "Leplastic": 5,
+    "Ideia": 63,
+    "Lacos E Acessorios": 57,
+    "Mundo Bizarro": 1,
+    "Sukest": 3,
+    "Toymaster": 12,
+    "Qualicoco": 11,
+    "Master Martini": 5,
+    "Ajm": 4,
+    "Perrutextil": 3,
+    "Bella Festa": 28,
+    "Nautika": 6,
+    "Bello Festa": 288,
+    "Bsw Plast": 4,
+    "Vanilla Brasil": 4,
+    "Interlar": 8,
+    "Iceberg": 97,
+    "Dacolonia": 32,
+    "Rayovac": 4,
+    "Divine": 33,
+    "Jeprimar": 14,
+    "Dukacau": 4,
+    "Festball": 38,
+    "Color Make": 100,
+    "Aeroflex": 4,
+    "Leke": 4,
+    "Crax": 2,
+    "Porto Formas": 4,
+    "slice": 1,
+    "Cory": 16,
+    "Plastilania": 33,
+    "Pitter Pan": 3,
+    "Nutribonn": 36,
+    "Anjo Fantasias": 31,
+    "Dona Rita": 1,
+    "Nuty": 12,
+    "Brinquedos Uniao": 4,
+    "Arte E Cor Pirulitos": 16
+  },
+  "collections": [
+    {
+      "id": "gid://shopify/Collection/318894735414",
+      "handle": "todos",
+      "title": "Todos"
+    },
+    {
+      "id": "gid://shopify/Collection/322099183670",
+      "handle": "festas",
+      "title": "Festas"
+    },
+    {
+      "id": "gid://shopify/Collection/322099314742",
+      "handle": "velas",
+      "title": "Velas"
+    },
+    {
+      "id": "gid://shopify/Collection/322448916534",
+      "handle": "guloseimas",
+      "title": "Guloseimas"
+    },
+    {
+      "id": "gid://shopify/Collection/322448982070",
+      "handle": "embalagens",
+      "title": "Embalagens"
+    },
+    {
+      "id": "gid://shopify/Collection/322532442166",
+      "handle": "doces-festa-junina",
+      "title": "Festa Junina"
+    },
+    {
+      "id": "gid://shopify/Collection/322533195830",
+      "handle": "doces",
+      "title": "Doces"
+    },
+    {
+      "id": "gid://shopify/Collection/322544795702",
+      "handle": "halloween",
+      "title": "Halloween"
+    },
+    {
+      "id": "gid://shopify/Collection/322545516598",
+      "handle": "fantasias",
+      "title": "Fantasias"
+    },
+    {
+      "id": "gid://shopify/Collection/322546139190",
+      "handle": "aderecos",
+      "title": "Adereços"
+    },
+    {
+      "id": "gid://shopify/Collection/322550890550",
+      "handle": "balas-1",
+      "title": "Balas"
+    },
+    {
+      "id": "gid://shopify/Collection/322551513142",
+      "handle": "marshmallows",
+      "title": "Marshmallows"
+    },
+    {
+      "id": "gid://shopify/Collection/322583789622",
+      "handle": "decoracoes",
+      "title": "Aviamentos"
+    },
+    {
+      "id": "gid://shopify/Collection/322585231414",
+      "handle": "formas-para-chocolate",
+      "title": "Formas para Chocolate"
+    },
+    {
+      "id": "gid://shopify/Collection/322585296950",
+      "handle": "utilidades",
+      "title": "Utilidades"
+    },
+    {
+      "id": "gid://shopify/Collection/322586050614",
+      "handle": "formas-para-bolo",
+      "title": "Formas para Bolo"
+    },
+    {
+      "id": "gid://shopify/Collection/322587263030",
+      "handle": "artesanato",
+      "title": "Artesanatos"
+    },
+    {
+      "id": "gid://shopify/Collection/322590638134",
+      "handle": "decoracoes-1",
+      "title": "Decorações"
+    },
+    {
+      "id": "gid://shopify/Collection/322591686710",
+      "handle": "descartaveis",
+      "title": "Descartáveis"
+    },
+    {
+      "id": "gid://shopify/Collection/322651488310",
+      "handle": "natal",
+      "title": "Natal"
+    },
+    {
+      "id": "gid://shopify/Collection/322707161142",
+      "handle": "mix",
+      "title": "Mix"
+    },
+    {
+      "id": "gid://shopify/Collection/322709782582",
+      "handle": "saint-patricks-day-copia-1",
+      "title": "Saint Patrick's Day"
+    },
+    {
+      "id": "gid://shopify/Collection/322746810422",
+      "handle": "bwb",
+      "title": "Bwb"
+    },
+    {
+      "id": "gid://shopify/Collection/322746908726",
+      "handle": "harald",
+      "title": "Harald"
+    },
+    {
+      "id": "gid://shopify/Collection/322747039798",
+      "handle": "cromus",
+      "title": "Cromus"
+    },
+    {
+      "id": "gid://shopify/Collection/322747170870",
+      "handle": "sicao",
+      "title": "Sicao"
+    },
+    {
+      "id": "gid://shopify/Collection/322747465782",
+      "handle": "ponto-das-festas",
+      "title": "Ponto das Festas"
+    },
+    {
+      "id": "gid://shopify/Collection/322832269366",
+      "handle": "carnaval",
+      "title": "Carnaval"
+    },
+    {
+      "id": "gid://shopify/Collection/322833285174",
+      "handle": "baloes-1",
+      "title": "Balões"
+    },
+    {
+      "id": "gid://shopify/Collection/322844590134",
+      "handle": "copa-do-mundo",
+      "title": "7 de Setembro"
+    },
+    {
+      "id": "gid://shopify/Collection/322845966390",
+      "handle": "pascoa",
+      "title": "Páscoa"
+    },
+    {
+      "id": "gid://shopify/Collection/322960621622",
+      "handle": "brinquedos",
+      "title": "Brinquedos"
+    },
+    {
+      "id": "gid://shopify/Collection/322960850998",
+      "handle": "embalagens-1",
+      "title": "Embalagem Festa"
+    },
+    {
+      "id": "gid://shopify/Collection/322961080374",
+      "handle": "lembrancinhas",
+      "title": "Lembrancinhas"
+    },
+    {
+      "id": "gid://shopify/Collection/322961965110",
+      "handle": "temas",
+      "title": "Temas"
+    },
+    {
+      "id": "gid://shopify/Collection/322963111990",
+      "handle": "tnt",
+      "title": "Tnt"
+    },
+    {
+      "id": "gid://shopify/Collection/322963537974",
+      "handle": "acrilicos",
+      "title": "Acrílicos"
+    },
+    {
+      "id": "gid://shopify/Collection/322963636278",
+      "handle": "forminhas",
+      "title": "Forminhas"
+    },
+    {
+      "id": "gid://shopify/Collection/322968617014",
+      "handle": "pirulitos",
+      "title": "Pirulitos"
+    },
+    {
+      "id": "gid://shopify/Collection/322968715318",
+      "handle": "chicles",
+      "title": "Chicles"
+    },
+    {
+      "id": "gid://shopify/Collection/323026649142",
+      "handle": "chocolates",
+      "title": "Chocolates"
+    },
+    {
+      "id": "gid://shopify/Collection/323026845750",
+      "handle": "confeitos",
+      "title": "Confeitos"
+    },
+    {
+      "id": "gid://shopify/Collection/323027075126",
+      "handle": "amendoins",
+      "title": "Amendoins"
+    },
+    {
+      "id": "gid://shopify/Collection/323027238966",
+      "handle": "salgados",
+      "title": "Salgados"
+    },
+    {
+      "id": "gid://shopify/Collection/323027402806",
+      "handle": "biscoito",
+      "title": "Biscoitos"
+    },
+    {
+      "id": "gid://shopify/Collection/323027501110",
+      "handle": "chocolates-e-coberturas",
+      "title": "Chocolates e Coberturas"
+    },
+    {
+      "id": "gid://shopify/Collection/323027566646",
+      "handle": "confeitarias",
+      "title": "Confeitarias"
+    },
+    {
+      "id": "gid://shopify/Collection/323027894326",
+      "handle": "acucares",
+      "title": "Açúcares"
+    },
+    {
+      "id": "gid://shopify/Collection/323028287542",
+      "handle": "corantes",
+      "title": "Corantes"
+    },
+    {
+      "id": "gid://shopify/Collection/323028385846",
+      "handle": "aromas",
+      "title": "Aromas"
+    },
+    {
+      "id": "gid://shopify/Collection/323028418614",
+      "handle": "misturas",
+      "title": "Misturas"
+    },
+    {
+      "id": "gid://shopify/Collection/323028484150",
+      "handle": "sorveteria",
+      "title": "Sorveteria"
+    },
+    {
+      "id": "gid://shopify/Collection/323028549686",
+      "handle": "chantillys",
+      "title": "Chantillys"
+    },
+    {
+      "id": "gid://shopify/Collection/323028582454",
+      "handle": "pastas-americana",
+      "title": "Pastas Americana"
+    },
+    {
+      "id": "gid://shopify/Collection/323028647990",
+      "handle": "papel-arroz",
+      "title": "Papel Arroz"
+    },
+    {
+      "id": "gid://shopify/Collection/323028680758",
+      "handle": "suspiros",
+      "title": "Suspiros"
+    },
+    {
+      "id": "gid://shopify/Collection/323028779062",
+      "handle": "outros-insumos",
+      "title": "Outros Insumos"
+    },
+    {
+      "id": "gid://shopify/Collection/323029041206",
+      "handle": "acrilicos-embalagens",
+      "title": "Acrílicos Embalagens"
+    },
+    {
+      "id": "gid://shopify/Collection/323029401654",
+      "handle": "caixas-de-papel",
+      "title": "Caixas de Papel"
+    },
+    {
+      "id": "gid://shopify/Collection/323029467190",
+      "handle": "cesta",
+      "title": "Cesta"
+    },
+    {
+      "id": "gid://shopify/Collection/323029860406",
+      "handle": "descartaveis-embalagens",
+      "title": "Descartáveis Embalagens"
+    },
+    {
+      "id": "gid://shopify/Collection/323030122550",
+      "handle": "embrulhos",
+      "title": "Embrulhos"
+    },
+    {
+      "id": "gid://shopify/Collection/323030908982",
+      "handle": "etiquetas",
+      "title": "Etiquetas"
+    },
+    {
+      "id": "gid://shopify/Collection/323030941750",
+      "handle": "fitas",
+      "title": "Fitas"
+    },
+    {
+      "id": "gid://shopify/Collection/323030974518",
+      "handle": "latas",
+      "title": "Latas"
+    },
+    {
+      "id": "gid://shopify/Collection/323031072822",
+      "handle": "sacolas",
+      "title": "Sacolas"
+    },
+    {
+      "id": "gid://shopify/Collection/323031269430",
+      "handle": "pratos-e-bandejas",
+      "title": "Pratos e Bandejas"
+    },
+    {
+      "id": "gid://shopify/Collection/323031564342",
+      "handle": "palitos",
+      "title": "Palitos"
+    },
+    {
+      "id": "gid://shopify/Collection/323031728182",
+      "handle": "utensilios-para-confeitar",
+      "title": "Utensílios para Confeitar"
+    },
+    {
+      "id": "gid://shopify/Collection/323031859254",
+      "handle": "utensilios-para-confeitar-1",
+      "title": "Utensilios para Confeitar"
+    },
+    {
+      "id": "gid://shopify/Collection/323032154166",
+      "handle": "cortadores",
+      "title": "Cortadores"
+    },
+    {
+      "id": "gid://shopify/Collection/323032252470",
+      "handle": "cake-boards",
+      "title": "Cake Boards"
+    },
+    {
+      "id": "gid://shopify/Collection/323032350774",
+      "handle": "papelaria",
+      "title": "Papelaria"
+    },
+    {
+      "id": "gid://shopify/Collection/323032547382",
+      "handle": "tintas",
+      "title": "Tintas"
+    },
+    {
+      "id": "gid://shopify/Collection/323032645686",
+      "handle": "pinceis",
+      "title": "Pincéis"
+    },
+    {
+      "id": "gid://shopify/Collection/323032678454",
+      "handle": "colas",
+      "title": "Colas"
+    },
+    {
+      "id": "gid://shopify/Collection/323032711222",
+      "handle": "glitters",
+      "title": "Glitters"
+    },
+    {
+      "id": "gid://shopify/Collection/323032875062",
+      "handle": "eva",
+      "title": "EVA"
+    },
+    {
+      "id": "gid://shopify/Collection/323032907830",
+      "handle": "eps-isopor",
+      "title": "EPS (Isopor)"
+    },
+    {
+      "id": "gid://shopify/Collection/323032973366",
+      "handle": "4-de-julho",
+      "title": "4 de Julho"
+    },
+    {
+      "id": "gid://shopify/Collection/323033038902",
+      "handle": "setembro-amarelo",
+      "title": "Setembro Amarelo"
+    },
+    {
+      "id": "gid://shopify/Collection/323033169974",
+      "handle": "outubro-rosa",
+      "title": "Outubro Rosa"
+    },
+    {
+      "id": "gid://shopify/Collection/323033202742",
+      "handle": "novembro-azul",
+      "title": "Novembro Azul"
+    },
+    {
+      "id": "gid://shopify/Collection/323033366582",
+      "handle": "reveillon",
+      "title": "Reveillon"
+    },
+    {
+      "id": "gid://shopify/Collection/324317413430",
+      "handle": "regina",
+      "title": "Regina"
+    },
+    {
+      "id": "gid://shopify/Collection/325522522166",
+      "handle": "leve-3-pague-2",
+      "title": "Leve 3 Pague 2"
+    },
+    {
+      "id": "gid://shopify/Collection/326108315702",
+      "handle": "promocoes",
+      "title": "Promoções"
+    },
+    {
+      "id": "gid://shopify/Collection/326559006774",
+      "handle": "panettone-pullman-a-partir-de-2-r-19-99-cada",
+      "title": "Panettone Pullman: a partir de 2, R$ 19,99 cada"
+    },
+    {
+      "id": "gid://shopify/Collection/327115702326",
+      "handle": "fim-de-ano",
+      "title": "Fim de Ano"
+    },
+    {
+      "id": "gid://shopify/Collection/327117340726",
+      "handle": "confeitarias-natal",
+      "title": "Confeitarias Natal"
+    }
+  ]
+}

@@ -92,7 +92,7 @@ try {
   assert.equal(pageResponse.status, 200);
   const pageData = await pageResponse.json();
   assert.ok(pageData.catalog.products.some((product) => product.id === "8936"));
-  assert.ok(pageData.catalog.products.length <= 48);
+  assert.ok(pageData.catalog.products.length <= 20);
   assert.equal(
     (await fetch(base + "/api/catalogs/halloween/?page=-1")).status,
     400,

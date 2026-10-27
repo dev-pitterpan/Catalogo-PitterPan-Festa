@@ -16,6 +16,27 @@ const config: SiteConfig = JSON.parse(
     "utf8",
   ),
 );
+test("busca encontra cobertura nos dados do produto, marca e SKU", () => {
+  const base = { id: "shopify-1", name: "Produto", description: "", image: "" };
+  assert.ok(
+    productSearchScore(
+      { ...base, name: "Cobertura de Chocolate" },
+      "cobertura",
+    ) > 0,
+  );
+  assert.ok(
+    productSearchScore(
+      { ...base, description: "Ideal para cobertura de bolos" },
+      "cobertura",
+    ) > 0,
+  );
+  assert.ok(
+    productSearchScore({ ...base, tags: ["coberturas"] }, "cobertura") > 0,
+  );
+  assert.ok(productSearchScore({ ...base, vendor: "Harald" }, "harald") > 0);
+  assert.ok(productSearchScore({ ...base, sku: "987654" }, "987654") > 0);
+  assert.equal(productSearchScore(base, "cobertura"), 0);
+});
 test("busca ignora acentos, aceita palavras parciais e pequenos erros", () => {
   const balloon = catalog.products.find((item) =>
     item.name.includes("Balões"),

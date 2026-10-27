@@ -124,6 +124,10 @@ export const productSearchScore = (
     },
     { value: product.description, weight: 3 },
     { value: product.id, weight: 5 },
+    { value: product.sku, weight: 8 },
+    { value: product.vendor, weight: 5 },
+    { value: product.tags?.join(" "), weight: 6 },
+    { value: product.collections?.join(" "), weight: 4 },
     { value: catalogName, weight: 2 },
   ].map((field) => ({
     ...field,

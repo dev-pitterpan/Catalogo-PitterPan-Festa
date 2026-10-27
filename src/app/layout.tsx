@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 /** Documento raiz do Next.js. Substitui a necessidade de manter um index.html manual. */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang="pt-BR" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <QueryProvider>{children}</QueryProvider>
       </body>

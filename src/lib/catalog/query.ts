@@ -1,5 +1,5 @@
 import { z } from "zod";
-export const PAGE_SIZE = 48;
+export const PAGE_SIZE = 20;
 export const catalogQuerySchema = z.object({
   q: z.string().trim().max(120).default(""),
   category: z.string().trim().max(200).default(""),

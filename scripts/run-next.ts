@@ -1,13 +1,15 @@
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { loadEnvFile } from "node:process";
+import { existsSync, readFileSync } from "node:fs";
+import { parseEnv } from "node:util";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { z } from "zod";
 const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL("../", import.meta.url));
 const envPath = fileURLToPath(new URL("../.env", import.meta.url));
-if (existsSync(envPath)) loadEnvFile(envPath);
+// Let Next load application variables itself, including updates made to .env.
+// Injecting them into the child environment freezes their initial values.
+const localEnv = existsSync(envPath) ? parseEnv(readFileSync(envPath, "utf8")) : {};
 const command = process.argv[2];
 if (command !== "dev" && command !== "start")
   throw new Error("Use dev ou start.");
@@ -16,7 +18,8 @@ const env = z
     HOST: z.string().min(1).default("127.0.0.1"),
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   })
-  .parse(process.env);
+  .parse({ ...process.env, ...localEnv });
+console.log(`Fonte do catálogo (.env): ${localEnv.CATALOG_DATA_SOURCE || process.env.CATALOG_DATA_SOURCE || "json"}`);
 // O mesmo comando funciona em Windows e Linux, sem sintaxe de shell específica.
 const child = spawn(
   process.execPath,

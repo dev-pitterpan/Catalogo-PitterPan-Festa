@@ -9,6 +9,13 @@ export interface Product {
   siteUrl?: string;
   /** ID numérico da variante Shopify, diferente do SKU e do ID do produto. */
   shopifyVariantId?: string;
+  shopifyProductId?: string;
+  sku?: string;
+  handle?: string;
+  tags?: string[];
+  collections?: string[];
+  inventoryQuantity?: number | null;
+  availableForSale?: boolean;
   price?: string;
   compareAtPrice?: string;
   currency?: string;

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { catalogVisual } from "../../lib/catalog/visual";
 type CategoryData = {
   departments: { id: string; label: string; count: number }[];
   categories: { name: string; count: number }[];
@@ -23,7 +24,7 @@ export default function CategoryNavigation({
   const [data, setData] = useState<CategoryData | null>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   useEffect(() => {
     if (!expanded) return;
     const controller = new AbortController();
@@ -59,7 +60,7 @@ export default function CategoryNavigation({
         aria-expanded={expanded}
         onClick={() => setExpanded((value) => !value)}
       >
-        Departamentos e categorias{" "}
+        Categorias da coleção{" "}
         <span aria-hidden="true">{expanded ? "−" : "+"}</span>
       </button>
       {expanded && (
@@ -78,19 +79,21 @@ export default function CategoryNavigation({
             }}
           />
           <div className="category-navigation__departments">
-            {data?.departments.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                aria-pressed={department === item.id}
-                onClick={() => {
-                  setDepartment(department === item.id ? "" : item.id);
-                  setPage(1);
-                }}
-              >
-                {item.label} <small>{item.count}</small>
-              </button>
-            ))}
+            {(data && data.departments.length > 1 ? data.departments : []).map(
+              (item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={department === item.id}
+                  onClick={() => {
+                    setDepartment(department === item.id ? "" : item.id);
+                    setPage(1);
+                  }}
+                >
+                  {item.label} <small>{item.count}</small>
+                </button>
+              ),
+            )}
           </div>
           <button
             type="button"
@@ -114,12 +117,21 @@ export default function CategoryNavigation({
                   aria-pressed={selected === item.name}
                   onClick={() => onSelect(item.name)}
                 >
-                  {item.name}
+                  <span className="category-navigation__name">
+                    <i
+                      style={{ background: catalogVisual(item.name).accent }}
+                      aria-hidden="true"
+                    />
+                    {item.name}
+                  </span>
                   <small>{item.count}</small>
                 </button>
               </li>
             ))}
           </ul>
+          {!loading && !error && data?.categories.length === 0 && (
+            <p role="status">Nenhuma categoria encontrada.</p>
+          )}
           {data && (
             <div className="category-navigation__pages">
               <button

@@ -17,9 +17,9 @@ export async function GET(
   );
   if (!parsed.success)
     return Response.json({ error: "Filtros inválidos" }, { status: 400 });
-  if (!(await getManifest()).some((item) => item.slug === slug))
-    return Response.json({ error: "Coleção não encontrada" }, { status: 404 });
   try {
+    if (!(await getManifest()).some((item) => item.slug === slug))
+      return Response.json({ error: "Coleção não encontrada" }, { status: 404 });
     if (usesDatabase())
       return Response.json(
         await categoryPage(

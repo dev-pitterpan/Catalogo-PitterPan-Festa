@@ -1,7 +1,11 @@
 import CategoryNavigation from "./navigation/CategoryNavigation";
+import CollectionNavigation from "./navigation/CollectionNavigation";
+import CatalogIcon from "./navigation/CatalogIcon";
+import { seasonalSlugs } from "./navigation/CatalogIcon";
+import { catalogVisual } from "../lib/catalog/visual";
 import { ChevronLeft, MessageCircle, Search } from "lucide-react";
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import type { Catalog, CatalogSummary } from "../types/catalog";
 interface Props {
   catalog: Catalog;
@@ -37,6 +41,20 @@ export default function CatalogShell({
   sharebar,
   children,
 }: Props) {
+  const [section, setSection] = useState<"collections" | "categories">(
+    "collections",
+  );
+  const visual = catalogVisual(selectedCategory || catalog.slug);
+  const banner =
+    selectedCategory || !seasonalSlugs.has(catalog.slug)
+      ? visual.banner
+      : catalog.banner;
+  const visualStyle = {
+    "--catalog-accent": visual.accent,
+    "--catalog-accent-rgb": visual.accentRgb,
+    "--catalog-secondary": visual.secondary,
+    "--catalog-secondary-rgb": visual.secondaryRgb,
+  } as CSSProperties;
   const slug = catalog.slug,
     rootPrefix = "/";
   const brandHref = isClient ? `/${slug}/` : "/",
@@ -45,21 +63,12 @@ export default function CatalogShell({
       : "Voltar ao gestor de catálogos";
   const shellClass = `catalog-shell ${isClient ? "client-shell" : ""} ${menuOpen ? "menu-open" : ""} ${collapsed ? "sidebar-collapsed" : ""}`;
   const sidebarClass = `sidebar ${isClient ? "client-sidebar" : ""}`;
-  const navigation = catalogs.map((item) => (
-    <Link
-      key={item.slug}
-      className={`catalog-nav-item ${item.slug === slug ? "is-active" : ""}`}
-      href={`${isClient ? "" : "/gestor"}/${item.slug}/`}
-      style={{ "--item-accent": item.accent } as CSSProperties}
-    >
-      <span className="nav-icon">
-        <img src={`/assets/icons/catalogs/${item.slug}.svg`} alt="" />
-      </span>
-      <span className="nav-name">{item.name}</span>
-    </Link>
-  ));
   return (
-    <div className={`${shellClass}`} id="catalogApp">
+    <div
+      className={`${shellClass} practical-catalog`}
+      id="catalogApp"
+      style={visualStyle}
+    >
       <div className="sidebar-mobilebar" aria-label="Navegação Pitter Pan">
         <Link
           className="sidebar-mobilebrand"
@@ -139,14 +148,54 @@ export default function CatalogShell({
         </div>
 
         <nav className="sidebar-nav" aria-label="Escolha um catálogo">
-          <p className="nav-label">Coleções e catálogo geral</p>
-          <div className="catalog-nav-list">{navigation}</div>
-          <CategoryNavigation
-            key={slug}
-            slug={slug}
-            selected={selectedCategory}
-            onSelect={onCategorySelect}
-          />
+          <div className="sidebar-context">
+            <span className="sidebar-context__dot" />
+            <div>
+              <small>Você está em</small>
+              <strong>{catalog.name}</strong>
+            </div>
+          </div>
+          <div className="sidebar-sections" aria-label="Tipo de navegação">
+            <button
+              type="button"
+              aria-pressed={section === "collections"}
+              onClick={() => setSection("collections")}
+            >
+              Explorar
+            </button>
+            <button
+              type="button"
+              aria-pressed={section === "categories"}
+              onClick={() => setSection("categories")}
+            >
+              Categorias
+            </button>
+          </div>
+          <div
+            className="sidebar-section-content"
+            hidden={section !== "collections"}
+          >
+            <CollectionNavigation
+              catalogs={catalogs}
+              slug={slug}
+              isClient={isClient}
+              onClose={onClose}
+              categories={catalog.pagination?.categories}
+              selectedCategory={selectedCategory}
+              onCategorySelect={onCategorySelect}
+            />
+          </div>
+          <div
+            className="sidebar-section-content"
+            hidden={section !== "categories"}
+          >
+            <CategoryNavigation
+              key={slug}
+              slug={slug}
+              selected={selectedCategory}
+              onSelect={onCategorySelect}
+            />
+          </div>
         </nav>
 
         <footer className="sidebar-signature">
@@ -174,28 +223,38 @@ export default function CatalogShell({
             <img
               className="catalog-hero__image"
               data-banner
-              src={`${rootPrefix}${catalog.banner.replace(/^\.\.\//, "")}`}
-              alt={`Cenário ${catalog.name} Pitter Pan`}
+              src={banner}
+              alt={`Banner ${selectedCategory || catalog.name} Pitter Pan`}
             />
             <div className="catalog-hero__veil" aria-hidden="true"></div>
             <div className="catalog-hero__content catalog-hero__content--premium">
               <p className="catalog-eyebrow" data-eyebrow>
-                {catalog.eyebrow || "Coleção"}
+                {selectedCategory ? catalog.name : catalog.eyebrow || "Coleção"}
               </p>
-              <h1 data-title>{catalog.name}</h1>
+              <h1 data-title>{selectedCategory || catalog.name}</h1>
               <div className="catalog-hero__meta">
-                <span>Experiência sazonal</span>
+                <span>
+                  {selectedCategory
+                    ? "Categoria selecionada"
+                    : "Inspire sua próxima festa"}
+                </span>
                 <span aria-hidden="true">•</span>
                 <span>Seleção Pitter Pan</span>
               </div>
               <span className="catalog-hero__line" aria-hidden="true"></span>
             </div>
+            {selectedCategory && (
+              <button
+                type="button"
+                className="catalog-category-reset"
+                onClick={() => onCategorySelect("")}
+              >
+                Ver toda a coleção ×
+              </button>
+            )}
             <div className="catalog-hero__monogram" aria-hidden="true">
               <span className="catalog-hero__monogram-ring"></span>
-              <img
-                src={`${rootPrefix}assets/icons/catalogs/${slug}.svg`}
-                alt=""
-              />
+              <CatalogIcon slug={slug} />
             </div>
           </section>
 
@@ -217,16 +276,17 @@ export default function CatalogShell({
                   onChange={(e) => onSearch(e.target.value)}
                   data-search
                   type="search"
-                  placeholder="Busque por vestido, balões, decoração, fantasia..."
+                  placeholder={
+                    slug === "todos"
+                      ? "Buscar em todos os produtos: nome, SKU, marca…"
+                      : `Buscar em ${catalog.name}: nome, SKU, marca…`
+                  }
                   autoComplete="off"
                 />
               </label>
               <div className="result-count">
                 <span className="result-count__icon">
-                  <img
-                    src={`${rootPrefix}assets/icons/catalogs/${slug}.svg`}
-                    alt=""
-                  />
+                  <CatalogIcon slug={slug} />
                 </span>
                 <span className="result-count__copy">
                   <strong data-count>{count}</strong>

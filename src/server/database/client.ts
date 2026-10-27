@@ -15,7 +15,7 @@ export function database() {
 }
 export function usesDatabase() {
   const source = process.env.CATALOG_DATA_SOURCE || "json";
-  if (!["json", "postgres"].includes(source))
-    throw new Error("CATALOG_DATA_SOURCE deve ser json ou postgres.");
+  if (!["json", "postgres", "shopify"].includes(source))
+    throw new Error("CATALOG_DATA_SOURCE deve ser json, postgres ou shopify.");
   return source === "postgres";
 }

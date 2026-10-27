@@ -1,8 +1,8 @@
 "use client";
 
 import type { CatalogPageData } from "../types/catalog";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import LoadingState from "./LoadingState";
-import SeasonalEffects from "./seasonal/SeasonalEffects";
 import { useCatalogPage } from "../hooks/useCatalogPage";
 import { publicCatalogUrl } from "../lib/routes";
 import { useEffect, useState } from "react";
@@ -129,13 +129,6 @@ export default function CatalogApp({
     <div
       className={`catalog-page theme-${catalog.slug}${isClient ? " client-page" : ""}`}
     >
-      {isClient && (
-        <SeasonalEffects
-          key={catalog.slug}
-          slug={catalog.slug}
-          suspended={cartOpen || menuOpen}
-        />
-      )}
       {quote.storageError && (
         <p role="alert">
           Não foi possível salvar o carrinho neste navegador. A seleção atual
@@ -254,7 +247,7 @@ export default function CatalogApp({
               disabled={fetching || catalog.pagination.page <= 1}
               onClick={() => setPage(catalog.pagination!.page - 1)}
             >
-              Anterior
+              <ChevronLeft size={18} aria-hidden="true" /> Anterior
             </button>
             <span>
               Página {catalog.pagination.page} de {catalog.pagination.pages}
@@ -266,7 +259,7 @@ export default function CatalogApp({
               }
               onClick={() => setPage(catalog.pagination!.page + 1)}
             >
-              Próxima
+              Próxima <ChevronRight size={18} aria-hidden="true" />
             </button>
           </nav>
         )}

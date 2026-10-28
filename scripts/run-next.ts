@@ -1,3 +1,4 @@
+import { localAuthEnvironment } from "./local-auth-env.ts";
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
@@ -8,7 +9,7 @@ const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL("../", import.meta.url));
 const envPath = fileURLToPath(new URL("../.env", import.meta.url));
 // Let Next load application variables itself, including updates made to .env.
-// Injecting them into the child environment freezes their initial values.
+// Somente o hash da senha é normalizado; alterações de senha exigem reiniciar o servidor.
 const localEnv = existsSync(envPath)
   ? parseEnv(readFileSync(envPath, "utf8"))
   : {};
@@ -35,7 +36,15 @@ const child = spawn(
     "--port",
     String(env.PORT),
   ],
-  { cwd: root, env: process.env, stdio: "inherit" },
+  {
+    cwd: root,
+    env: localAuthEnvironment(
+      root,
+      process.env.NODE_ENV ||
+        (command === "dev" ? "development" : "production"),
+    ),
+    stdio: "inherit",
+  },
 );
 child.on("error", (error) => {
   console.error(error.message);

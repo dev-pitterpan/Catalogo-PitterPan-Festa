@@ -78,3 +78,7 @@ O login limita oito tentativas por e-mail a cada janela de 15 minutos. Com a tab
 O visual usa CSS com profundidade e ilustração em perspectiva, sem motor WebGL, fontes externas ou bibliotecas por CDN. O CSS é isolado em `src/styles/admin.css`; componentes ficam em `src/components/admin`, autenticação em `src/server/auth` e dados em `src/server/admin`. As páginas usam o grupo `(dashboard)` para compartilhar o shell, mantendo o catálogo de uma coleção com seu próprio layout.
 
 Validação local: testes de criptografia, permissões, comparação real de snapshots com PostgreSQL/PGlite, estoque desconhecido, ofertas, login HTTP, CSRF, cookies, redirecionamento, APIs privadas e páginas públicas. Contas, credenciais e dados de teste nunca são usados para ativar a produção.
+
+### Compatibilidade do hash local
+
+O setup salva o hash em uma forma sem `$` para impedir a expansão de variáveis do Next. Hashes antigos continuam válidos: `npm run dev` e `npm start` normalizam a configuração em memória, sem reescrever o `.env` ou trocar a senha. Depois de atualizar o código, reinicie o servidor local. O fingerprint das sessões usa a forma canônica, preservando a compatibilidade com os valores já configurados na Vercel.

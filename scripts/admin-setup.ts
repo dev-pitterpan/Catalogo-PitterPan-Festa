@@ -3,7 +3,10 @@ import { readFile, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import { createInterface } from "node:readline/promises";
 import { Writable } from "node:stream";
-import { hashPassword } from "../src/server/auth/crypto.ts";
+import {
+  hashPassword,
+  environmentPasswordHash,
+} from "../src/server/auth/crypto.ts";
 if (!process.stdin.isTTY) {
   console.error("Execute npm run admin:setup em um terminal interativo.");
   process.exit(1);
@@ -48,7 +51,7 @@ let content = existsSync(path) ? await readFile(path, "utf8") : "";
 const values = {
   ADMIN_EMAIL: email,
   ADMIN_NAME: name,
-  ADMIN_PASSWORD_HASH: hash,
+  ADMIN_PASSWORD_HASH: environmentPasswordHash(hash),
   ADMIN_SESSION_SECRET: randomBytes(48).toString("hex"),
 };
 for (const [key, value] of Object.entries(values)) {

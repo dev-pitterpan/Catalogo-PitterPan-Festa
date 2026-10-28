@@ -40,8 +40,22 @@ export function authSecret() {
     throw new Error("Acesso administrativo não configurado.");
   return secret;
 }
+/** Aceita hashes antigos e a forma segura para arquivos .env (sem expansão de $). */
+export function normalizePasswordHash(hash: string) {
+  return hash.startsWith("scrypt:") ? hash.replaceAll(":", "$") : hash;
+}
+export function environmentPasswordHash(hash: string) {
+  return normalizePasswordHash(hash).replaceAll("$", ":");
+}
+export function isPasswordHash(hash: string) {
+  return /^scrypt\$[a-f0-9]{32}\$[a-f0-9]{128}$/.test(
+    normalizePasswordHash(hash),
+  );
+}
 export function credentialVersion(hash: string, secret = authSecret()) {
-  return createHmac("sha256", secret).update(hash).digest("base64url");
+  return createHmac("sha256", secret)
+    .update(normalizePasswordHash(hash))
+    .digest("base64url");
 }
 export async function hashPassword(password: string) {
   if (password.length < 12 || password.length > 128)
@@ -51,6 +65,7 @@ export async function hashPassword(password: string) {
   return `scrypt$${salt}$${key.toString("hex")}`;
 }
 export async function verifyPassword(password: string, encoded: string) {
+  encoded = normalizePasswordHash(encoded);
   if (
     password.length > 128 ||
     !/^scrypt\$[a-f0-9]{32}\$[a-f0-9]{128}$/.test(encoded)

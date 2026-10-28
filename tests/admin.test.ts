@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import {
+  environmentPasswordHash,
   hashPassword,
   verifyPassword,
   signSession,
@@ -26,6 +27,14 @@ test("senha usa salt distinto e não aceita texto/hash inválido", async () => {
   assert.notEqual(first, second);
   assert.ok(!first.includes(password));
   assert.equal(await verifyPassword(password, first), true);
+  assert.equal(
+    await verifyPassword(password, environmentPasswordHash(first)),
+    true,
+  );
+  assert.equal(
+    credentialVersion(first, secret),
+    credentialVersion(environmentPasswordHash(first), secret),
+  );
   assert.equal(await verifyPassword("wrong", first), false);
   assert.equal(await verifyPassword(password, "invalid"), false);
   await assert.rejects(() => hashPassword("short"));

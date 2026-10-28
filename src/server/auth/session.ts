@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { database } from "../database/client";
 import {
+  isPasswordHash,
   allowed,
   authSecret,
   COOKIE_NAME,
@@ -14,9 +15,7 @@ import {
 export function authConfigured() {
   return (
     !!process.env.ADMIN_EMAIL &&
-    /^scrypt\$[a-f0-9]{32}\$[a-f0-9]{128}$/.test(
-      process.env.ADMIN_PASSWORD_HASH || "",
-    ) &&
+    isPasswordHash(process.env.ADMIN_PASSWORD_HASH || "") &&
     (process.env.ADMIN_SESSION_SECRET?.length || 0) >= 32
   );
 }

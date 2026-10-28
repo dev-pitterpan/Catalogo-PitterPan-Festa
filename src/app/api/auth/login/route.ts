@@ -15,6 +15,7 @@ const schema = z.object({
   email: z.email().max(254),
   password: z.string().min(1).max(128),
   next: z.string().optional(),
+  remember: z.boolean().default(true),
 });
 export async function POST(request: Request) {
   if (!sameOrigin(request))
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: SESSION_SECONDS,
+      ...(parsed.data.remember ? { maxAge: SESSION_SECONDS } : {}),
     });
     return Response.json(
       { next: safeDestination(parsed.data.next) },

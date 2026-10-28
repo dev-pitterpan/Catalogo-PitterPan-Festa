@@ -121,6 +121,36 @@ try {
   assert.match(setCookie, /HttpOnly/i);
   assert.match(setCookie, /Secure/i);
   assert.match(setCookie, /SameSite=lax/i);
+  assert.match(setCookie, /Max-Age=28800/i);
+  const sessionOnly = await rawFetch(base + "/api/auth/login/", {
+    method: "POST",
+    headers: { origin: base, "content-type": "application/json" },
+    body: JSON.stringify({
+      email: testUser.email,
+      password: testPassword,
+      remember: false,
+    }),
+  });
+  assert.equal(sessionOnly.status, 200);
+  assert.ok(!/Max-Age=/i.test(sessionOnly.headers.get("set-cookie") || ""));
+  const invalidRemember = await rawFetch(base + "/api/auth/login/", {
+    method: "POST",
+    headers: { origin: base, "content-type": "application/json" },
+    body: JSON.stringify({
+      email: testUser.email,
+      password: testPassword,
+      remember: "yes",
+    }),
+  });
+  assert.equal(invalidRemember.status, 400);
+  const loginView = await rawFetch(base + "/login/");
+  const loginHtml = await loginView.text();
+  assert.match(loginHtml, /A festa começa/);
+  assert.match(loginHtml, /Manter conectado/);
+  const art = await rawFetch(base + "/assets/images/admin/login-party.webp");
+  assert.equal(art.status, 200);
+  assert.match(art.headers.get("content-type") || "", /image\/webp/);
+
   assert.equal((await login.json()).next, "/gestor/");
   const wrong = await rawFetch(base + "/api/auth/login/", {
     method: "POST",

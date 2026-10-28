@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Sparkles, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { ShieldCheck, ArrowUpRight } from "lucide-react";
 import LoginForm from "../../components/admin/LoginForm";
 import { authConfigured, currentSession } from "../../server/auth/session";
 import { safeDestination } from "../../server/auth/crypto";
 import "../../styles/admin.css";
+import "../../styles/admin/login.css";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Acesso da equipe",
@@ -18,61 +20,66 @@ export default async function LoginPage({
   const next = safeDestination((await searchParams).next);
   if (await currentSession()) redirect(next);
   return (
-    <main className="admin-login">
-      <section className="admin-login-story">
-        <a href="/" className="admin-login-brand">
-          <img
-            src="/assets/images/brand/pitter-pan-logo.svg"
-            alt="Pitter Pan Festas"
-          />
-          <span>PITTER PAN FESTAS</span>
+    <main className="admin-login party-login">
+      <section className="admin-login-story party-login-story">
+        <a
+          href="/"
+          className="party-login-wordmark"
+          aria-label="Pitter Pan Festas · início"
+        >
+          <span>Pitter Pan</span>
+          <small>FESTAS</small>
         </a>
-        <div className="admin-login-copy">
-          <span className="admin-eyebrow">
-            <Sparkles size={16} /> BEM-VINDO AOS BASTIDORES
-          </span>
-          <h1>
-            Grandes festas.
-            <br />
-            Uma gestão
-            <br />
-            <em>à altura.</em>
-          </h1>
-          <p>
-            Produtos, coleções e oportunidades.
-            <br />
-            Tudo conectado, em um só lugar.
-          </p>
-          <div className="admin-gift-scene" aria-hidden="true">
-            <div className="admin-gift">
-              <i />
-              <b />
-              <span />
-            </div>
-            <div className="admin-orb admin-orb-gold" />
-            <div className="admin-orb admin-orb-blue" />
-            <span className="admin-confetti">✦</span>
+        <div className="party-login-story-content">
+          <div className="party-login-heading">
+            <h1>
+              A festa começa
+              <br />
+              <em>nos detalhes.</em>
+            </h1>
+            <p>
+              Seu catálogo. Sua equipe.
+              <br className="party-login-mobile-break" /> Infinitas
+              possibilidades.
+            </p>
+          </div>
+          <div className="party-login-art" aria-hidden="true">
+            <Image
+              src="/assets/images/admin/login-party.webp"
+              alt=""
+              width={1536}
+              height={1024}
+              sizes="(max-width: 820px) 260px, 56vw"
+              priority
+            />
           </div>
         </div>
-        <span className="admin-login-story-footer">
-          Pequenos detalhes. Grandes celebrações.
-        </span>
       </section>
-      <section className="admin-login-panel">
-        <div className="admin-login-card">
+      <section
+        className="admin-login-panel party-login-panel"
+        aria-labelledby="login-title"
+      >
+        <div className="admin-login-card party-login-card">
           <span className="admin-login-badge">
-            <ShieldCheck size={17} /> ÁREA DA EQUIPE
+            <ShieldCheck size={20} aria-hidden="true" />
+            ÁREA DA EQUIPE
           </span>
-          <h2>Bom ter você aqui.</h2>
-          <p>Entre para acompanhar o que faz a festa acontecer.</p>
+          <h2 id="login-title">Bom ter você aqui.</h2>
+          <p>Entre para fazer a festa acontecer.</p>
           <LoginForm configured={authConfigured()} next={next} />
           <a className="admin-login-back" href="/">
-            Explorar os catálogos públicos <ArrowUpRight size={15} />
+            Explorar os catálogos públicos
+            <ArrowUpRight size={19} aria-hidden="true" />
           </a>
         </div>
-        <span className="admin-login-copyright">
-          Pitter Pan Festas · Joinville, SC
-        </span>
+        <footer className="party-login-footer">
+          <span className="party-login-colors" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          <p>Pitter Pan Festas · Joinville, SC</p>
+        </footer>
       </section>
     </main>
   );

@@ -120,3 +120,9 @@ A inspeção visual e as interações completas no navegador devem ser conferida
 ## Catálogo em escala e Shopify
 
 A estrutura opcional de PostgreSQL inclui importação Shopify em lotes, versões com publicação transacional, preços por variante, busca/filtros no servidor, grade de 20 itens e navegação de categorias por departamento com pesquisa/paginação. O modo inicial continua usando os JSONs existentes. A ativação depende de banco e credenciais reais; consulte [docs/SHOPIFY.md](docs/SHOPIFY.md) para a sequência completa e os limites. `npm run test:scale` valida 13.518 variantes simuladas, sem chamar a loja real.
+
+## Central de gestão e login
+
+O painel usa `/gestor/`, com rotas de produtos, estoque, ofertas, catálogos, alterações, sincronizações, calendário, relatórios, equipe e configurações. O acesso da equipe é protegido; clientes continuam abrindo `/[slug]/` sem login.
+
+Execute `npm run admin:setup` para definir a conta principal localmente. Cadastre as variáveis geradas no ambiente correto da Vercel antes de entrar. Não existe senha padrão e o acesso permanece fechado sem configuração. Para dados completos e outras contas, prepare o banco exclusivo e publique a importação conforme [docs/ADMIN.md](docs/ADMIN.md).

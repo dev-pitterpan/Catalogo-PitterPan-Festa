@@ -1,0 +1,19 @@
+import type { ReactNode } from "react";
+import DashboardShell from "../../../components/admin/DashboardShell";
+import { requireSession } from "../../../server/auth/session";
+import "../../../styles/admin.css";
+export const metadata = { title: "Central de gestão" };
+export default async function DashboardLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const user = await requireSession();
+  return (
+    <DashboardShell
+      user={{ name: user.name, email: user.email, role: user.role }}
+    >
+      {children}
+    </DashboardShell>
+  );
+}

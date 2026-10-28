@@ -1,9 +1,42 @@
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
+import {
+  hashPassword,
+  signSession,
+  credentialVersion,
+} from "../src/server/auth/crypto.ts";
+const testSecret = randomBytes(48).toString("hex");
+const testPassword = "test-only-password-2026";
+const testHash = await hashPassword(testPassword);
+const testUser = {
+  sub: "bootstrap",
+  email: "admin@example.test",
+  name: "Equipe de teste",
+  role: "admin",
+  version: credentialVersion(testHash, testSecret),
+};
+const testCookie = `__Host-pitterpan-session=${signSession(testUser, testSecret)}`;
+const rawFetch = globalThis.fetch;
+const fetch = (input, options = {}) =>
+  rawFetch(input, {
+    ...options,
+    headers: { cookie: testCookie, ...options.headers },
+  });
 const port = "3187";
 const child = spawn(process.execPath, ["scripts/run-next.ts", "start"], {
-  env: { ...process.env, PORT: port, NEXT_TELEMETRY_DISABLED: "1" },
+  env: {
+    ...process.env,
+    PORT: port,
+    NEXT_TELEMETRY_DISABLED: "1",
+    CATALOG_DATA_SOURCE: "json",
+    DATABASE_URL: "",
+    ADMIN_EMAIL: testUser.email,
+    ADMIN_NAME: testUser.name,
+    ADMIN_PASSWORD_HASH: testHash,
+    ADMIN_SESSION_SECRET: testSecret,
+  },
   stdio: ["ignore", "pipe", "pipe"],
 });
 let logs = "";
@@ -32,6 +65,128 @@ try {
     });
   });
   const base = `http://127.0.0.1:${port}`;
+  for (const route of ["/gestor/", "/gestor/produtos/", "/gestor/halloween/"]) {
+    const denied = await rawFetch(base + route, { redirect: "manual" });
+    const html = await denied.text();
+    assert.ok([200, 307].includes(denied.status));
+    assert.ok(
+      denied.headers.get("location")?.includes("/login") ||
+        html.includes("/login/"),
+    );
+    assert.ok(!html.includes('class="admin-stats"'));
+  }
+  for (const route of [
+    "/api/admin/overview/",
+    "/api/admin/products/",
+    "/api/admin/users/",
+  ])
+    assert.equal((await rawFetch(base + route)).status, 401);
+  assert.equal(
+    (await rawFetch(base + "/api/admin/settings/", { method: "POST" })).status,
+    401,
+  );
+  assert.equal(
+    (
+      await fetch(base + "/api/admin/settings/", {
+        method: "POST",
+        headers: { origin: "https://evil.example" },
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await rawFetch(base + "/api/auth/login/", {
+        method: "POST",
+        headers: {
+          origin: "https://evil.example",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ email: testUser.email, password: testPassword }),
+      })
+    ).status,
+    403,
+  );
+  const login = await rawFetch(base + "/api/auth/login/", {
+    method: "POST",
+    headers: { origin: base, "content-type": "application/json" },
+    body: JSON.stringify({
+      email: testUser.email,
+      password: testPassword,
+      next: "https://evil.example",
+    }),
+  });
+  assert.equal(login.status, 200);
+  const setCookie = login.headers.get("set-cookie") || "";
+  assert.match(setCookie, /HttpOnly/i);
+  assert.match(setCookie, /Secure/i);
+  assert.match(setCookie, /SameSite=lax/i);
+  assert.equal((await login.json()).next, "/gestor/");
+  const wrong = await rawFetch(base + "/api/auth/login/", {
+    method: "POST",
+    headers: { origin: base, "content-type": "application/json" },
+    body: JSON.stringify({ email: testUser.email, password: "wrong-password" }),
+  });
+  assert.equal(wrong.status, 401);
+  assert.equal(
+    (
+      await rawFetch(base + "/api/admin/overview/", {
+        headers: { cookie: testCookie + "tampered" },
+      })
+    ).status,
+    401,
+  );
+  const overview = await fetch(base + "/api/admin/overview/");
+  assert.equal(overview.status, 200);
+  assert.equal((await overview.json()).source, "json");
+  for (const route of [
+    "produtos",
+    "estoque",
+    "ofertas",
+    "catalogos",
+    "alteracoes",
+    "sincronizacoes",
+    "usuarios",
+    "configuracoes",
+    "calendario",
+    "relatorios",
+  ]) {
+    const page = await fetch(base + `/gestor/${route}/`);
+    assert.equal(page.status, 200, route);
+    const html = await page.text();
+    assert.match(html, /admin-sidebar/);
+    assert.ok(!html.includes(testSecret));
+    assert.ok(!html.includes(testHash));
+  }
+  const publicHome = await rawFetch(base + "/");
+  const publicHtml = await publicHome.text();
+  assert.ok(publicHtml.includes('href="/halloween/"'));
+  assert.ok(!publicHtml.includes('href="/gestor/halloween/"'));
+  const publicCatalog = await rawFetch(base + "/halloween/");
+  assert.equal(publicCatalog.status, 200);
+  assert.match(await publicCatalog.text(), /product-card/);
+  const logout = await fetch(base + "/api/auth/logout/", {
+    method: "POST",
+    headers: { origin: base },
+  });
+  assert.equal(logout.status, 200);
+  assert.match(logout.headers.get("set-cookie") || "", /Max-Age=0/i);
+  if (process.env.ADMIN_CAPTURE_DIR) {
+    await mkdir(process.env.ADMIN_CAPTURE_DIR, { recursive: true });
+    const capture = await fetch(base + "/gestor/");
+    await writeFile(
+      process.env.ADMIN_CAPTURE_DIR + "/overview.html",
+      await capture.text(),
+    );
+    const loginCapture = await rawFetch(base + "/login/");
+    await writeFile(
+      process.env.ADMIN_CAPTURE_DIR + "/login.html",
+      await loginCapture.text(),
+    );
+  }
+  console.log(
+    "Admin HTTP OK: rotas protegidas, login, cookies, CSRF, logout, dashboard e catálogos públicos.",
+  );
   const manifest = JSON.parse(
     await readFile(
       new URL("../public/data/catalogs/manifest.json", import.meta.url),

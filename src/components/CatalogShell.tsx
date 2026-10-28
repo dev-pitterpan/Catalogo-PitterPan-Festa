@@ -55,7 +55,7 @@ export default function CatalogShell({
   } as CSSProperties;
   const slug = catalog.slug,
     rootPrefix = "/";
-  const brandHref = isClient ? `/${slug}/` : "/",
+  const brandHref = isClient ? `/${slug}/` : "/gestor/",
     brandLabel = isClient
       ? "Pitter Pan Festas"
       : "Voltar ao gestor de catálogos";

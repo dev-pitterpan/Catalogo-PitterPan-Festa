@@ -65,15 +65,17 @@ function NavigationProgress() {
 function CatalogTile({
   catalog,
   compact = false,
+  publicView = false,
 }: {
   catalog: CatalogSummary;
   compact?: boolean;
+  publicView?: boolean;
 }) {
   const Icon = icons[catalog.slug] || CalendarDays;
   return (
     <Link
       className={`manager-hub__tile ${compact ? "manager-hub__tile--compact" : ""}`}
-      href={`/gestor/${catalog.slug}/`}
+      href={`${publicView ? "" : "/gestor"}/${catalog.slug}/`}
       prefetch={false}
     >
       <span className="manager-hub__icon">
@@ -96,8 +98,10 @@ function CatalogTile({
 }
 export default function ManagerHome({
   catalogs,
+  publicView = false,
 }: {
   catalogs: CatalogSummary[];
+  publicView?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const terms = normalizeText(query).split(" ").filter(Boolean);
@@ -125,9 +129,13 @@ export default function ManagerHome({
     <main className="manager-hub">
       <header className="manager-hub__topbar">
         <Link
-          href="/gestor/"
+          href={publicView ? "/" : "/gestor/"}
           className="manager-hub__brand"
-          aria-label="Início do gestor Pitter Pan"
+          aria-label={
+            publicView
+              ? "Início dos catálogos Pitter Pan"
+              : "Início do gestor Pitter Pan"
+          }
         >
           <img
             src="/assets/images/brand/pitter-pan-logo.svg"
@@ -140,7 +148,7 @@ export default function ManagerHome({
         </Link>
         <span className="manager-hub__account">
           <UserRound size={16} aria-hidden="true" />
-          <span>Área do gestor</span>
+          <span>{publicView ? "Catálogos Pitter Pan" : "Área do gestor"}</span>
         </span>
       </header>
       <div className="manager-hub__content">
@@ -162,7 +170,7 @@ export default function ManagerHome({
           {all && (
             <Link
               className="manager-hub__all"
-              href="/gestor/todos/"
+              href={publicView ? "/todos/" : "/gestor/todos/"}
               prefetch={false}
             >
               <span className="manager-hub__all-icon">
@@ -219,7 +227,11 @@ export default function ManagerHome({
               aria-label="Catálogos por departamento"
             >
               {filteredDepartments.map((catalog) => (
-                <CatalogTile key={catalog.slug} catalog={catalog} />
+                <CatalogTile
+                  key={catalog.slug}
+                  catalog={catalog}
+                  publicView={publicView}
+                />
               ))}
             </nav>
           </section>
@@ -240,7 +252,12 @@ export default function ManagerHome({
               aria-label="Catálogos de datas especiais"
             >
               {filteredSeasonal.map((catalog) => (
-                <CatalogTile key={catalog.slug} catalog={catalog} compact />
+                <CatalogTile
+                  key={catalog.slug}
+                  catalog={catalog}
+                  compact
+                  publicView={publicView}
+                />
               ))}
             </nav>
           </section>

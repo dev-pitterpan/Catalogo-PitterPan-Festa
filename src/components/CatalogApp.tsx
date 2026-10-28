@@ -87,7 +87,9 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
       : "";
     document.title = catalog
       ? `${catalog.name} | Pitter Pan Festas`
-      : "Pitter Pan Festas | Gestor de Catálogos";
+      : isClient
+        ? "Pitter Pan Festas | Catálogos"
+        : "Pitter Pan Festas | Gestor de Catálogos";
   }, [catalog, menuOpen, cartOpen, isClient]);
   useEffect(() => {
     function escape(event: KeyboardEvent) {
@@ -122,7 +124,7 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
     return (
       <>
         <div className="manager-page">
-          <ManagerHome catalogs={catalogs} />
+          <ManagerHome catalogs={catalogs} publicView={isClient} />
         </div>
       </>
     );

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { resolveCatalogRoute } from "../lib/routes";
 import type { CatalogPageData } from "../types/catalog";
+import { matchesCatalogRoute } from "../lib/catalog/page-state";
 /** O servidor fornece o primeiro conteúdo; consultas posteriores atualizam o cache da interface. */
 export function useCatalogPage(
   initialData: CatalogPageData,
@@ -26,6 +27,7 @@ export function useCatalogPage(
       filters.sort,
     ],
     initialData:
+      matchesCatalogRoute(initialData, route.slug) &&
       !filters.q &&
       !filters.category &&
       !filters.vendor &&
@@ -52,7 +54,12 @@ export function useCatalogPage(
       );
       if (!response.ok)
         throw new Error("Não foi possível carregar os produtos.");
-      return (await response.json()) as CatalogPageData;
+      const data = (await response.json()) as CatalogPageData;
+      if (!matchesCatalogRoute(data, route.slug))
+        throw new Error(
+          "O catálogo retornado não corresponde à página solicitada.",
+        );
+      return data;
     },
   });
   return {
@@ -60,9 +67,15 @@ export function useCatalogPage(
     ...route,
     fetching: result.isFetching,
     catalogs: result.data?.catalogs || initialData.catalogs,
-    catalog: result.data?.catalog || null,
-    config: result.data?.config || null,
-    loading: result.isPending,
+    catalog: matchesCatalogRoute(result.data, route.slug)
+      ? result.data?.catalog || null
+      : null,
+    config: matchesCatalogRoute(result.data, route.slug)
+      ? result.data?.config || null
+      : null,
+    loading:
+      result.isPending ||
+      (!result.error && !matchesCatalogRoute(result.data, route.slug)),
     error: result.error?.message,
   };
 }

@@ -34,3 +34,9 @@ Os departamentos consultam a união das coleções configuradas na Shopify; os p
 O manifesto interno mantém todos os handles originais da Shopify e os aliases locais. A navegação pública é uma projeção reduzida desse manifesto; portanto links antigos permanecem acessíveis. Natal reúne `natal` e `confeitarias-natal`. As duas rotas de Utensílios para Confeitar consultam a mesma união. Departamentos novos têm URLs próprias, sem alterar `siteUrl` dos produtos ou o checkout.
 
 Validação: 18 testes e build aprovados. O departamento Ofertas retornou 187 variantes únicas em dez páginas, com sete na última; o filtro de vendor foi conferido com dados reais.
+
+## Troca de catálogo e dados de outra rota
+
+A navegação remonta o estado do catálogo por pathname, limpa os filtros ao selecionar um catálogo e valida o slug antes de usar dados iniciais ou resultados de consultas. Assim, uma página de Todos não pode usar dados de Natal. Rotas públicas e do gestor têm loading.tsx para mostrar carregamento imediatamente enquanto a Shopify é consultada; links exibem indicação de navegação pendente.
+
+Os metadados usam o manifesto em vez de consultar o catálogo completo. A leitura da Shopify usa lotes de 40 produtos, com paginação adicional de variantes e coleções, e compartilha leituras pendentes entre recargas dos módulos de desenvolvimento. A primeira leitura de Todos ainda exige percorrer a loja; o cache é temporário e por processo. O checkout continua consultando as variantes selecionadas diretamente.

@@ -1,7 +1,6 @@
 import CategoryNavigation from "./navigation/CategoryNavigation";
 import CollectionNavigation from "./navigation/CollectionNavigation";
 import CatalogIcon from "./navigation/CatalogIcon";
-import { seasonalSlugs } from "./navigation/CatalogIcon";
 import { catalogVisual } from "../lib/catalog/visual";
 import { ChevronLeft, MessageCircle, Search } from "lucide-react";
 import Link from "next/link";
@@ -21,6 +20,7 @@ interface Props {
   count: number;
   selectedCategory: string;
   onCategorySelect: (category: string) => void;
+  onCatalogSelect: () => void;
   sharebar: ReactNode;
   children: ReactNode;
 }
@@ -38,6 +38,7 @@ export default function CatalogShell({
   count,
   selectedCategory,
   onCategorySelect,
+  onCatalogSelect,
   sharebar,
   children,
 }: Props) {
@@ -45,10 +46,7 @@ export default function CatalogShell({
     "collections",
   );
   const visual = catalogVisual(selectedCategory || catalog.slug);
-  const banner =
-    selectedCategory || !seasonalSlugs.has(catalog.slug)
-      ? visual.banner
-      : catalog.banner;
+  const banner = visual.banner;
   const visualStyle = {
     "--catalog-accent": visual.accent,
     "--catalog-accent-rgb": visual.accentRgb,
@@ -180,6 +178,7 @@ export default function CatalogShell({
               slug={slug}
               isClient={isClient}
               onClose={onClose}
+              onCatalogSelect={onCatalogSelect}
               categories={catalog.pagination?.categories}
               selectedCategory={selectedCategory}
               onCategorySelect={onCategorySelect}

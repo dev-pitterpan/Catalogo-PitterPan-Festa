@@ -68,10 +68,10 @@ export async function loadShopifyCatalog(
   const search = collectionIds.length
     ? `status:active AND (${collectionIds.map((id) => `collection_id:${id.split("/").at(-1)}`).join(" OR ")})`
     : "status:active";
-  const query = `query($after:String,$search:String!){ products(first:20,after:$after,query:$search,sortKey:ID) { nodes {
+  const query = `query($after:String,$search:String!){ products(first:40,after:$after,query:$search,sortKey:ID) { nodes {
     id title handle description productType vendor tags onlineStoreUrl featuredImage { url altText }
-    variants(first:5) { nodes { ${variantFields} } ${pageInfo} }
-    collections(first:5) { nodes { ${collectionFields} } ${pageInfo} }
+    variants(first:1) { nodes { ${variantFields} } ${pageInfo} }
+    collections(first:10) { nodes { ${collectionFields} } ${pageInfo} }
   } ${pageInfo} } }`;
   const products = new Map<string, Product>();
   const collections = new Map<string, Collection>();
@@ -166,11 +166,20 @@ export async function loadShopifyCatalog(
 }
 
 type Snapshot = Awaited<ReturnType<typeof loadShopifyCatalog>>;
-const snapshots = new Map<string, { value: Snapshot; expires: number }>();
-const pending = new Map<string, Promise<Snapshot>>();
+// Preserve single-flight reads across Next development module reloads.
+const cacheOwner = globalThis as typeof globalThis & {
+  shopifyCatalogReadsV2?: {
+    snapshots: Map<string, { value: Snapshot; expires: number }>;
+    pending: Map<string, Promise<Snapshot>>;
+  };
+};
+const { snapshots, pending } = (cacheOwner.shopifyCatalogReadsV2 ||= {
+  snapshots: new Map<string, { value: Snapshot; expires: number }>(),
+  pending: new Map<string, Promise<Snapshot>>(),
+});
 /** Publish only a complete snapshot; concurrent requests share the same read. */
 export function getShopifyCatalog(collectionIds: string[] = []) {
-  const key = [...collectionIds].sort().join(",");
+  const key = `${process.env.SHOPIFY_STORE_DOMAIN}:${process.env.SHOPIFY_API_VERSION || "2026-07"}:${[...collectionIds].sort().join(",")}`;
   const snapshot = snapshots.get(key);
   if (snapshot && snapshot.expires > Date.now())
     return Promise.resolve(snapshot.value);

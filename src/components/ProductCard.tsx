@@ -106,72 +106,74 @@ export default function ProductCard({
         </span>
         <h2>{product.name}</h2>
         <p>{product.description}</p>
-        {product.price !== undefined && (
-          <div className="product-price">
-            {product.compareAtPrice &&
-              moneyToMinor(product.compareAtPrice) >
-                moneyToMinor(product.price) && (
-                <del>
-                  {formatMoney(product.compareAtPrice, product.currency)}
-                </del>
-              )}
-            <strong>{formatMoney(product.price, product.currency)}</strong>
-            <small>Preço por unidade / variante</small>
-          </div>
-        )}
-        {product.shopifyVariantId && (
-          <button
-            type="button"
-            className="product-buy-button"
-            disabled={buying}
-            onClick={buyNow}
-          >
-            <ShoppingCart size={16} aria-hidden="true" />
-            {buying ? "Preparando checkout…" : "Comprar no site"}
-            <ArrowUpRight size={16} aria-hidden="true" />
-          </button>
-        )}
-        {buyError && (
-          <p className="product-buy-error" role="alert">
-            {buyError}
-          </p>
-        )}
-        {isClient ? (
-          <div className="product-card__actions">
-            {quantity ? (
-              <Quantity
-                name={product.name}
-                quantity={quantity}
-                onChange={onChange}
-              />
-            ) : (
-              <button
-                className="product-cart-button"
-                type="button"
-                onClick={() => onChange(1)}
-                aria-label={`Adicionar ${product.name} ao carrinho`}
-              >
-                <span className="product-cart-button__icon">
-                  <ShoppingCart aria-hidden="true" />
-                </span>
-                <span>Adicionar ao carrinho</span>
-              </button>
-            )}
-            <a
-              className="product-site-link"
-              href={product.siteUrl || website}
-              target="_blank"
-              rel="noopener noreferrer"
+        <div className="product-card__purchase">
+          {product.price !== undefined && (
+            <div className="product-price">
+              {product.compareAtPrice &&
+                moneyToMinor(product.compareAtPrice) >
+                  moneyToMinor(product.price) && (
+                  <del>
+                    {formatMoney(product.compareAtPrice, product.currency)}
+                  </del>
+                )}
+              <strong>{formatMoney(product.price, product.currency)}</strong>
+              <small>Preço por unidade / variante</small>
+            </div>
+          )}
+          {product.shopifyVariantId && (
+            <button
+              type="button"
+              className="product-buy-button"
+              disabled={buying}
+              onClick={buyNow}
             >
-              <span>Ver no site</span>
-              <ArrowUpRight aria-hidden="true" />
-            </a>
-          </div>
-        ) : (
-          <div className="product-card__footer">
-            <span className="product-add-label">Catálogo do gestor</span>
-          </div>
-        )}
+              <ShoppingCart size={16} aria-hidden="true" />
+              {buying ? "Preparando checkout…" : "Comprar no site"}
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </button>
+          )}
+          {buyError && (
+            <p className="product-buy-error" role="alert">
+              {buyError}
+            </p>
+          )}
+          {isClient ? (
+            <div className="product-card__actions">
+              {quantity ? (
+                <Quantity
+                  name={product.name}
+                  quantity={quantity}
+                  onChange={onChange}
+                />
+              ) : (
+                <button
+                  className="product-cart-button"
+                  type="button"
+                  onClick={() => onChange(1)}
+                  aria-label={`Adicionar ${product.name} ao carrinho`}
+                >
+                  <span className="product-cart-button__icon">
+                    <ShoppingCart aria-hidden="true" />
+                  </span>
+                  <span>Adicionar ao carrinho</span>
+                </button>
+              )}
+              <a
+                className="product-site-link"
+                href={product.siteUrl || website}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>Ver no site</span>
+                <ArrowUpRight aria-hidden="true" />
+              </a>
+            </div>
+          ) : (
+            <div className="product-card__footer">
+              <span className="product-add-label">Catálogo do gestor</span>
+            </div>
+          )}
+        </div>
       </div>
     </article>
   );

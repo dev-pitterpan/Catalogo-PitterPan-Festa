@@ -6,6 +6,7 @@ import LoadingState from "./LoadingState";
 import { useCatalogPage } from "../hooks/useCatalogPage";
 import { publicCatalogUrl } from "../lib/routes";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import CatalogShell from "../components/CatalogShell";
 import ProductCard from "../components/ProductCard";
 import QuoteCart from "../components/QuoteCart";
@@ -19,6 +20,11 @@ export default function CatalogApp({
 }: {
   initialData: CatalogPageData;
 }) {
+  const pathname = usePathname() || "/";
+  return <CatalogPage key={pathname} initialData={initialData} />;
+}
+
+function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [category, setCategory] = useState("");
@@ -127,7 +133,7 @@ export default function CatalogApp({
   );
   return (
     <div
-      className={`catalog-page theme-${catalog.slug}${isClient ? " client-page" : ""}`}
+      className={`catalog-page catalog-unified theme-${catalog.slug}${isClient ? " client-page" : ""}`}
     >
       {quote.storageError && (
         <p role="alert">
@@ -143,6 +149,14 @@ export default function CatalogApp({
         collapsed={collapsed}
         onToggle={() => setMenuOpen((open) => !open)}
         onClose={() => setMenuOpen(false)}
+        onCatalogSelect={() => {
+          setQuery("");
+          setDebouncedQuery("");
+          setCategory("");
+          setVendor("");
+          setSort("name");
+          setPage(1);
+        }}
         onCollapse={() => {
           if (innerWidth > 980) setCollapsed((value) => !value);
         }}

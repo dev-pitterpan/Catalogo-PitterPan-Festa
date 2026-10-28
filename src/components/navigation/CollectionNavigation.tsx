@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { Search, X, ChevronDown } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { CatalogSummary } from "../../types/catalog";
@@ -10,6 +10,15 @@ import { collectionGroups } from "../../lib/catalog/navigation";
 import { catalogVisual } from "../../lib/catalog/visual";
 import { departments, departmentHandles } from "../../lib/catalog/departments";
 
+function NavigationProgress() {
+  const { pending } = useLinkStatus();
+  return pending ? (
+    <span className="collection-navigation__pending" role="status">
+      Carregando…
+    </span>
+  ) : null;
+}
+
 export default function CollectionNavigation({
   catalogs,
   slug,
@@ -18,6 +27,7 @@ export default function CollectionNavigation({
   categories = [],
   selectedCategory = "",
   onCategorySelect,
+  onCatalogSelect,
 }: {
   catalogs: CatalogSummary[];
   slug: string;
@@ -26,6 +36,7 @@ export default function CollectionNavigation({
   categories?: { name: string; count: number }[];
   selectedCategory?: string;
   onCategorySelect?: (category: string) => void;
+  onCatalogSelect?: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [collapsedFilters, setCollapsedFilters] = useState<
@@ -123,6 +134,7 @@ export default function CollectionNavigation({
                     href={`${isClient ? "" : "/gestor"}/${item.slug}/`}
                     prefetch={false}
                     onClick={onClose}
+                    onNavigate={onCatalogSelect}
                     aria-current={item.slug === slug ? "page" : undefined}
                     title={item.name}
                     style={{ "--item-accent": item.accent } as CSSProperties}
@@ -131,6 +143,7 @@ export default function CollectionNavigation({
                       <CatalogIcon slug={item.slug} />
                     </span>
                     <span className="nav-name">{item.name}</span>
+                    <NavigationProgress />
                   </Link>
                   {item.slug === slug &&
                     !terms.length &&

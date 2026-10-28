@@ -424,3 +424,9 @@
     display: none;
   }
 }
+
+.collection-navigation__pending {
+  grid-column: 2;
+  font-size: 0.65rem;
+  color: var(--item-accent);
+}

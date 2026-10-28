@@ -1,3 +1,5 @@
+import Image from "next/image";
+import PartyChart from "../../../components/admin/PartyChart";
 import Link from "next/link";
 import {
   Package,
@@ -17,7 +19,6 @@ import { adminContext } from "../../../server/admin/repository";
 import { requireSession } from "../../../server/auth/session";
 import {
   DataNotice,
-  EmptyState,
   dateTime,
   number,
   statusLabels,
@@ -25,7 +26,6 @@ import {
 export default async function Overview() {
   const [context, user] = await Promise.all([adminContext(), requireSession()]);
   const s = context.summary;
-  const max = Math.max(1, ...context.categories.map((c) => c.count));
   const last = context.runs.find((r) => r.id === context.active);
   const stats = [
     {
@@ -109,15 +109,15 @@ export default async function Overview() {
           </Link>
         </div>
         <div className="admin-hero-art" aria-hidden="true">
-          <div className="admin-gift-scene">
-            <div className="admin-gift">
-              <i />
-              <b />
-              <span />
-            </div>
-            <div className="admin-orb admin-orb-gold" />
-            <div className="admin-orb admin-orb-blue" />
-            <span className="admin-confetti">✦</span>
+          <div className="admin-party-scene">
+            <Image
+              src="/assets/images/admin/login-party.webp"
+              alt=""
+              width={1536}
+              height={1024}
+              sizes="(max-width: 700px) 280px, 400px"
+              className="admin-party-illustration"
+            />
           </div>
           <div className="admin-art-label">
             <Sparkles size={16} />
@@ -159,52 +159,7 @@ export default async function Overview() {
             </div>
             <span className="admin-subtle">Variantes</span>
           </header>
-          {context.categories.length ? (
-            <div className="admin-bar-chart">
-              {context.categories.map((c, i) => (
-                <div className="admin-chart-row" key={c.name}>
-                  <div>
-                    <span>
-                      <i
-                        style={{
-                          background: [
-                            "#527fb5",
-                            "#7aa6c9",
-                            "#99bdd4",
-                            "#b5a2cd",
-                            "#c2ad88",
-                            "#80b5ad",
-                          ][i % 6],
-                        }}
-                      />
-                      {c.name}
-                    </span>
-                    <strong>{number(c.count)}</strong>
-                  </div>
-                  <div className="admin-chart-track">
-                    <span
-                      style={{
-                        width: `${(c.count / max) * 100}%`,
-                        background: [
-                          "#527fb5",
-                          "#7aa6c9",
-                          "#99bdd4",
-                          "#b5a2cd",
-                          "#c2ad88",
-                          "#80b5ad",
-                        ][i % 6],
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              title="Seu mix vai aparecer aqui"
-              description="As categorias serão organizadas após a primeira importação publicada."
-            />
-          )}
+          <PartyChart categories={context.categories} />
           <Link className="admin-text-link" href="/gestor/produtos/">
             Explorar todos os produtos <ArrowRight size={16} />
           </Link>

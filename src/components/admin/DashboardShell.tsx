@@ -1,4 +1,5 @@
 "use client";
+import PartyExperience, { PartySectionScene } from "./PartyExperience";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -159,7 +160,7 @@ export default function DashboardShell({
   const title =
     links.find((l) => l.href === pathname)?.label || "Central de gestão";
   return (
-    <div className="admin-app">
+    <PartyExperience>
       <a className="admin-skip-link" href="#admin-main">
         Ir para o conteúdo
       </a>
@@ -306,6 +307,7 @@ export default function DashboardShell({
           </Link>
         </header>
         <main className="admin-content" id="admin-main">
+          <PartySectionScene />
           {children}
         </main>
         <footer className="admin-footer">
@@ -313,6 +315,6 @@ export default function DashboardShell({
           <span>Pequenos detalhes. Grandes celebrações.</span>
         </footer>
       </div>
-    </div>
+    </PartyExperience>
   );
 }

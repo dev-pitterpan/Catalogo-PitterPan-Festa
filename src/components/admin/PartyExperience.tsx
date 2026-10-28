@@ -26,6 +26,12 @@ import { PartyHelper } from "./PartyChart";
 const MotionContext = createContext(true);
 export const usePartyMotion = () => useContext(MotionContext);
 const scenes = {
+  vendas: {
+    title: "Uma celebração a cada pedido",
+    detail: "Vendas confirmadas, com atenção a cada detalhe.",
+    icon: Package,
+    kind: "boxes",
+  },
   produtos: {
     title: "Cada produto, uma possibilidade",
     detail: "Seu acervo de ideias para celebrar.",

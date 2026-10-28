@@ -1,0 +1,404 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { PGlite } from "@electric-sql/pglite";
+import {
+  validSignature,
+  webhookOrderId,
+} from "../src/server/sales/security.ts";
+import { saveOrder, readSales } from "../src/server/sales/repository.ts";
+import { orderSchema, type SalesOrder } from "../src/server/sales/model.ts";
+import { ShopifyClient } from "../src/server/shopify/client.ts";
+const store = "fixture.myshopify.com";
+function order(id = "1"): SalesOrder {
+  const m = (amount: string) => ({
+    shopMoney: { amount, currencyCode: "BRL" },
+  });
+  return {
+    id: `gid://shopify/Order/${id}`,
+    name: `#${id}`,
+    processedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    cancelledAt: null,
+    test: false,
+    displayFinancialStatus: "PAID",
+    displayFulfillmentStatus: "UNFULFILLED",
+    totalPriceSet: m("100.00"),
+    totalReceivedSet: m("100.00"),
+    totalRefundedSet: m("0.00"),
+    netPaymentSet: m("100.00"),
+    lineItems: {
+      nodes: [
+        {
+          id: `gid://shopify/LineItem/${id}`,
+          title: "Balão",
+          sku: "SKU-COMPARTILHADO",
+          quantity: 3,
+          currentQuantity: 3,
+          variant: { id: "gid://shopify/ProductVariant/10" },
+          product: { id: "gid://shopify/Product/1" },
+        },
+      ],
+      pageInfo: { hasNextPage: false, endCursor: null },
+    },
+  };
+}
+test("webhook verifica bytes exatos, recusa assinatura adulterada e valida ID sem precisão perdida", () => {
+  const body = Buffer.from('{"id":123}'),
+    secret = "private-fixture";
+  const signature = createHmac("sha256", secret).update(body).digest("base64");
+  assert.equal(validSignature(body, signature, secret), true);
+  assert.equal(
+    validSignature(Buffer.from('{ "id":123}'), signature, secret),
+    false,
+  );
+  assert.equal(validSignature(body, signature, "wrong"), false);
+  assert.equal(validSignature(body, "bad", secret), false);
+  assert.equal(
+    webhookOrderId("orders/paid", { id: 123 }),
+    "gid://shopify/Order/123",
+  );
+  assert.equal(
+    webhookOrderId("refunds/create", { id: 123, order_id: "456" }),
+    "gid://shopify/Order/456",
+  );
+  assert.throws(() =>
+    webhookOrderId("orders/paid", { id: Number.MAX_SAFE_INTEGER + 1 }),
+  );
+});
+test("vendas: reenvio, eventos atrasados, reembolso, cancelamento, teste e outra loja não corrompem indicadores", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      "CREATE TABLE unrelated(id int PRIMARY KEY); INSERT INTO unrelated VALUES(7);",
+    );
+    const sql = await readFile(
+      new URL("../src/server/sales/schema.sql", import.meta.url),
+      "utf8",
+    );
+    await db.exec(sql);
+    await db.exec(sql);
+    const paid = order();
+    await saveOrder(db, store, paid, true);
+    await saveOrder(db, store, paid, true);
+    assert.equal(
+      (await db.query("SELECT * FROM pitterpan_sales_confirmations")).rows
+        .length,
+      1,
+    );
+    const old = {
+      ...paid,
+      updatedAt: new Date(Date.now() - 86400000).toISOString(),
+      displayFinancialStatus: "PENDING",
+    };
+    assert.equal(await saveOrder(db, store, old), false);
+    const refund = order("2");
+    refund.displayFinancialStatus = "PARTIALLY_REFUNDED";
+    refund.totalRefundedSet.shopMoney.amount = "40.00";
+    refund.netPaymentSet.shopMoney.amount = "60.00";
+    refund.lineItems.nodes[0].currentQuantity = 1;
+    refund.lineItems.nodes[0].variant = {
+      id: "gid://shopify/ProductVariant/20",
+    };
+    await saveOrder(db, store, refund, true);
+    const cancelled = order("3");
+    cancelled.cancelledAt = new Date().toISOString();
+    await saveOrder(db, store, cancelled, true);
+    const fake = order("4");
+    fake.test = true;
+    await saveOrder(db, store, fake, true);
+    await saveOrder(db, "another.myshopify.com", order("5"), true);
+    const data = await readSales(db, store, 30, "0");
+    assert.equal(data.totals[0].orders, "3");
+    assert.equal(data.totals[0].paid, "1");
+    assert.equal(data.totals[0].cancelled, "1");
+    assert.equal(Number(data.totals[0].net), 260);
+    assert.equal(Number(data.totals[0].refunded), 40);
+    assert.equal(data.top.length, 2);
+    assert.equal(data.top[0].units, "3");
+    assert.equal(data.top[1].units, "1");
+    assert.equal(data.events.length, 1);
+    const partial = order("6");
+    partial.lineItems.pageInfo.hasNextPage = true;
+    await assert.rejects(() => saveOrder(db, store, partial), /incompletos/);
+    const duplicate = order("6");
+    duplicate.lineItems.nodes.push(duplicate.lineItems.nodes[0]);
+    await assert.rejects(() => saveOrder(db, store, duplicate), /duplicados/);
+    const changed = {
+      ...paid,
+      updatedAt: new Date(Date.now() + 1000).toISOString(),
+      cancelledAt: new Date().toISOString(),
+    };
+    await saveOrder(db, store, changed);
+    assert.equal((await readSales(db, store, 30, "0")).events.length, 0);
+    assert.deepEqual((await db.query("SELECT * FROM unrelated")).rows, [
+      { id: 7 },
+    ]);
+    assert.equal(
+      orderSchema.safeParse({
+        ...paid,
+        totalReceivedSet: { shopMoney: { amount: "100", currencyCode: "USD" } },
+      }).success,
+      false,
+    );
+  } finally {
+    await db.close();
+  }
+});
+test("cliente de vendas usa credencial explícita e não herda token do catálogo", async (t) => {
+  const calls: { url: string; body: string; authorization: string | null }[] =
+    [];
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async (url: string, options: RequestInit) => {
+      const headers = new Headers(options.headers);
+      calls.push({
+        url: String(url),
+        body: String(options.body),
+        authorization: headers.get("X-Shopify-Access-Token"),
+      });
+      return new Response(
+        JSON.stringify(
+          String(url).includes("oauth")
+            ? { access_token: "sales-fixture-token", expires_in: 86399 }
+            : { data: { ok: true } },
+        ),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    },
+  );
+  const api = new ShopifyClient({
+    SHOPIFY_STORE_DOMAIN: store,
+    SHOPIFY_CLIENT_ID: "sales-app",
+    SHOPIFY_CLIENT_SECRET: "sales-secret",
+  });
+  await api.query("{ shop { id } }");
+  assert.match(calls[0].body, /client_id=sales-app/);
+  assert.match(calls[0].body, /client_secret=sales-secret/);
+  assert.equal(calls[1].authorization, "sales-fixture-token");
+  assert.equal(calls.length, 2);
+});
+
+test("worker retoma cursor, completa itens, deduplica pagamento e preserva checkpoint após falha", async (t) => {
+  const db = new PGlite();
+  await db.exec(
+    await readFile(
+      new URL("../src/server/sales/schema.sql", import.meta.url),
+      "utf8",
+    ),
+  );
+  const globals = globalThis as typeof globalThis & { catalogPool?: unknown };
+  const previousPool = globals.catalogPool;
+  globals.catalogPool = {
+    query: db.query.bind(db),
+    connect: async () => ({ query: db.query.bind(db), release() {} }),
+  };
+  const keys = [
+    "DATABASE_URL",
+    "SHOPIFY_SALES_STORE_DOMAIN",
+    "SHOPIFY_SALES_CLIENT_ID",
+    "SHOPIFY_SALES_CLIENT_SECRET",
+  ];
+  const previous = keys.map((k) => process.env[k]);
+  process.env.DATABASE_URL = "postgresql://fixture.invalid/test";
+  process.env.SHOPIFY_SALES_STORE_DOMAIN = store;
+  process.env.SHOPIFY_SALES_CLIENT_ID = "fixture";
+  process.env.SHOPIFY_SALES_CLIENT_SECRET = "fixture";
+  t.after(async () => {
+    globals.catalogPool = previousPool;
+    keys.forEach((k, i) => {
+      if (previous[i] === undefined) delete process.env[k];
+      else process.env[k] = previous[i];
+    });
+    await db.close();
+  });
+  const { syncSalesPage } = await import("../src/server/sales/sync.ts");
+  let fail = false,
+    pageCalls = 0;
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async (url: string, options: RequestInit) => {
+      if (String(url).includes("oauth"))
+        return new Response(
+          JSON.stringify({ access_token: "fixture-token", expires_in: 86399 }),
+        );
+      const { query, variables } = JSON.parse(String(options.body));
+      if (fail)
+        return new Response(
+          JSON.stringify({
+            errors: [{ extensions: { code: "ACCESS_DENIED" } }],
+          }),
+        );
+      let data;
+      if (query.includes("orders(first:5")) {
+        pageCalls++;
+        if (!variables.after) {
+          const partial = order("10");
+          partial.lineItems.pageInfo = {
+            hasNextPage: true,
+            endCursor: "line-next",
+          };
+          data = {
+            orders: {
+              nodes: [partial],
+              pageInfo: { hasNextPage: true, endCursor: "order-next" },
+            },
+          };
+        } else {
+          assert.equal(variables.after, "order-next");
+          data = {
+            orders: {
+              nodes: [order("11")],
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+          };
+        }
+      } else if (query.includes("lineItems(first:100")) {
+        const extra = {
+          ...order("12").lineItems.nodes[0],
+          variant: { id: "gid://shopify/ProductVariant/12" },
+        };
+        data = {
+          order: {
+            updatedAt: partialUpdatedAt,
+            lineItems: {
+              nodes: [extra],
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+          },
+        };
+      } else {
+        data = {
+          order:
+            variables.id === "gid://shopify/Order/999" ? null : order("20"),
+        };
+      }
+      // Keep the pagination consistency timestamp stable across both calls.
+      if (query.includes("orders(first:5") && !variables.after) {
+        if (data.orders) data.orders.nodes[0].updatedAt = partialUpdatedAt;
+      }
+      return new Response(JSON.stringify({ data }));
+    },
+  );
+  const partialUpdatedAt = new Date().toISOString();
+  const first = await syncSalesPage();
+  assert.equal(first.more, true);
+  assert.equal(
+    (
+      await db.query(
+        "SELECT * FROM pitterpan_sales_items WHERE order_id='gid://shopify/Order/10'",
+      )
+    ).rows.length,
+    2,
+  );
+  fail = true;
+  await assert.rejects(() => syncSalesPage());
+  const checkpoint = (
+    await db.query<{
+      cursor: string;
+      completed_at: Date | null;
+      lease_id: string | null;
+    }>("SELECT cursor,completed_at,lease_id FROM pitterpan_sales_sync")
+  ).rows[0];
+  assert.equal(checkpoint.cursor, "order-next");
+  assert.equal(checkpoint.completed_at, null);
+  assert.equal(checkpoint.lease_id, null);
+  fail = false;
+  assert.equal((await syncSalesPage()).more, false);
+  assert.equal(pageCalls, 2);
+  await db.query(
+    "INSERT INTO pitterpan_sales_inbox(store,delivery_id,topic,order_id) VALUES($1,'delivery-1','orders/paid','gid://shopify/Order/20'),($1,'delivery-2','orders/paid','gid://shopify/Order/20')",
+    [store],
+  );
+  await syncSalesPage();
+  assert.equal(
+    (await db.query("SELECT * FROM pitterpan_sales_confirmations")).rows.length,
+    1,
+  );
+  assert.equal(
+    (
+      await db.query(
+        "SELECT * FROM pitterpan_sales_inbox WHERE done_at IS NULL",
+      )
+    ).rows.length,
+    0,
+  );
+  await db.query(
+    "INSERT INTO pitterpan_sales_inbox(store,delivery_id,topic,order_id) VALUES($1,'invalid-order','orders/paid','gid://shopify/Order/999')",
+    [store],
+  );
+  await syncSalesPage();
+  const retry = (
+    await db.query<{ attempts: number; done_at: Date | null }>(
+      "SELECT attempts,done_at FROM pitterpan_sales_inbox WHERE delivery_id='invalid-order'",
+    )
+  ).rows[0];
+  assert.equal(retry.attempts, 1);
+  assert.equal(retry.done_at, null);
+  await db.query(
+    "UPDATE pitterpan_sales_inbox SET attempts=10 WHERE delivery_id='invalid-order'",
+  );
+  assert.equal((await readSales(db, store, 30)).failed, 1);
+  await db.query(
+    "UPDATE pitterpan_sales_sync SET lease_until=now()+interval '10 minutes'",
+  );
+  assert.equal((await syncSalesPage()).busy, true);
+});
+
+test("setup reaproveita arquivo validado com BOM e preserva as credenciais e banco existentes", async () => {
+  const { mkdtemp, writeFile, readFile, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const { spawnSync } = await import("node:child_process");
+  const { parseEnv } = await import("node:util");
+  const root = await mkdtemp(join(tmpdir(), "pitter-sales-test-"));
+  try {
+    const original =
+      'SHOPIFY_CLIENT_ID=original-app\nSHOPIFY_CLIENT_SECRET=original-secret\nSHOPIFY_ADMIN_ACCESS_TOKEN=original-token\nDATABASE_URL=postgresql://original-db\nADMIN_PASSWORD_HASH="scrypt:fixture:key"\nSHOPIFY_SALES_CLIENT_ID=\n';
+    await writeFile(join(root, ".env"), original);
+    await writeFile(
+      join(root, ".env.shopify-test.local"),
+      "\uFEFFSHOPIFY_STORE_DOMAIN=fixture.myshopify.com\nSHOPIFY_CLIENT_ID=new-app\nSHOPIFY_CLIENT_SECRET=new-secret\nSHOPIFY_API_VERSION=2026-10\n",
+    );
+    const script = fileURLToPath(
+      new URL("../scripts/sales/setup.ts", import.meta.url),
+    );
+    const result = spawnSync(process.execPath, [script], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(!result.stdout.includes("new-secret"));
+    const text = await readFile(join(root, ".env"), "utf8"),
+      env = parseEnv(text);
+    assert.equal(env.SHOPIFY_CLIENT_ID, "original-app");
+    assert.equal(env.SHOPIFY_CLIENT_SECRET, "original-secret");
+    assert.equal(env.SHOPIFY_ADMIN_ACCESS_TOKEN, "original-token");
+    assert.equal(env.DATABASE_URL, "postgresql://original-db");
+    assert.equal(env.SHOPIFY_SALES_CLIENT_ID, "new-app");
+    assert.equal(env.SHOPIFY_SALES_CLIENT_SECRET, "new-secret");
+    assert.equal(env.CRON_SECRET?.length, 64);
+    const again = spawnSync(process.execPath, [script], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.equal(again.status, 0);
+    assert.equal(await readFile(join(root, ".env"), "utf8"), text);
+    await writeFile(
+      join(root, ".env.shopify-test.local"),
+      "SHOPIFY_STORE_DOMAIN=fixture.myshopify.com\nSHOPIFY_CLIENT_ID=different-app\nSHOPIFY_CLIENT_SECRET=different-secret\n",
+    );
+    assert.notEqual(
+      spawnSync(process.execPath, [script], { cwd: root, encoding: "utf8" })
+        .status,
+      0,
+    );
+    assert.equal(await readFile(join(root, ".env"), "utf8"), text);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

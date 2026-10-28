@@ -126,3 +126,7 @@ A estrutura opcional de PostgreSQL inclui importação Shopify em lotes, versõe
 O painel usa `/gestor/`, com rotas de produtos, estoque, ofertas, catálogos, alterações, sincronizações, calendário, relatórios, equipe e configurações. O acesso da equipe é protegido; clientes continuam abrindo `/[slug]/` sem login.
 
 Execute `npm run admin:setup` para definir a conta principal localmente. Cadastre as variáveis geradas no ambiente correto da Vercel antes de entrar. Não existe senha padrão e o acesso permanece fechado sem configuração. Para dados completos e outras contas, prepare o banco exclusivo e publique a importação conforme [docs/ADMIN.md](docs/ADMIN.md).
+
+### Vendas Shopify
+
+O módulo de vendas em `/gestor/vendas/` usa credenciais próprias, importação retomável e fila autenticada de eventos. Consulte [docs/VENDAS.md](docs/VENDAS.md) para ativar sem substituir a integração atual do catálogo. A publicação do código não executa migrações nem agenda sincronizações automaticamente.

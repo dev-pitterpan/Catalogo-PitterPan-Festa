@@ -12,6 +12,7 @@ import {
   Package,
   Boxes,
   BadgePercent,
+  ShoppingCart,
   BookOpen,
   ArrowLeftRight,
   RefreshCw,
@@ -27,6 +28,12 @@ import {
 import type { Role } from "../../server/auth/crypto";
 const links = [
   { href: "/gestor/", label: "Visão geral", icon: LayoutDashboard },
+  {
+    href: "/gestor/vendas/",
+    label: "Vendas e vendidos",
+    icon: ShoppingCart,
+    financial: true,
+  },
   { href: "/gestor/produtos/", label: "Produtos", icon: Package },
   { href: "/gestor/estoque/", label: "Estoque", icon: Boxes },
   { href: "/gestor/ofertas/", label: "Ofertas", icon: BadgePercent },
@@ -56,6 +63,7 @@ const navigationGroups = [
     label: "Sua operação",
     paths: [
       "/gestor/",
+      "/gestor/vendas/",
       "/gestor/produtos/",
       "/gestor/estoque/",
       "/gestor/ofertas/",
@@ -211,7 +219,8 @@ export default function DashboardShell({
             const items = links.filter(
               (link) =>
                 group.paths.includes(link.href) &&
-                (!link.admin || user.role === "admin"),
+                (!link.admin || user.role === "admin") &&
+                (!link.financial || user.role !== "atendimento"),
             );
             if (!items.length) return null;
             return (

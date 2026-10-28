@@ -32,6 +32,11 @@ const child = spawn(process.execPath, ["scripts/run-next.ts", "start"], {
     NEXT_TELEMETRY_DISABLED: "1",
     CATALOG_DATA_SOURCE: "json",
     DATABASE_URL: "",
+    SHOPIFY_SALES_STORE_DOMAIN: "fixture.myshopify.com",
+    SHOPIFY_SALES_CLIENT_ID: "fixture",
+    SHOPIFY_SALES_CLIENT_SECRET: "test-webhook-secret",
+    SHOPIFY_SALES_WEBHOOK_SECRET: "",
+    CRON_SECRET: "fixture-cron-secret-with-at-least-32-characters",
     ADMIN_EMAIL: testUser.email,
     ADMIN_NAME: testUser.name,
     ADMIN_PASSWORD_HASH: testHash,
@@ -65,7 +70,12 @@ try {
     });
   });
   const base = `http://127.0.0.1:${port}`;
-  for (const route of ["/gestor/", "/gestor/produtos/", "/gestor/halloween/"]) {
+  for (const route of [
+    "/gestor/",
+    "/gestor/produtos/",
+    "/gestor/vendas/",
+    "/gestor/halloween/",
+  ]) {
     const denied = await rawFetch(base + route, { redirect: "manual" });
     const html = await denied.text();
     assert.ok([200, 307].includes(denied.status));
@@ -76,6 +86,7 @@ try {
     assert.ok(!html.includes('class="admin-stats"'));
   }
   for (const route of [
+    "/api/admin/sales/",
     "/api/admin/overview/",
     "/api/admin/products/",
     "/api/admin/users/",
@@ -166,6 +177,39 @@ try {
     ).status,
     401,
   );
+  assert.equal(
+    (await rawFetch(base + "/api/admin/sales/", { method: "POST" })).status,
+    401,
+  );
+  assert.equal(
+    (
+      await fetch(base + "/api/admin/sales/", {
+        method: "POST",
+        headers: { origin: "https://evil.example" },
+      })
+    ).status,
+    403,
+  );
+  assert.equal((await fetch(base + "/api/admin/sales/")).status, 503);
+  assert.equal((await rawFetch(base + "/api/cron/sales/")).status, 401);
+  assert.equal(
+    (
+      await rawFetch(base + "/api/webhooks/shopify/sales/", {
+        method: "POST",
+        headers: {
+          "x-shopify-shop-domain": "fixture.myshopify.com",
+          "x-shopify-topic": "orders/paid",
+          "x-shopify-webhook-id": "fixture-delivery-id",
+          "x-shopify-hmac-sha256": "invalid",
+        },
+        body: '{"id":123}',
+      })
+    ).status,
+    401,
+  );
+  const salesPage = await fetch(base + "/gestor/vendas/");
+  assert.equal(salesPage.status, 200);
+  assert.ok((await salesPage.text()).includes("Cada venda"));
   const overview = await fetch(base + "/api/admin/overview/");
   assert.equal(overview.status, 200);
   assert.equal((await overview.json()).source, "json");

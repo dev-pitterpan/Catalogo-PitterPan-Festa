@@ -15,7 +15,10 @@ export const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 /** Token não sai do processo servidor. Não inclui resposta/credencial em mensagens de erro. */
 export class ShopifyClient {
-  private config = configSchema.parse(process.env);
+  private config: z.infer<typeof configSchema>;
+  constructor(environment: Record<string, string | undefined> = process.env) {
+    this.config = configSchema.parse(environment);
+  }
   private token = "";
   private expires = 0;
   get domain() {
@@ -154,7 +157,7 @@ export class ShopifyClient {
           continue;
         }
         throw new Error(
-          "Erro GraphQL Shopify. Confira campos da versão e read_products; nenhum dado foi publicado.",
+          "Erro GraphQL Shopify. Confira os campos da versão e as permissões do aplicativo.",
         );
       }
       if (!payload.data) throw new Error("Resposta Shopify sem dados.");

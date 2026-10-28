@@ -18,7 +18,12 @@
     "shopify:publish": "node scripts/shopify-publish.ts",
     "test:scale": "node --experimental-strip-types --test tests/scale.test.ts",
     "shopify:report": "node scripts/shopify-report.ts",
-    "admin:setup": "node scripts/admin-setup.ts"
+    "admin:setup": "node scripts/admin-setup.ts",
+    "sales:migrate": "node scripts/sales/migrate.ts",
+    "sales:sync": "node scripts/sales/sync.ts",
+    "sales:setup": "node scripts/sales/setup.ts",
+    "sales:webhooks": "node scripts/sales/webhooks.ts",
+    "sales:retry": "node scripts/sales/retry.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.5",

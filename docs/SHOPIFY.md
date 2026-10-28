@@ -70,3 +70,11 @@ A sincronização é manual; não há webhooks, agendamento nem edição adminis
 `npm test` inclui PostgreSQL embarcado de teste com 13.518 variantes simuladas, preços, paginação, categorias e publicação. Isso não substitui uma importação completa da sua loja, revisão visual e teste de carga no provedor real. Antes da virada, confira SKUs sem cadastro, duplicados, produtos publicados, correspondência de coleções, contagens e uma compra de teste. Não há garantia de ausência total de erros.
 
 Referências oficiais: [Bulk operations](https://shopify.dev/docs/apps/build/apis/graphql-admin/bulk-operations/queries), [escopos](https://shopify.dev/docs/api/usage/access-scopes) e [client credentials](https://shopify.dev/docs/apps/build/authentication-authorization/client-credentials-grant).
+
+## Cache da leitura direta da Shopify
+
+No modo `shopify`, as páginas GraphQL e a lista de coleções usam o Data Cache do Next, com revalidação de 300 segundos. O cache por consulta/página permite reutilizar resultados entre requisições e instâncias na hospedagem compatível, sem tentar guardar os milhares de produtos em uma única entrada. Apenas respostas validadas pelo cliente Shopify são armazenadas; erros não viram catálogo válido. As chaves identificam loja, versão, consulta e variáveis, sem incluir credenciais.
+
+O cache em memória continua unificando chamadas simultâneas na mesma instância. Preços e dados da vitrine podem levar alguns minutos para refletir alterações; o carrinho e o checkout continuam buscando somente as variantes selecionadas diretamente na Shopify, sem esse cache. O primeiro acesso sem cache ainda depende da latência e dos limites da API. Para uma base grande, a fonte PostgreSQL importada continua sendo o caminho para retirar a varredura da Shopify da abertura das páginas.
+
+A interface exibe imediatamente os dados iniciais enviados pelo servidor. A animação de carregamento aparece apenas enquanto faltam dados, sem acrescentar uma espera fixa após a resposta.

@@ -1,3 +1,4 @@
+import { cachedShopifyClient } from "./cached-client.ts";
 import { ShopifyClient } from "./client.ts";
 import { shopifyImageUrl } from "./media.ts";
 import type { Product } from "../../types/catalog.ts";
@@ -202,7 +203,7 @@ export function getShopifyCatalog(collectionIds: string[] = []) {
     return Promise.resolve(snapshot.value);
   const existing = pending.get(key);
   if (existing) return existing;
-  const request = loadShopifyCatalog(new ShopifyClient(), collectionIds)
+  const request = loadShopifyCatalog(cachedShopifyClient(), collectionIds)
     .then((value) => {
       snapshots.set(key, { value, expires: Date.now() + 300_000 });
       return value;
@@ -220,7 +221,7 @@ export function getShopifyCollections() {
   if (collectionCache && collectionCache.expires > Date.now())
     return Promise.resolve(collectionCache.value);
   return (collectionPending ||= (async () => {
-    const client = new ShopifyClient();
+    const client = cachedShopifyClient();
     const page = async (
       after: string | null,
     ): Promise<Connection<Collection>> => {

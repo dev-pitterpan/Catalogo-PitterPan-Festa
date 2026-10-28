@@ -79,11 +79,17 @@ try {
     200,
   );
   assert.equal((await fetch(base + "/assets/inexistente.webp")).status, 404);
-  assert.equal((await fetch(base + "/colecao-inexistente/")).status, 404);
-  assert.equal(
-    (await fetch(base + "/gestor/colecao-inexistente/")).status,
-    404,
-  );
+  // Next pode ter iniciado streaming antes de notFound(); confira também o documento.
+  for (const path of [
+    "/colecao-inexistente/",
+    "/gestor/colecao-inexistente/",
+  ]) {
+    const missing = await fetch(base + path);
+    assert.ok([200, 404].includes(missing.status));
+    const html = await missing.text();
+    assert.match(html, /Este catálogo não está disponível/);
+    assert.match(html, /name="robots" content="noindex"/);
+  }
   assert.equal(
     (await fetch(base + "/api/health/", { method: "POST" })).status,
     405,

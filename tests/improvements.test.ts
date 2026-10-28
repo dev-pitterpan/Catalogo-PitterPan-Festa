@@ -169,7 +169,9 @@ test("restauração do carrinho descarta dados inválidos e une a mesma variante
   assert.equal(selected[0].image, "");
 });
 
-test("Shopify limita tempo de falha em vez de aguardar múltiplos timeouts longos", async () => {
+test("Shopify limita tempo de falha em vez de aguardar múltiplos timeouts longos", async (context) => {
+  // O teste compara Retry-After com o orçamento; não depende da velocidade do runner.
+  context.mock.method(Date, "now", () => 1_793_200_000_000);
   const originalFetch = globalThis.fetch;
   const originalDomain = process.env.SHOPIFY_STORE_DOMAIN;
   const originalToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;

@@ -189,6 +189,7 @@ export default function CatalogShell({
             hidden={section !== "categories"}
           >
             <CategoryNavigation
+              active={section === "categories"}
               key={slug}
               slug={slug}
               selected={selectedCategory}

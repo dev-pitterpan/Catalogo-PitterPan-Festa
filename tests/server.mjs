@@ -96,6 +96,10 @@ try {
   );
   const pageResponse = await fetch(base + "/api/catalogs/halloween/?q=8936");
   assert.equal(pageResponse.status, 200);
+  assert.match(
+    pageResponse.headers.get("server-timing") || "",
+    /^catalog;dur=\d/,
+  );
   const pageData = await pageResponse.json();
   assert.ok(pageData.catalog.products.some((product) => product.id === "8936"));
   assert.ok(pageData.catalog.products.length <= 20);

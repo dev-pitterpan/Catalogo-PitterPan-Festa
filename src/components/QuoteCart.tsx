@@ -169,7 +169,7 @@ export default function QuoteCart({
                 <img src={asset(item.image)} alt="" />
               </div>
               <div className="quote-item__content">
-                <span className="quote-item__code">{item.id}</span>
+                <span className="quote-item__code">{item.sku || item.id}</span>
                 <strong>{item.name}</strong>
                 <small>{item.category}</small>
                 {priceStatus === "ready" &&

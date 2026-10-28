@@ -13,7 +13,7 @@ import QuoteCart from "../components/QuoteCart";
 import ShareBar from "../components/ShareBar";
 import ManagerHome from "./manager/ManagerHome";
 import { useQuote } from "../hooks/useQuote";
-import { whatsappUrl } from "../lib/quote";
+import { MAX_CART_ITEMS, whatsappUrl } from "../lib/quote";
 
 export default function CatalogApp({
   initialData,
@@ -232,6 +232,12 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
               : `${catalog.pagination?.total ?? products.length} produtos encontrados`}
           </span>
         </div>
+        {isClient && quote.selected.length >= MAX_CART_ITEMS && (
+          <p role="status">
+            Seu carrinho atingiu o limite de {MAX_CART_ITEMS} produtos
+            diferentes. Remova um item para adicionar outro.
+          </p>
+        )}
         {products.length ? (
           products.map((product) => (
             <ProductCard
@@ -239,8 +245,12 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
               product={product}
               isClient={isClient}
               quantity={
-                quote.selected.find((item) => item.id === product.id)
-                  ?.quantity || 0
+                quote.selected.find(
+                  (item) =>
+                    item.id === product.id ||
+                    (!!item.shopifyVariantId &&
+                      item.shopifyVariantId === product.shopifyVariantId),
+                )?.quantity || 0
               }
               onChange={(delta) =>
                 quote.change(product, delta, catalog, config)

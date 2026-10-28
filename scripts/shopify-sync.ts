@@ -42,19 +42,6 @@ try {
       ),
     ),
   ).mappings;
-  const manifest = JSON.parse(
-    await readFile(
-      new URL("../public/data/catalogs/manifest.json", import.meta.url),
-      "utf8",
-    ),
-  );
-  for (const mapping of mappings)
-    if (
-      !manifest.catalogs.some(
-        (catalog: { slug: string }) => catalog.slug === mapping.catalogSlug,
-      )
-    )
-      throw new Error(`Coleção local desconhecida: ${mapping.catalogSlug}`);
   const resumeIndex = process.argv.indexOf("--resume");
   let operation: string;
   if (resumeIndex >= 0) {
@@ -179,6 +166,34 @@ try {
     throw new Error(
       "Esta versão usa preços BRL. Configure a moeda/mercado antes de importar outra moeda.",
     );
+  const legacyCollections = await connection.query<{ total: string }>(
+    `SELECT count(*)::text AS total FROM catalog_raw WHERE import_id=$1
+     AND data->>'id' LIKE 'gid://shopify/Collection/%' AND COALESCE(data->>'handle','')=''`,
+    [run],
+  );
+  if (Number(legacyCollections.rows[0].total))
+    throw new Error(
+      "Exportação antiga sem handles de coleção. Inicie uma nova importação sem --resume.",
+    );
+  // Coleções e produtos pertencem à mesma versão; a publicação continua atômica.
+  await connection.query("DELETE FROM catalog_collections WHERE import_id=$1", [
+    run,
+  ]);
+  await connection.query(
+    `INSERT INTO catalog_collections(import_id,id,handle,title)
+     SELECT $1,data->>'id',data->>'handle',data->>'title'
+     FROM catalog_raw WHERE import_id=$1 AND data->>'id' LIKE 'gid://shopify/Collection/%'
+       AND COALESCE(data->>'handle','')<>''
+     GROUP BY data->>'id',data->>'handle',data->>'title'`,
+    [run],
+  );
+  const collectionRows = await connection.query<{ id: string; handle: string }>(
+    "SELECT id,handle FROM catalog_collections WHERE import_id=$1",
+    [run],
+  );
+  const collectionHandles = new Map(
+    collectionRows.rows.map((item) => [item.id, item.handle]),
+  );
   let cursor = 0,
     imported = 0,
     missingImages = 0,
@@ -199,11 +214,16 @@ try {
       .map((row) => {
         if (!row.product)
           throw new Error(`Variante sem produto pai na linha ${row.line}.`);
-        const catalogSlugs = mappings
-          .filter((mapping) =>
-            (row.collection_ids as string[]).includes(mapping.collectionId),
-          )
-          .map((mapping) => mapping.catalogSlug);
+        const catalogSlugs = [
+          ...(row.collection_ids as string[]).flatMap((id) =>
+            collectionHandles.get(id) ? [collectionHandles.get(id)!] : [],
+          ),
+          ...mappings
+            .filter((mapping) =>
+              (row.collection_ids as string[]).includes(mapping.collectionId),
+            )
+            .map((mapping) => mapping.catalogSlug),
+        ];
         return normalizeVariant(
           row.product,
           row.variant,
@@ -220,7 +240,7 @@ try {
       for (const slug of item.collections)
         categoryCounts[slug] = (categoryCounts[slug] || 0) + 1;
     }
-    // SKU vazio/duplicado e variante duplicada impedem a publicação por validação/constraint.
+    // Identidade é a variante: SKU vazio/compartilhado não elimina produtos.
     await stageItems(connection, run, items);
     cursor = Number(rows.at(-1).line);
   }
@@ -255,7 +275,7 @@ try {
     error instanceof z.ZodError
       ? "Dados ou configuração inválidos: confira SKUs, domínio, IDs de coleções e campos obrigatórios."
       : (error as { code?: string })?.code === "23505"
-        ? "SKU ou variante duplicada: corrija a origem e reimporte. A versão ativa foi preservada."
+        ? "Variante ou coleção duplicada: revise a origem e reimporte. A versão ativa foi preservada."
         : error instanceof Error
           ? error.message
           : "Importação falhou.",

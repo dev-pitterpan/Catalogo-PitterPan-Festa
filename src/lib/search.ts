@@ -112,6 +112,11 @@ export const productSearchScore = (
   catalogName = "",
 ) => {
   const query = normalizeSearchText(rawQuery);
+  // Códigos não recebem tolerância de palavras: números da descrição não são SKUs.
+  if (/^\d+$/.test(query)) {
+    const sku = product.sku ?? product.id;
+    return sku === query ? 1000 : sku.startsWith(query) ? 100 : 0;
+  }
   const queryTokens = tokenizeSearch(rawQuery);
   if (!queryTokens.length) return 1;
 

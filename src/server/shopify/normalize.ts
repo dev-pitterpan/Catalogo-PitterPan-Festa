@@ -33,7 +33,7 @@ const variantSchema = z.object({
     }
   }),
   compareAtPrice: z.string().nullable().optional(),
-  sku: z.string().trim().min(1).max(100),
+  sku: z.string().trim().max(100).nullable().optional(),
   title: z.string(),
   inventoryQuantity: z.number().int().nullable().optional(),
   image: imageSchema.nullable().optional(),
@@ -63,7 +63,8 @@ export function normalizeVariant(
   const name = [p.title, variantName].filter(Boolean).join(" — ");
   site.searchParams.set("variant", v.id.split("/").at(-1)!);
   return {
-    id: v.sku,
+    id: `shopify-${v.id.split("/").at(-1)!}`,
+    sku: v.sku || "",
     price: v.price,
     compare_at_price:
       v.compareAtPrice && moneyToMinor(v.compareAtPrice) > moneyToMinor(v.price)

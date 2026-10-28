@@ -1,3 +1,4 @@
+import { departmentHandles } from "../../lib/catalog/departments.ts";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 import { z } from "zod";
@@ -49,8 +50,13 @@ export async function categoryPage(
   );
   const snapshot = await activeSnapshot(db);
   const all = await db.query<{ category: string; total: string }>(
-    "SELECT category,count(*)::text AS total FROM catalog_items WHERE import_id=$1 AND ($2='todos' OR collections @> ARRAY[$2]::text[]) GROUP BY category ORDER BY category",
-    [snapshot, slug],
+    "SELECT category,count(*)::text AS total FROM catalog_items WHERE import_id=$1 AND ($2::text[] IS NULL OR collections && $2::text[]) GROUP BY category ORDER BY category",
+    [
+      snapshot,
+      slug === "todos"
+        ? null
+        : [...new Set([slug, ...departmentHandles(slug)])],
+    ],
   );
   const configured = new Set(
     settings.departments.flatMap((item) => item.categories),

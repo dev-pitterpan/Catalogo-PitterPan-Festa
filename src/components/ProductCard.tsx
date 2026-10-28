@@ -1,3 +1,5 @@
+import { MAX_QUANTITY } from "../lib/quote";
+import { cardImage } from "../lib/catalog/image";
 import { formatMoney, moneyToMinor } from "../lib/money";
 import Image from "next/image";
 import { ShoppingCart, ArrowUpRight } from "lucide-react";
@@ -41,6 +43,7 @@ export function Quantity({
       <button
         type="button"
         onClick={() => onChange(1)}
+        disabled={quantity >= MAX_QUANTITY}
         aria-label={`Aumentar quantidade de ${name}`}
       >
         +
@@ -106,7 +109,7 @@ export default function ProductCard({
     >
       <div className="product-card__media">
         <Image
-          src={asset(product.image)}
+          src={cardImage(asset(product.image))}
           unoptimized={product.image.startsWith("https://")}
           alt={product.name}
           width={640}

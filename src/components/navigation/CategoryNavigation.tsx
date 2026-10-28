@@ -10,10 +10,12 @@ type CategoryData = {
 };
 /** Departamentos compactos e categorias pesquisadas/paginadas: não cria milhares de links. */
 export default function CategoryNavigation({
+  active = true,
   slug,
   selected,
   onSelect,
 }: {
+  active?: boolean;
   slug: string;
   selected: string;
   onSelect: (category: string) => void;
@@ -26,7 +28,7 @@ export default function CategoryNavigation({
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(true);
   useEffect(() => {
-    if (!expanded) return;
+    if (!expanded || !active) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setLoading(true);
@@ -51,7 +53,7 @@ export default function CategoryNavigation({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [slug, search, department, page, expanded]);
+  }, [slug, search, department, page, expanded, active]);
   return (
     <section className="category-navigation">
       <button

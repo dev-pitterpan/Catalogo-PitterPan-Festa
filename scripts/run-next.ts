@@ -9,7 +9,9 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const envPath = fileURLToPath(new URL("../.env", import.meta.url));
 // Let Next load application variables itself, including updates made to .env.
 // Injecting them into the child environment freezes their initial values.
-const localEnv = existsSync(envPath) ? parseEnv(readFileSync(envPath, "utf8")) : {};
+const localEnv = existsSync(envPath)
+  ? parseEnv(readFileSync(envPath, "utf8"))
+  : {};
 const command = process.argv[2];
 if (command !== "dev" && command !== "start")
   throw new Error("Use dev ou start.");
@@ -19,7 +21,9 @@ const env = z
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   })
   .parse({ ...process.env, ...localEnv });
-console.log(`Fonte do catálogo (.env): ${localEnv.CATALOG_DATA_SOURCE || process.env.CATALOG_DATA_SOURCE || "json"}`);
+console.log(
+  `Fonte do catálogo (.env): ${localEnv.CATALOG_DATA_SOURCE || process.env.CATALOG_DATA_SOURCE || "json"}`,
+);
 // O mesmo comando funciona em Windows e Linux, sem sintaxe de shell específica.
 const child = spawn(
   process.execPath,

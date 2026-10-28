@@ -17,6 +17,11 @@ export function publicCatalogUrl(
   base: string,
   current?: { hostname: string; origin: string },
 ) {
+  // Compatibilidade com o domínio anterior da implantação.
+  const configured = new URL(base);
+  if (configured.hostname === "pitterpanfestascatalogo.vercel.app")
+    configured.hostname = "catalogopitterpanfesta.vercel.app";
+  base = configured.href;
   if (!current) return new URL(`${slug}/`, base).href;
   const local =
     /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(current.hostname) ||

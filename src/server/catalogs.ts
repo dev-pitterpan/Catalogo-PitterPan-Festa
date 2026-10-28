@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { cache } from "react";
 import { database, usesDatabase } from "./database/client";
-import { findPage } from "./database/catalog-repository";
+import { activeCollections, findPage } from "./database/catalog-repository";
 import {
   PAGE_SIZE,
   catalogQuerySchema,
@@ -54,8 +54,10 @@ export const getManifest = cache(async () => {
   const catalogs = z
     .object({ catalogs: z.array(summarySchema) })
     .parse(await readJson("catalogs/manifest.json")).catalogs;
-  if (usesShopify()) {
-    const collections = await getShopifyCollections();
+  if (usesShopify() || usesDatabase()) {
+    const collections = usesShopify()
+      ? await getShopifyCollections()
+      : await activeCollections(database());
     for (const collection of collections) {
       if (!catalogs.some((item) => item.slug === collection.handle))
         catalogs.push({
@@ -78,7 +80,7 @@ export const getManifest = cache(async () => {
       description: "Explore o catálogo completo da Pitter Pan.",
       accent: "#279aff",
     });
-  if (usesShopify()) {
+  if (usesShopify() || usesDatabase()) {
     for (const summary of departmentSummaries()) {
       const index = catalogs.findIndex((item) => item.slug === summary.slug);
       if (index < 0) catalogs.push(summary);
@@ -165,18 +167,17 @@ export async function getCatalog(
       ),
     );
   }
-  const categories = [
-    ...new Set(
-      catalog.products
-        .map((item) => item.category)
-        .filter((name): name is string => !!name),
-    ),
-  ]
-    .sort()
-    .map((name) => ({
-      name,
-      count: catalog.products.filter((item) => item.category === name).length,
-    }));
+  const categoryCounts = new Map<string, number>();
+  for (const product of catalog.products) {
+    if (product.category)
+      categoryCounts.set(
+        product.category,
+        (categoryCounts.get(product.category) || 0) + 1,
+      );
+  }
+  const categories = [...categoryCounts]
+    .sort(([a], [b]) => a.localeCompare(b, "pt-BR"))
+    .map(([name, count]) => ({ name, count }));
   const filtered = catalog.products
     .map((product) => ({
       product,
@@ -230,7 +231,8 @@ export async function getPageData(
   query: Partial<CatalogQuery> = {},
 ): Promise<CatalogPageData> {
   const manifest = await getManifest();
-  const catalogs = usesShopify() ? storefrontNavigation(manifest) : manifest;
+  const catalogs =
+    usesShopify() || usesDatabase() ? storefrontNavigation(manifest) : manifest;
   if (!slug) return { catalogs, catalog: null, config: null };
 
   const [catalog, config] = await Promise.all([
@@ -242,10 +244,45 @@ export async function getPageData(
 
 /** Checkout consulta somente os códigos selecionados, sem depender da página exibida. */
 export async function getSelectedProducts(ids: string[]) {
-  if (usesShopify()) return getShopifySelectedProducts(ids);
-  if (usesDatabase()) {
-    const { findByIds } = await import("./database/catalog-repository");
-    return findByIds(database(), ids);
+  if (usesShopify() || usesDatabase()) {
+    let aliases: { id: string; shopifyVariantId?: string }[] = [];
+    if (usesDatabase()) {
+      const { findByIds } = await import("./database/catalog-repository");
+      aliases = await findByIds(database(), ids);
+    } else if (ids.some((id) => !/^shopify-[1-9]\d*$/.test(id))) {
+      // Somente aliases locais conhecidos; nunca adivinha variante por SKU repetido.
+      const localManifest = z
+        .object({ catalogs: z.array(summarySchema) })
+        .parse(await readJson("catalogs/manifest.json")).catalogs;
+      const localCatalogs = await Promise.all(
+        localManifest.map(async ({ slug }) =>
+          catalogSchema.parse(await readJson(`catalogs/${slug}.json`)),
+        ),
+      );
+      aliases = localCatalogs.flatMap((catalog) => catalog.products);
+    }
+    const resolved = ids.flatMap((id) => {
+      if (/^shopify-[1-9]\d*$/.test(id)) return [{ id, variant: id }];
+      const variants = [
+        ...new Set(
+          aliases
+            .filter((item) => item.id === id)
+            .map((item) => item.shopifyVariantId)
+            .filter((value): value is string => !!value),
+        ),
+      ];
+      return variants.length === 1
+        ? [{ id, variant: `shopify-${variants[0]}` }]
+        : [];
+    });
+    // Mesmo com PostgreSQL, preço/publicação da compra são conferidos ao vivo.
+    const current = await getShopifySelectedProducts(
+      resolved.map((item) => item.variant),
+    );
+    return resolved.flatMap(({ id, variant }) => {
+      const product = current.find((item) => item.id === variant);
+      return product ? [{ ...product, id }] : [];
+    });
   }
   const manifest = await getManifest();
   const catalogs = await Promise.all(

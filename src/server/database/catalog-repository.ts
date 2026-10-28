@@ -1,3 +1,4 @@
+import { departmentHandles } from "../../lib/catalog/departments.ts";
 import type { Product } from "../../types/catalog";
 import {
   PAGE_SIZE,
@@ -12,6 +13,7 @@ export interface SqlClient {
 }
 export type ItemRow = {
   id: string;
+  sku?: string | null;
   variant_id: string;
   product_id: string;
   name: string;
@@ -32,7 +34,11 @@ export type ItemRow = {
 };
 export function toProduct(row: ItemRow): Product {
   return {
-    id: row.id,
+    id: `shopify-${row.variant_id}`,
+    sku: row.sku ?? row.id,
+    shopifyProductId: row.product_id,
+    collections: row.collections,
+    inventoryQuantity: row.inventory_quantity,
     price: row.price,
     compareAtPrice: row.compare_at_price || undefined,
     currency: row.currency,
@@ -63,12 +69,12 @@ export async function findPage(
   const snapshot = await activeSnapshot(db);
   const values = [
     snapshot,
-    slug,
+    slug === "todos" ? null : [...new Set([slug, ...departmentHandles(slug)])],
     searchQuery(query.q),
     query.category,
     query.vendor,
   ];
-  const where = `import_id=$1 AND ($2='todos' OR collections @> ARRAY[$2]::text[])
+  const where = `import_id=$1 AND ($2::text[] IS NULL OR collections && $2::text[])
     AND ($3='' OR to_tsvector('simple',search_text) @@ to_tsquery('simple',$3))
     AND ($4='' OR category=$4) AND ($5='' OR vendor=$5)`;
   const count = await db.query<{ total: string }>(
@@ -82,12 +88,22 @@ export async function findPage(
     [...values, PAGE_SIZE, (page - 1) * PAGE_SIZE],
   );
   const facets = await db.query<{ category: string; total: string }>(
-    `SELECT category,count(*)::text AS total FROM catalog_items WHERE import_id=$1 AND ($2='todos' OR collections @> ARRAY[$2]::text[]) AND category<>'' GROUP BY category ORDER BY count(*) DESC,category LIMIT 200`,
-    [snapshot, slug],
+    `SELECT category,count(*)::text AS total FROM catalog_items WHERE import_id=$1 AND ($2::text[] IS NULL OR collections && $2::text[]) AND category<>'' GROUP BY category ORDER BY count(*) DESC,category LIMIT 200`,
+    [
+      snapshot,
+      slug === "todos"
+        ? null
+        : [...new Set([slug, ...departmentHandles(slug)])],
+    ],
   );
   const brands = await db.query<{ vendor: string }>(
-    "SELECT DISTINCT vendor FROM catalog_items WHERE import_id=$1 AND ($2='todos' OR collections @> ARRAY[$2]::text[]) AND vendor<>'' ORDER BY vendor LIMIT 1000",
-    [snapshot, slug],
+    "SELECT DISTINCT vendor FROM catalog_items WHERE import_id=$1 AND ($2::text[] IS NULL OR collections && $2::text[]) AND vendor<>'' ORDER BY vendor LIMIT 1000",
+    [
+      snapshot,
+      slug === "todos"
+        ? null
+        : [...new Set([slug, ...departmentHandles(slug)])],
+    ],
   );
   return {
     products: result.rows.map(toProduct),
@@ -107,16 +123,25 @@ export async function findPage(
 export async function findByIds(db: SqlClient, ids: string[]) {
   const snapshot = await activeSnapshot(db);
   const { rows } = await db.query<ItemRow>(
-    "SELECT * FROM catalog_items WHERE import_id=$1 AND id=ANY($2::text[])",
+    "SELECT * FROM catalog_items WHERE import_id=$1 AND (id=ANY($2::text[]) OR ('shopify-'||variant_id)=ANY($2::text[]) OR sku=ANY($2::text[]))",
     [snapshot, ids],
   );
-  return rows.map(toProduct);
+  return ids.flatMap((id) => {
+    const canonical = /^shopify-[1-9]\d*$/.test(id);
+    const matches = rows.filter((row) =>
+      canonical
+        ? `shopify-${row.variant_id}` === id
+        : row.id === id || row.sku === id,
+    );
+    // SKU compartilhado nunca é escolhido arbitrariamente para um carrinho legado.
+    return matches.length === 1 ? [{ ...toProduct(matches[0]), id }] : [];
+  });
 }
 export async function stageItems(db: SqlClient, run: string, items: ItemRow[]) {
   if (!items.length) return;
   await db.query(
-    `INSERT INTO catalog_items(import_id,id,variant_id,product_id,name,description,category,vendor,image_url,site_url,collections,tags,images,search_text,updated_at,inventory_quantity,price,compare_at_price,currency)
-    SELECT $1,x.* FROM jsonb_to_recordset($2::jsonb) AS x(id text,variant_id text,product_id text,name text,description text,category text,vendor text,image_url text,site_url text,collections text[],tags text[],images jsonb,search_text text,updated_at text,inventory_quantity integer,price numeric,compare_at_price numeric,currency text)`,
+    `INSERT INTO catalog_items(import_id,id,variant_id,product_id,name,description,category,vendor,image_url,site_url,collections,tags,images,search_text,updated_at,inventory_quantity,price,compare_at_price,currency,sku)
+    SELECT $1,x.* FROM jsonb_to_recordset($2::jsonb) AS x(id text,variant_id text,product_id text,name text,description text,category text,vendor text,image_url text,site_url text,collections text[],tags text[],images jsonb,search_text text,updated_at text,inventory_quantity integer,price numeric,compare_at_price numeric,currency text,sku text)`,
     [run, JSON.stringify(items)],
   );
 }
@@ -187,4 +212,18 @@ export async function publishSnapshot(
     await db.query("ROLLBACK");
     throw error;
   }
+}
+
+/** Só expõe o manifesto pertencente à mesma versão publicada dos produtos. */
+export async function activeCollections(db: SqlClient) {
+  const snapshot = await activeSnapshot(db);
+  const { rows } = await db.query<{
+    id: string;
+    handle: string;
+    title: string;
+  }>(
+    "SELECT id,handle,title FROM catalog_collections WHERE import_id=$1 ORDER BY title,handle",
+    [snapshot],
+  );
+  return rows;
 }

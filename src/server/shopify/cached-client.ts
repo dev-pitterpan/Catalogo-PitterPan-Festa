@@ -1,9 +1,9 @@
 import { unstable_cache } from "next/cache.js";
-import { ShopifyClient } from "./client.ts";
+import { getShopifyClient } from "./client.ts";
 
 /** Cache por página GraphQL, evitando guardar o catálogo inteiro em uma entrada. */
 export function cachedShopifyClient() {
-  const client = new ShopifyClient();
+  const client = getShopifyClient();
   const version = process.env.SHOPIFY_API_VERSION || "2026-07";
   return {
     query<T>(

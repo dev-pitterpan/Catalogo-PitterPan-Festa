@@ -34,3 +34,12 @@ CREATE INDEX IF NOT EXISTS catalog_items_category ON catalog_items(import_id,cat
 
 CREATE INDEX IF NOT EXISTS catalog_items_price ON catalog_items(import_id,price,id);
 CREATE INDEX IF NOT EXISTS catalog_items_vendor ON catalog_items(import_id,vendor);
+
+-- Migração aditiva: não reescreve IDs nem registros das versões já publicadas.
+ALTER TABLE catalog_items ADD COLUMN IF NOT EXISTS sku text;
+CREATE INDEX IF NOT EXISTS catalog_items_sku ON catalog_items(import_id,sku);
+CREATE TABLE IF NOT EXISTS catalog_collections (
+  import_id uuid NOT NULL REFERENCES catalog_imports(id) ON DELETE CASCADE,
+  id text NOT NULL, handle text NOT NULL, title text NOT NULL,
+  PRIMARY KEY(import_id,id), UNIQUE(import_id,handle)
+);

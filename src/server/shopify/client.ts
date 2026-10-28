@@ -21,7 +21,7 @@ export class ShopifyClient {
   get domain() {
     return this.config.SHOPIFY_STORE_DOMAIN;
   }
-  private async accessToken() {
+  private async accessToken(signal: AbortSignal) {
     if (this.config.SHOPIFY_ADMIN_ACCESS_TOKEN)
       return this.config.SHOPIFY_ADMIN_ACCESS_TOKEN;
     if (this.token && this.expires > Date.now() + 60000) return this.token;
@@ -39,7 +39,7 @@ export class ShopifyClient {
           client_id: this.config.SHOPIFY_CLIENT_ID,
           client_secret: this.config.SHOPIFY_CLIENT_SECRET,
         }),
-        signal: AbortSignal.timeout(30000),
+        signal,
       },
     );
     if (!response.ok)
@@ -57,8 +57,25 @@ export class ShopifyClient {
   async query<T>(
     query: string,
     variables: Record<string, unknown> = {},
+    options: { timeoutMs?: number } = {},
   ): Promise<T> {
-    for (let attempt = 0; attempt < 6; attempt++) {
+    const deadline = Date.now() + Math.max(1, options.timeoutMs ?? 20_000);
+    const remaining = () => {
+      const left = deadline - Date.now();
+      if (left <= 0)
+        throw new Error(
+          "A consulta Shopify demorou além do esperado. Tente novamente.",
+        );
+      return left;
+    };
+    const pause = async (ms: number) => {
+      if (ms >= remaining())
+        throw new Error(
+          "A Shopify está ocupada. Tente novamente em instantes.",
+        );
+      await delay(ms);
+    };
+    for (let attempt = 0; attempt < 3; attempt++) {
       let response: Response;
       try {
         response = await fetch(
@@ -67,22 +84,24 @@ export class ShopifyClient {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-Shopify-Access-Token": await this.accessToken(),
+              "X-Shopify-Access-Token": await this.accessToken(
+                AbortSignal.timeout(remaining()),
+              ),
             },
             body: JSON.stringify({ query, variables }),
-            signal: AbortSignal.timeout(30000),
+            signal: AbortSignal.timeout(remaining()),
           },
         );
       } catch {
-        if (attempt === 5)
+        if (attempt === 2)
           throw new Error(
             "Não foi possível conectar à Shopify. Tente novamente em instantes.",
           );
-        await delay(1000 * 2 ** attempt);
+        await pause(1000 * 2 ** attempt);
         continue;
       }
       if (response.status === 429 || response.status >= 500) {
-        await delay(
+        await pause(
           Math.min(
             30000,
             Math.max(
@@ -118,7 +137,7 @@ export class ShopifyClient {
         ) {
           const cost = payload.extensions?.cost;
           const status = cost?.throttleStatus;
-          await delay(
+          await pause(
             status
               ? Math.min(
                   30000,
@@ -139,7 +158,7 @@ export class ShopifyClient {
         );
       }
       if (!payload.data) throw new Error("Resposta Shopify sem dados.");
-      // Pace pagination using Shopify's actual remaining query budget.
+      // Retorna dados completos já recebidos; o próximo pedido respeita THROTTLED.
       const cost = payload.extensions?.cost;
       const budget = cost?.throttleStatus;
       if (
@@ -148,6 +167,7 @@ export class ShopifyClient {
       ) {
         await delay(
           Math.min(
+            Math.max(0, deadline - Date.now()),
             5000,
             Math.max(
               0,
@@ -170,7 +190,14 @@ export const BULK_PRODUCTS_QUERY = `{
     id title description productType vendor tags status onlineStoreUrl updatedAt
     featuredMedia { ... on MediaImage { image { url altText } } }
     variants { edges { node { id sku title price compareAtPrice barcode inventoryQuantity image { url altText } selectedOptions { name value } } } }
-    collections { edges { node { id title } } }
+    collections { edges { node { id handle title } } }
     media { edges { node { ... on MediaImage { id image { url altText } } } } }
   } } }
 }`;
+
+// Reutiliza o token do app entre leitura, carrinho e checkout no mesmo processo.
+// As credenciais nunca são incluídas na chave do cache público.
+let sharedClient: ShopifyClient | undefined;
+export function getShopifyClient() {
+  return (sharedClient ||= new ShopifyClient());
+}

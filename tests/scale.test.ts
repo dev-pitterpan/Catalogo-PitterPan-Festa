@@ -91,7 +91,9 @@ test("13.518 registros: paginação, separação de coleções, busca, checkout 
     const halloween = await findPage(db, "halloween", query);
     assert.equal(halloween.pagination.total, 6759);
     assert.ok(
-      halloween.products.every((product) => Number(product.id) % 2 === 1),
+      halloween.products.every(
+        (product) => Number(product.shopifyVariantId) % 2 === 1,
+      ),
     );
     const natal = await findPage(db, "natal", { ...query, q: "balo" });
     assert.equal(natal.pagination.total, 6759);
@@ -158,7 +160,8 @@ test("normalização respeita variante, SKU, coleção explícita e domínio de 
     compareAtPrice: "39.90",
   };
   const item = normalizeVariant(parent, variant, ["halloween"], []);
-  assert.equal(item?.id, "0008936");
+  assert.equal(item?.id, "shopify-22");
+  assert.equal(item?.sku, "0008936");
   assert.equal(item?.variant_id, "22");
   assert.deepEqual(item?.collections, ["halloween"]);
   assert.match(item?.site_url || "", /variant=22/);
@@ -170,8 +173,13 @@ test("normalização respeita variante, SKU, coleção explícita e domínio de 
     normalizeVariant({ ...parent, onlineStoreUrl: null }, variant, [], []),
     null,
   );
-  assert.throws(() =>
-    normalizeVariant(parent, { ...variant, sku: "" }, [], []),
+  assert.equal(
+    normalizeVariant(parent, { ...variant, sku: "" }, [], [])?.sku,
+    "",
+  );
+  assert.equal(
+    normalizeVariant(parent, { ...variant, sku: null }, [], [])?.id,
+    "shopify-22",
   );
   for (const url of [
     "http://cdn.shopify.com/x",

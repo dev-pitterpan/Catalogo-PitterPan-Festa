@@ -1,5 +1,5 @@
 import { cachedShopifyClient } from "./cached-client.ts";
-import { ShopifyClient } from "./client.ts";
+import { getShopifyClient } from "./client.ts";
 import { shopifyImageUrl } from "./media.ts";
 import type { Product } from "../../types/catalog.ts";
 
@@ -68,7 +68,7 @@ export async function loadShopifyCatalog(
     "{ shop { currencyCode } }",
   );
   // Read membership directly: Shopify can silently ignore collection_id search.
-  const fields = `id status title handle description productType vendor tags onlineStoreUrl featuredImage { url altText }
+  const fields = `id status title handle description(truncateAt:180) productType vendor tags onlineStoreUrl featuredImage { url altText }
     variants(first:1) { nodes { ${variantFields} } ${pageInfo} }
     collections(first:10) { nodes { ${collectionFields} } ${pageInfo} }`;
   const query = collectionIds.length
@@ -146,7 +146,10 @@ export async function loadShopifyCatalog(
             ]
               .filter(Boolean)
               .join(" — "),
-            description: parent.description,
+            description: parent.description
+              .replace(/\s+/g, " ")
+              .trim()
+              .slice(0, 180),
             category: parent.productType || "Sem categoria",
             vendor: parent.vendor,
             tags: parent.tags,
@@ -246,7 +249,7 @@ export function usesShopify() {
 /** Read only selected variants, freshly, without scanning the whole store at checkout. */
 export async function getShopifySelectedProducts(
   ids: string[],
-  client: Client = new ShopifyClient(),
+  client: Client = getShopifyClient(),
 ): Promise<Product[]> {
   const variantIds = [
     ...new Set(

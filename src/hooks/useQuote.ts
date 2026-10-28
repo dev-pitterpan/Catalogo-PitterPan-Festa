@@ -1,7 +1,14 @@
 /** Mantém o carrinho entre coleções e versões do catálogo, inclusive quando o armazenamento falha. */
 import { useEffect, useState } from "react";
-import { loadSelection, STORAGE_KEY } from "../lib/quote";
+import {
+  loadSelection,
+  STORAGE_KEY,
+  MAX_CART_ITEMS,
+  MAX_QUANTITY,
+} from "../lib/quote";
 import type { Catalog, Product, QuoteItem, SiteConfig } from "../types/catalog";
+// Memória da aba preserva a seleção quando o navegador bloqueia localStorage.
+let fallbackSelection: QuoteItem[] = [];
 export function useQuote() {
   // SSR e navegador começam vazios; a leitura ocorre somente após hidratar.
   const [selected, setSelected] = useState<QuoteItem[]>([]);
@@ -9,8 +16,14 @@ export function useQuote() {
   const [storageError, setStorageError] = useState(false);
   useEffect(() => {
     try {
-      setSelected(loadSelection(localStorage));
+      const saved = localStorage.getItem(STORAGE_KEY);
+      setSelected(
+        saved === null
+          ? fallbackSelection
+          : loadSelection({ getItem: () => saved }),
+      );
     } catch {
+      setSelected(fallbackSelection);
       setStorageError(true);
     }
     setHydrated(true);
@@ -18,6 +31,7 @@ export function useQuote() {
   useEffect(() => {
     // Nunca sobrescreve um carrinho antigo antes de terminar sua leitura.
     if (!hydrated) return;
+    fallbackSelection = selected;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(selected));
       setStorageError(false);
@@ -32,16 +46,30 @@ export function useQuote() {
     config?: SiteConfig,
   ) {
     setSelected((previous) => {
-      const existing = previous.find((item) => item.id === product.id);
+      const sameProduct = (item: QuoteItem) =>
+        item.id === product.id ||
+        (!!item.shopifyVariantId &&
+          item.shopifyVariantId === product.shopifyVariantId);
+      const existing = previous.find(sameProduct);
       if (existing)
         return previous
           .map((item) =>
-            item.id === product.id
-              ? { ...item, quantity: item.quantity + delta }
+            sameProduct(item)
+              ? {
+                  ...item,
+                  id: product.id,
+                  quantity: Math.min(MAX_QUANTITY, item.quantity + delta),
+                }
               : item,
           )
           .filter((item) => item.quantity > 0);
-      if (delta <= 0 || !catalog || !config) return previous;
+      if (
+        delta <= 0 ||
+        !catalog ||
+        !config ||
+        previous.length >= MAX_CART_ITEMS
+      )
+        return previous;
       return [
         ...previous,
         {

@@ -8,7 +8,7 @@ Produtos ativos publicados na loja online aparecem em `/todos/`. Produtos em ras
 
 Coleções presentes nos produtos publicados entram automaticamente no manifesto pelo handle. Catálogos locais recebem produtos da coleção com o mesmo handle; para handles diferentes, configure `config/shopify-collections.json` com o `catalogSlug` local e o `collectionId` Shopify. Tipos de produto alimentam as categorias. Produtos sem coleção continuam disponíveis em `todos`.
 
-Todas as páginas de produtos, variantes e coleções são percorridas por cursor. O servidor compartilha uma leitura entre requisições simultâneas e guarda o resultado completo por cinco minutos, sem publicar leituras parciais. A primeira requisição e as renovações podem demorar em lojas grandes; em hospedagem com timeout curto, o importador PostgreSQL existente é a opção para escala. O cache é por processo, não persistente nem distribuído.
+Todas as páginas de produtos, variantes e coleções são percorridas por cursor. O servidor compartilha uma leitura entre requisições simultâneas e guarda o resultado completo por cinco minutos, sem publicar leituras parciais. A primeira requisição pode demorar em lojas grandes; em hospedagem com timeout curto, o importador PostgreSQL existente é a opção para escala. O snapshot em memória é por processo; as páginas GraphQL também usam o Data Cache do Next, com revalidação de cinco minutos.
 
 Preços usam a moeda da loja. Estoque agregado é informado quando retornado pela API; disponibilidade é uma estimativa baseada na quantidade e política de estoque, não uma garantia por local/mercado. A Shopify valida a compra no checkout. Fotos são carregadas do CDN Shopify. O checkout continua recebendo os mesmos IDs do catálogo e resolve a variante no servidor.
 
@@ -24,7 +24,6 @@ O botão Comprar no site está disponível em produtos com variante Shopify, tan
 
 Validação real em 27/10/2026: 13.515 variantes percorridas, 11.007 produtos/variantes públicos, 17 categorias, 178 marcas, 90 coleções; nenhum ID de variante duplicado ou imagem ausente. Foram encontrados 622 valores de SKU repetidos e quatro produtos sem categoria. Nenhuma correção foi feita no cadastro da loja. O checkout foi aberto com um produto de R$ 35,00 e quantidade 1, sem envio de dados pessoais ou conclusão de pedido.
 
-
 ## Departamentos unificados no catálogo
 
 A navegação Shopify usa Todos os produtos, Festas e decoração, Doces e guloseimas, Confeitaria, Embalagens e descartáveis, Artesanato e papelaria, Utilidades, Datas especiais e Ofertas. As definições ficam em `src/lib/catalog/departments.ts`.
@@ -39,4 +38,4 @@ Validação: 18 testes e build aprovados. O departamento Ofertas retornou 187 va
 
 A navegação remonta o estado do catálogo por pathname, limpa os filtros ao selecionar um catálogo e valida o slug antes de usar dados iniciais ou resultados de consultas. Assim, uma página de Todos não pode usar dados de Natal. Rotas públicas e do gestor têm loading.tsx para mostrar carregamento imediatamente enquanto a Shopify é consultada; links exibem indicação de navegação pendente.
 
-Os metadados usam o manifesto em vez de consultar o catálogo completo. A leitura da Shopify usa lotes de 40 produtos, com paginação adicional de variantes e coleções, e compartilha leituras pendentes entre recargas dos módulos de desenvolvimento. A primeira leitura de Todos ainda exige percorrer a loja; o cache é temporário e por processo. O checkout continua consultando as variantes selecionadas diretamente.
+Os metadados usam o manifesto em vez de consultar o catálogo completo. A leitura da Shopify usa lotes de 100 produtos, com paginação adicional de variantes e coleções, e compartilha leituras pendentes entre recargas dos módulos de desenvolvimento. A primeira leitura de Todos ainda exige percorrer a loja; o snapshot é temporário e por processo, com reaproveitamento das consultas pelo Data Cache. O checkout continua consultando as variantes selecionadas diretamente.

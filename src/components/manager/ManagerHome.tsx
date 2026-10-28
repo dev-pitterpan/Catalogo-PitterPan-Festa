@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -57,6 +57,11 @@ const descriptions: Record<string, string> = {
   "datas-especiais": "Explore todas as campanhas temáticas.",
   ofertas: "Seleções com condições especiais.",
 };
+function NavigationProgress() {
+  const { pending } = useLinkStatus();
+  return pending ? <span role="status">Abrindo catálogo…</span> : null;
+}
+
 function CatalogTile({
   catalog,
   compact = false,
@@ -76,6 +81,7 @@ function CatalogTile({
       </span>
       <span className="manager-hub__tile-copy">
         <strong>{catalog.name}</strong>
+        <NavigationProgress />
         {!compact && (
           <small>{descriptions[catalog.slug] || catalog.description}</small>
         )}
@@ -165,6 +171,7 @@ export default function ManagerHome({
               <span>
                 <small>Visão completa</small>
                 <strong>Todos os produtos</strong>
+                <NavigationProgress />
               </span>
               <ArrowRight size={18} aria-hidden="true" />
             </Link>

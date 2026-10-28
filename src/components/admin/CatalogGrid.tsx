@@ -1,14 +1,9 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import {
-  Search,
-  Copy,
-  Check,
-  Share2,
-  ArrowUpRight,
-  BookOpen,
-} from "lucide-react";
+import { Search, Copy, Check, Share2, ArrowUpRight } from "lucide-react";
+import CatalogIcon from "../navigation/CatalogIcon";
+import { catalogVisual } from "../../lib/catalog/visual";
 import type { CatalogSummary } from "../../types/catalog";
 import { publicCatalogUrl } from "../../lib/routes";
 export default function CatalogGrid({
@@ -83,7 +78,17 @@ export default function CatalogGrid({
               <span className="admin-catalog-number">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <BookOpen size={42} strokeWidth={1} />
+              <img
+                className="admin-catalog-cover-art"
+                src={catalogVisual(c.slug).banner}
+                alt=""
+                loading="lazy"
+                width={600}
+                height={210}
+              />
+              <span className="admin-catalog-theme-icon" aria-hidden="true">
+                <CatalogIcon slug={c.slug} />
+              </span>
               <span className="admin-catalog-cover-label">
                 SELEÇÃO PITTER PAN
               </span>

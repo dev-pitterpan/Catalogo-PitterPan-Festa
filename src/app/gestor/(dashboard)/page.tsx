@@ -31,7 +31,9 @@ export default async function Overview() {
     {
       label: "Produtos no catálogo",
       value: s?.products,
-      detail: `${number(s?.variants)} variantes cadastradas`,
+      detail: s
+        ? `${number(s.variants)} variantes cadastradas`
+        : "Aguardando os dados da sua loja",
       icon: Package,
       tone: "blue",
       href: "/gestor/produtos/",
@@ -67,9 +69,12 @@ export default async function Overview() {
         <div>
           <span className="admin-eyebrow">SEU NEGÓCIO, EM PERSPECTIVA</span>
           <h1>
-            Olá, {user.name.split(" ")[0]}. <span>Vamos celebrar?</span>
+            Olá, {user.name.split(" ")[0]}. <span>Bom ter você por aqui.</span>
           </h1>
-          <p>Acompanhe os detalhes que fazem sua loja acontecer.</p>
+          <p>
+            Seu catálogo, seus produtos e as próximas oportunidades, em um só
+            lugar.
+          </p>
         </div>
         <span className="admin-date">
           <Clock3 size={15} />
@@ -87,20 +92,20 @@ export default async function Overview() {
             <span /> CENTRAL PITTER PAN
           </span>
           <h2>
-            Uma visão completa.
+            Cada detalhe conectado.
             <br />
-            <em>Infinitas possibilidades.</em>
+            <em>Mais espaço para celebrar.</em>
           </h2>
           <p>
-            Da primeira novidade ao próximo catálogo compartilhado.
+            Uma gestão tão especial quanto as festas que você ajuda a criar.
             <br />
-            Sua operação com mais clareza, todos os dias.
+            Organize sua operação e compartilhe as melhores seleções.
           </p>
           <Link
             href="/gestor/catalogos/"
             className="admin-button admin-button-light"
           >
-            Explorar catálogos <ArrowUpRight size={17} />
+            Escolher um catálogo <ArrowUpRight size={17} />
           </Link>
         </div>
         <div className="admin-hero-art" aria-hidden="true">
@@ -126,7 +131,11 @@ export default async function Overview() {
       </section>
       <section className="admin-stats" aria-label="Indicadores do catálogo">
         {stats.map(({ label, value, detail, icon: Icon, tone, href }) => (
-          <Link href={href} key={label} className="admin-stat">
+          <Link
+            href={href}
+            key={label}
+            className={`admin-stat admin-stat--${tone}${value == null ? " is-unavailable" : ""}`}
+          >
             <div>
               <span className={`admin-stat-icon ${tone}`}>
                 <Icon size={21} />
@@ -135,7 +144,9 @@ export default async function Overview() {
             </div>
             <span>{label}</span>
             <strong>{number(value)}</strong>
-            <small>{detail}</small>
+            <small>
+              {value == null ? "Disponível após a importação" : detail}
+            </small>
           </Link>
         ))}
       </section>
@@ -156,7 +167,14 @@ export default async function Overview() {
                     <span>
                       <i
                         style={{
-                          background: `hsl(${225 + i * 24} 60% ${55 + i * 2}%)`,
+                          background: [
+                            "#527fb5",
+                            "#7aa6c9",
+                            "#99bdd4",
+                            "#b5a2cd",
+                            "#c2ad88",
+                            "#80b5ad",
+                          ][i % 6],
                         }}
                       />
                       {c.name}
@@ -167,7 +185,14 @@ export default async function Overview() {
                     <span
                       style={{
                         width: `${(c.count / max) * 100}%`,
-                        background: `hsl(${225 + i * 24} 60% ${55 + i * 2}%)`,
+                        background: [
+                          "#527fb5",
+                          "#7aa6c9",
+                          "#99bdd4",
+                          "#b5a2cd",
+                          "#c2ad88",
+                          "#80b5ad",
+                        ][i % 6],
                       }}
                     />
                   </div>
@@ -255,8 +280,8 @@ export default async function Overview() {
           </div>
         </section>
         <section className="admin-panel admin-sync-card">
-          <div className="admin-sync-icon">
-            <CircleCheck size={25} />
+          <div className={`admin-sync-icon${last ? "" : " is-pending"}`}>
+            {last ? <CircleCheck size={25} /> : <Clock3 size={25} />}
           </div>
           <span className="admin-eyebrow">ÚLTIMA PUBLICAÇÃO</span>
           <h2>

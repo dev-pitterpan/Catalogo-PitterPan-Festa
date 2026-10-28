@@ -75,10 +75,14 @@ Sessões assinadas com HMAC-SHA256, duração de oito horas, cookies HttpOnly/Sa
 
 O login limita oito tentativas por e-mail a cada janela de 15 minutos. Com a tabela preparada, o limite é compartilhado pelo banco; sem ela, há fallback de memória por instância. Regras de WAF na hospedagem podem complementar a proteção, especialmente antes da migração. Não há cadastro público.
 
-O visual usa CSS com profundidade e ilustração em perspectiva, sem motor WebGL, fontes externas ou bibliotecas por CDN. O CSS é isolado em `src/styles/admin.css`; componentes ficam em `src/components/admin`, autenticação em `src/server/auth` e dados em `src/server/admin`. As páginas usam o grupo `(dashboard)` para compartilhar o shell, mantendo o catálogo de uma coleção com seu próprio layout.
+O visual usa CSS com profundidade e ilustração em perspectiva, sem motor WebGL, fontes externas ou bibliotecas por CDN. O CSS base é isolado em `src/styles/admin.css`, com acabamento do dashboard em `src/styles/admin/dashboard.css`; componentes ficam em `src/components/admin`, autenticação em `src/server/auth` e dados em `src/server/admin`. As páginas usam o grupo `(dashboard)` para compartilhar o shell, mantendo o catálogo de uma coleção com seu próprio layout.
 
 Validação local: testes de criptografia, permissões, comparação real de snapshots com PostgreSQL/PGlite, estoque desconhecido, ofertas, login HTTP, CSRF, cookies, redirecionamento, APIs privadas e páginas públicas. Contas, credenciais e dados de teste nunca são usados para ativar a produção.
 
 ### Compatibilidade do hash local
 
 O setup salva o hash em uma forma sem `$` para impedir a expansão de variáveis do Next. Hashes antigos continuam válidos: `npm run dev` e `npm start` normalizam a configuração em memória, sem reescrever o `.env` ou trocar a senha. Depois de atualizar o código, reinicie o servidor local. O fingerprint das sessões usa a forma canônica, preservando a compatibilidade com os valores já configurados na Vercel.
+
+### Acabamento visual do dashboard
+
+O painel compartilha a linguagem clara da vitrine: base azul suave, superfícies translúcidas e bordas discretas. A navegação é agrupada por operação, planejamento e gestão, com indicação de navegação pendente. Cards de catálogos reutilizam os banners e ícones da vitrine. O carregamento usa placeholders de estrutura, sem números simulados nem espera artificial. O tema contempla redução de movimento, foco visível, navegação móvel com contenção de foco e alvos maiores para toque.

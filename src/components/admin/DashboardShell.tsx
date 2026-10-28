@@ -1,8 +1,10 @@
 "use client";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
+  ShieldCheck,
+  LoaderCircle,
   CalendarDays,
   BarChart3,
   LayoutDashboard,
@@ -48,6 +50,39 @@ const links = [
     admin: true,
   },
 ];
+const navigationGroups = [
+  {
+    label: "Sua operação",
+    paths: [
+      "/gestor/",
+      "/gestor/produtos/",
+      "/gestor/estoque/",
+      "/gestor/ofertas/",
+      "/gestor/alteracoes/",
+    ],
+  },
+  {
+    label: "Planejar e compartilhar",
+    paths: ["/gestor/catalogos/", "/gestor/calendario/", "/gestor/relatorios/"],
+  },
+  {
+    label: "Gestão da equipe",
+    paths: [
+      "/gestor/sincronizacoes/",
+      "/gestor/usuarios/",
+      "/gestor/configuracoes/",
+    ],
+  },
+];
+function NavigationPending() {
+  const { pending } = useLinkStatus();
+  return pending ? (
+    <span className="admin-nav-pending" role="status">
+      <LoaderCircle size={14} />
+      <span className="admin-sr-only">Abrindo seção</span>
+    </span>
+  ) : null;
+}
 const roleLabels = {
   admin: "Administrador",
   gestor: "Gestor",
@@ -60,7 +95,7 @@ export default function DashboardShell({
   children: ReactNode;
   user: { name: string; email: string; role: Role };
 }) {
-  const pathname = usePathname();
+  const pathname = (usePathname() || "/gestor/").replace(/\/+$/, "") + "/";
   const sidebarRef = useRef<HTMLElement>(null);
   useEffect(() => {
     document.documentElement.className = "";
@@ -162,28 +197,43 @@ export default function DashboardShell({
           </span>
           <div>
             <strong>Pitter Pan Festas</strong>
-            <small>Seu universo de celebrações</small>
+            <small>Seu espaço de trabalho</small>
           </div>
-          <span className="admin-live-dot" />
+          <ShieldCheck
+            className="admin-workspace-shield"
+            size={16}
+            aria-hidden="true"
+          />
         </div>
-        <span className="admin-nav-label">ORGANIZE. ACOMPANHE. CELEBRE.</span>
-        <nav>
-          {links
-            .filter((l) => !l.admin || user.role === "admin")
-            .map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                prefetch={false}
-                aria-current={pathname === href ? "page" : undefined}
-                className={pathname === href ? "active" : ""}
-                onClick={() => setOpen(false)}
-              >
-                <Icon size={19} strokeWidth={1.7} />
-                <span>{label}</span>
-                {pathname === href && <span className="admin-nav-marker" />}
-              </Link>
-            ))}
+        <nav className="admin-navigation" aria-label="Seções da central">
+          {navigationGroups.map((group) => {
+            const items = links.filter(
+              (link) =>
+                group.paths.includes(link.href) &&
+                (!link.admin || user.role === "admin"),
+            );
+            if (!items.length) return null;
+            return (
+              <section className="admin-nav-group" key={group.label}>
+                <h2>{group.label}</h2>
+                {items.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    prefetch={false}
+                    aria-current={pathname === href ? "page" : undefined}
+                    className={pathname === href ? "active" : ""}
+                    onClick={() => setOpen(false)}
+                  >
+                    <Icon size={19} strokeWidth={1.7} aria-hidden="true" />
+                    <span>{label}</span>
+                    <NavigationPending />
+                    {pathname === href && <span className="admin-nav-marker" />}
+                  </Link>
+                ))}
+              </section>
+            );
+          })}
         </nav>
         <div className="admin-sidebar-note">
           <span>
@@ -229,7 +279,9 @@ export default function DashboardShell({
               <Menu size={22} />
             </button>
             <span className="admin-breadcrumb">
-              Central de gestão <span>/</span> <strong>{title}</strong>
+              <span className="admin-breadcrumb-root">Central de gestão</span>
+              <span className="admin-breadcrumb-separator">/</span>
+              <strong>{title}</strong>
             </span>
           </div>
           <form action="/gestor/produtos/" className="admin-global-search">
@@ -240,6 +292,10 @@ export default function DashboardShell({
               placeholder="Buscar produto ou SKU…"
             />
           </form>
+          <span className="admin-secure-label">
+            <ShieldCheck size={15} aria-hidden="true" />
+            Área da equipe
+          </span>
           <Link
             className="admin-public-link"
             href="/"

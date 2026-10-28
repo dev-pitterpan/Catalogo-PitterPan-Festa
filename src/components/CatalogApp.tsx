@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import LoadingState from "./LoadingState";
 import { useCatalogPage } from "../hooks/useCatalogPage";
 import { publicCatalogUrl } from "../lib/routes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import CatalogShell from "../components/CatalogShell";
 import ProductCard from "../components/ProductCard";
@@ -25,6 +25,8 @@ export default function CatalogApp({
 }
 
 function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
+  const [revealed, setRevealed] = useState(false);
+  const reveal = useCallback(() => setRevealed(true), []);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [category, setCategory] = useState("");
@@ -108,7 +110,6 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
     };
   }, []);
   const products = catalog?.products || [];
-  if (loading) return <LoadingState />;
   if (error)
     return (
       <main className="min-h-dvh flex flex-col items-center justify-center gap-4 p-8 font-sans text-pitter-blue bg-pitter-ice text-center">
@@ -118,6 +119,8 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
         <button onClick={() => location.reload()}>Tentar novamente</button>
       </main>
     );
+  if (loading || (catalog && !revealed))
+    return <LoadingState ready={!loading && !!catalog} onComplete={reveal} />;
   if (!catalog || !config)
     return (
       <>

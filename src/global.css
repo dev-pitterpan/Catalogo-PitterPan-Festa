@@ -4,6 +4,7 @@
 @import "./styles/catalog/catalog-base.css";
 @import "./styles/pages/gestor-home.css";
 @import "./styles/components/sidebar-practical.css";
+@import "./styles/components/catalog-loader.css";
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 @source './';
@@ -613,4 +614,74 @@
 .catalog-unified .result-count__copy small {
   color: #61758a;
   opacity: 1;
+}
+
+/* One primary action, one quiet direct-checkout action. */
+.catalog-unified .product-card__actions {
+  padding-top: 0;
+  border-top: 0;
+  gap: 0.15rem;
+  grid-template-rows: 50px 40px;
+}
+.catalog-unified .product-cart-button {
+  background: linear-gradient(115deg, #287ed0, #2066ad);
+  color: #fff;
+  border-color: #5299dd44;
+  box-shadow: 0 3px 10px #305b8a10;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.catalog-unified .product-cart-button:hover {
+  background: linear-gradient(115deg, #2474c1, #195997);
+  color: #fff;
+  border-color: #3b84ca;
+}
+.catalog-unified .product-cart-button__icon {
+  color: inherit;
+}
+.catalog-unified .product-buy-link {
+  grid-row: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 40px;
+  margin: 0;
+  padding: 0.35rem 0.4rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  box-shadow: none;
+  color: #526d88;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 550;
+  cursor: pointer;
+}
+.catalog-unified .product-buy-link:hover {
+  color: #205c97;
+  background: #e8f0f8;
+}
+.catalog-unified .product-buy-link:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.catalog-unified .product-buy-link:focus-visible,
+.catalog-unified .product-detail-link:focus-visible {
+  outline: 2px solid #4b89bf;
+  outline-offset: 2px;
+}
+.catalog-unified .product-detail-link {
+  color: inherit;
+  text-decoration: none;
+}
+.catalog-unified .product-detail-link:hover {
+  color: #245f98;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 560px) {
+  .catalog-unified .product-cart-button {
+    font-size: 0.62rem;
+  }
 }

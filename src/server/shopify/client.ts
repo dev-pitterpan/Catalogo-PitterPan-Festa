@@ -76,7 +76,7 @@ export class ShopifyClient {
       } catch {
         if (attempt === 5)
           throw new Error(
-            "Falha de rede na Shopify. Execute novamente com --resume.",
+            "Não foi possível conectar à Shopify. Tente novamente em instantes.",
           );
         await delay(1000 * 2 ** attempt);
         continue;
@@ -139,10 +139,29 @@ export class ShopifyClient {
         );
       }
       if (!payload.data) throw new Error("Resposta Shopify sem dados.");
+      // Pace pagination using Shopify's actual remaining query budget.
+      const cost = payload.extensions?.cost;
+      const budget = cost?.throttleStatus;
+      if (
+        budget &&
+        budget.currentlyAvailable < (cost?.requestedQueryCost || 100)
+      ) {
+        await delay(
+          Math.min(
+            5000,
+            Math.max(
+              0,
+              (((cost?.requestedQueryCost || 100) - budget.currentlyAvailable) /
+                Math.max(1, budget.restoreRate)) *
+                1000,
+            ),
+          ),
+        );
+      }
       return payload.data;
     }
     throw new Error(
-      "Shopify permaneceu indisponível/limitada. Retome a importação depois.",
+      "A Shopify está temporariamente indisponível ou limitando as consultas. Tente novamente em instantes.",
     );
   }
 }

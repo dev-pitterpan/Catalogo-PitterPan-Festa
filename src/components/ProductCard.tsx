@@ -84,6 +84,22 @@ export default function ProductCard({
       setBuying(false);
     }
   }
+  const buyButton = product.shopifyVariantId ? (
+    <button
+      type="button"
+      className={isClient ? "product-buy-link" : "product-buy-button"}
+      disabled={buying}
+      onClick={buyNow}
+    >
+      {!isClient && <ShoppingCart size={16} aria-hidden="true" />}
+      {buying
+        ? "Preparando checkout…"
+        : isClient
+          ? "Comprar agora"
+          : "Comprar no site"}
+      <ArrowUpRight size={14} aria-hidden="true" />
+    </button>
+  ) : null;
   return (
     <article
       className={`product-card ${isClient ? "product-card--selectable" : ""} ${quantity ? "is-selected" : ""}`}
@@ -104,7 +120,17 @@ export default function ProductCard({
         <span className="product-category">
           {product.category || "Coleção"}
         </span>
-        <h2>{product.name}</h2>
+        <h2>
+          <a
+            className="product-detail-link"
+            href={product.siteUrl || website}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Ver detalhes no site"
+          >
+            {product.name}
+          </a>
+        </h2>
         <p>{product.description}</p>
         <div className="product-card__purchase">
           {product.price !== undefined && (
@@ -119,23 +145,6 @@ export default function ProductCard({
               <strong>{formatMoney(product.price, product.currency)}</strong>
               <small>Preço por unidade / variante</small>
             </div>
-          )}
-          {product.shopifyVariantId && (
-            <button
-              type="button"
-              className="product-buy-button"
-              disabled={buying}
-              onClick={buyNow}
-            >
-              <ShoppingCart size={16} aria-hidden="true" />
-              {buying ? "Preparando checkout…" : "Comprar no site"}
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </button>
-          )}
-          {buyError && (
-            <p className="product-buy-error" role="alert">
-              {buyError}
-            </p>
           )}
           {isClient ? (
             <div className="product-card__actions">
@@ -158,20 +167,20 @@ export default function ProductCard({
                   <span>Adicionar ao carrinho</span>
                 </button>
               )}
-              <a
-                className="product-site-link"
-                href={product.siteUrl || website}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span>Ver no site</span>
-                <ArrowUpRight aria-hidden="true" />
-              </a>
+              {buyButton}
             </div>
           ) : (
-            <div className="product-card__footer">
-              <span className="product-add-label">Catálogo do gestor</span>
-            </div>
+            <>
+              {buyButton}
+              <div className="product-card__footer">
+                <span className="product-add-label">Catálogo do gestor</span>
+              </div>
+            </>
+          )}
+          {buyError && (
+            <p className="product-buy-error" role="alert">
+              {buyError}
+            </p>
           )}
         </div>
       </div>

@@ -146,3 +146,47 @@ test("checkout lê apenas variantes selecionadas e exclui produtos sem publicaç
     [],
   );
 });
+
+test("coleções usam conexão direta, paginam e unificam variantes sem varrer a loja", async () => {
+  const calls: Record<string, unknown>[] = [];
+  const client = {
+    async query<T>(
+      query: string,
+      variables: Record<string, unknown> = {},
+    ): Promise<T> {
+      if (query.includes("currencyCode"))
+        return { shop: { currencyCode: "BRL" } } as T;
+      assert.ok(query.includes("collection(id:$id)"));
+      assert.ok(!query.includes("collection_id:"));
+      calls.push(variables);
+      const product = parent(variables.after ? 2 : 1);
+      const hidden = { ...parent(3), status: "DRAFT" };
+      return {
+        collection: {
+          products: connection(
+            [product, hidden],
+            variables.after ? null : "next",
+          ),
+        },
+      } as T;
+    },
+  };
+  const result = await loadShopifyCatalog(client, [
+    "collection-a",
+    "collection-b",
+    "collection-a",
+  ]);
+  assert.deepEqual(
+    calls.map((c) => [c.id, c.after]),
+    [
+      ["collection-a", null],
+      ["collection-a", "next"],
+      ["collection-b", null],
+      ["collection-b", "next"],
+    ],
+  );
+  assert.deepEqual(
+    result.products.map((p) => p.id),
+    ["shopify-1", "shopify-2"],
+  );
+});

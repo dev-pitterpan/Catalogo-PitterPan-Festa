@@ -20,6 +20,7 @@ type Variant = {
 };
 type Parent = {
   id: string;
+  status?: string;
   title: string;
   handle: string;
   description: string;
@@ -65,100 +66,116 @@ export async function loadShopifyCatalog(
   const { shop } = await client.query<{ shop: { currencyCode: string } }>(
     "{ shop { currencyCode } }",
   );
-  const search = collectionIds.length
-    ? `status:active AND (${collectionIds.map((id) => `collection_id:${id.split("/").at(-1)}`).join(" OR ")})`
-    : "status:active";
-  const query = `query($after:String,$search:String!){ products(first:40,after:$after,query:$search,sortKey:ID) { nodes {
-    id title handle description productType vendor tags onlineStoreUrl featuredImage { url altText }
+  // Read membership directly: Shopify can silently ignore collection_id search.
+  const fields = `id status title handle description productType vendor tags onlineStoreUrl featuredImage { url altText }
     variants(first:1) { nodes { ${variantFields} } ${pageInfo} }
-    collections(first:10) { nodes { ${collectionFields} } ${pageInfo} }
-  } ${pageInfo} } }`;
+    collections(first:10) { nodes { ${collectionFields} } ${pageInfo} }`;
+  const query = collectionIds.length
+    ? `query($id:ID!,$after:String){collection(id:$id){products(first:100,after:$after){nodes{${fields}} ${pageInfo}}}}`
+    : `query($after:String){products(first:100,after:$after,query:"status:active",sortKey:ID){nodes{${fields}} ${pageInfo}}}`;
   const products = new Map<string, Product>();
   const collections = new Map<string, Collection>();
-  let after: string | null = null;
-  const cursors = new Set<string>();
-  do {
-    const data: { products: Connection<Parent> } = await client.query(query, {
-      after,
-      search,
-    });
-    for (const parent of data.products.nodes) {
-      // Only products published to the online store may be exposed publicly.
-      if (!parent.onlineStoreUrl) continue;
-      const memberships = await drain(parent.collections, async (cursor) => {
-        const { product } = await client.query<{
-          product: { collections: Connection<Collection> };
-        }>(
-          `query($id:ID!,$after:String){product(id:$id){collections(first:100,after:$after){nodes{${collectionFields}} ${pageInfo}}}}`,
-          { id: parent.id, after: cursor },
-        );
-        return product.collections;
+  for (const id of [...new Set(collectionIds.length ? collectionIds : [""])]) {
+    let after: string | null = null;
+    const cursors = new Set<string>();
+    do {
+      const data: {
+        products?: Connection<Parent>;
+        collection?: { products: Connection<Parent> } | null;
+      } = await client.query<{
+        products?: Connection<Parent>;
+        collection?: { products: Connection<Parent> } | null;
+      }>(query, {
+        after,
+        id,
       });
-      for (const collection of memberships)
-        collections.set(collection.id, collection);
-      const variants = await drain(parent.variants, async (cursor) => {
-        const { product } = await client.query<{
-          product: { variants: Connection<Variant> };
-        }>(
-          `query($id:ID!,$after:String){product(id:$id){variants(first:100,after:$after){nodes{${variantFields}} ${pageInfo}}}}`,
-          { id: parent.id, after: cursor },
-        );
-        return product.variants;
-      });
-      for (const variant of variants) {
-        const variantId = variant.id.split("/").at(-1)!;
-        if (!/^[1-9]\d*$/.test(variantId))
-          throw new Error("ID de variante inválido.");
-        const url = new URL(parent.onlineStoreUrl);
-        if (url.protocol !== "https:" || url.username || url.password)
-          throw new Error("URL de produto inválida.");
-        url.searchParams.set("variant", variantId);
-        const image =
-          shopifyImageUrl(variant.image?.url) ||
-          shopifyImageUrl(parent.featuredImage?.url);
-        const stock = variant.inventoryQuantity ?? null;
-        products.set(variant.id, {
-          id: `shopify-${variantId}`,
-          shopifyVariantId: variantId,
-          shopifyProductId: parent.id,
-          sku: variant.sku || "",
-          handle: parent.handle,
-          name: [
-            parent.title,
-            variant.title === "Default Title" ? "" : variant.title,
-          ]
-            .filter(Boolean)
-            .join(" — "),
-          description: parent.description,
-          category: parent.productType || "Sem categoria",
-          vendor: parent.vendor,
-          tags: parent.tags,
-          collections: memberships.map((c) => c.handle),
-          keywords: [
-            variant.sku || "",
-            parent.vendor,
-            ...parent.tags,
-            ...memberships.map((c) => c.title),
-          ],
-          price: variant.price,
-          compareAtPrice: variant.compareAtPrice || undefined,
-          currency: shop.currencyCode,
-          image: image || "/assets/images/brand/product-placeholder.svg",
-          siteUrl: url.href,
-          inventoryQuantity: stock,
-          availableForSale:
-            stock === null
-              ? undefined
-              : stock > 0 || variant.inventoryPolicy === "CONTINUE",
+      const connection: Connection<Parent> | undefined = id
+        ? data.collection?.products
+        : data.products;
+      if (!connection)
+        throw new Error("Coleção Shopify indisponível. Tente novamente.");
+      for (const parent of connection.nodes) {
+        // Only products published to the online store may be exposed publicly.
+        if (
+          !parent.onlineStoreUrl ||
+          (parent.status && parent.status !== "ACTIVE")
+        )
+          continue;
+        const memberships = await drain(parent.collections, async (cursor) => {
+          const { product } = await client.query<{
+            product: { collections: Connection<Collection> };
+          }>(
+            `query($id:ID!,$after:String){product(id:$id){collections(first:100,after:$after){nodes{${collectionFields}} ${pageInfo}}}}`,
+            { id: parent.id, after: cursor },
+          );
+          return product.collections;
         });
+        for (const collection of memberships)
+          collections.set(collection.id, collection);
+        const variants = await drain(parent.variants, async (cursor) => {
+          const { product } = await client.query<{
+            product: { variants: Connection<Variant> };
+          }>(
+            `query($id:ID!,$after:String){product(id:$id){variants(first:100,after:$after){nodes{${variantFields}} ${pageInfo}}}}`,
+            { id: parent.id, after: cursor },
+          );
+          return product.variants;
+        });
+        for (const variant of variants) {
+          const variantId = variant.id.split("/").at(-1)!;
+          if (!/^[1-9]\d*$/.test(variantId))
+            throw new Error("ID de variante inválido.");
+          const url = new URL(parent.onlineStoreUrl);
+          if (url.protocol !== "https:" || url.username || url.password)
+            throw new Error("URL de produto inválida.");
+          url.searchParams.set("variant", variantId);
+          const image =
+            shopifyImageUrl(variant.image?.url) ||
+            shopifyImageUrl(parent.featuredImage?.url);
+          const stock = variant.inventoryQuantity ?? null;
+          products.set(variant.id, {
+            id: `shopify-${variantId}`,
+            shopifyVariantId: variantId,
+            shopifyProductId: parent.id,
+            sku: variant.sku || "",
+            handle: parent.handle,
+            name: [
+              parent.title,
+              variant.title === "Default Title" ? "" : variant.title,
+            ]
+              .filter(Boolean)
+              .join(" — "),
+            description: parent.description,
+            category: parent.productType || "Sem categoria",
+            vendor: parent.vendor,
+            tags: parent.tags,
+            collections: memberships.map((c) => c.handle),
+            keywords: [
+              variant.sku || "",
+              parent.vendor,
+              ...parent.tags,
+              ...memberships.map((c) => c.title),
+            ],
+            price: variant.price,
+            compareAtPrice: variant.compareAtPrice || undefined,
+            currency: shop.currencyCode,
+            image: image || "/assets/images/brand/product-placeholder.svg",
+            siteUrl: url.href,
+            inventoryQuantity: stock,
+            availableForSale:
+              stock === null
+                ? undefined
+                : stock > 0 || variant.inventoryPolicy === "CONTINUE",
+          });
+        }
       }
-    }
-    if (!data.products.pageInfo.hasNextPage) break;
-    after = data.products.pageInfo.endCursor;
-    if (!after || cursors.has(after))
-      throw new Error("Paginação Shopify sem progresso.");
-    cursors.add(after);
-  } while (true);
+      if (!connection.pageInfo.hasNextPage) break;
+      after = connection.pageInfo.endCursor;
+      if (!after || cursors.has(after))
+        throw new Error("Paginação Shopify sem progresso.");
+      cursors.add(after);
+    } while (true);
+  }
   return {
     products: [...products.values()],
     collections: [...collections.values()],
@@ -168,12 +185,12 @@ export async function loadShopifyCatalog(
 type Snapshot = Awaited<ReturnType<typeof loadShopifyCatalog>>;
 // Preserve single-flight reads across Next development module reloads.
 const cacheOwner = globalThis as typeof globalThis & {
-  shopifyCatalogReadsV2?: {
+  shopifyCatalogReadsV3?: {
     snapshots: Map<string, { value: Snapshot; expires: number }>;
     pending: Map<string, Promise<Snapshot>>;
   };
 };
-const { snapshots, pending } = (cacheOwner.shopifyCatalogReadsV2 ||= {
+const { snapshots, pending } = (cacheOwner.shopifyCatalogReadsV3 ||= {
   snapshots: new Map<string, { value: Snapshot; expires: number }>(),
   pending: new Map<string, Promise<Snapshot>>(),
 });

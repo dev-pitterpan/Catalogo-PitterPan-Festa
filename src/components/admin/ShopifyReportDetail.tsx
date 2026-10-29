@@ -10,8 +10,9 @@ import {
   numberValue,
   shortDate,
 } from "./AnalyticsCharts";
+import InteractiveColumns from "./InteractiveColumns";
 import PitterSpinner from "./PitterSpinner";
-import AdminSelect from "./AdminSelect";
+
 type Data = Awaited<ReturnType<typeof readShopifyReport>>;
 export function formatReportValue(
   value: unknown,
@@ -41,6 +42,7 @@ export default function ShopifyReportDetail({
   params: string;
 }) {
   const report = reportById(id)!;
+  const [chartMode, setChartMode] = useState(report.series ? "line" : "depth");
   const [data, setData] = useState<Data | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(true),
@@ -145,6 +147,10 @@ export default function ShopifyReportDetail({
       )}
       {data && (
         <>
+          <p className="analytics-session-note">
+            Clique em um indicador para mudar o gráfico. As variações comparam
+            períodos de mesma duração.
+          </p>
           <div className="shopify-report-metrics">
             {report.metrics.map((m) => {
               const current = numberValue(aggregate?.[m.key]),
@@ -191,18 +197,38 @@ export default function ShopifyReportDetail({
                 <span>
                   Visualizando: <strong>{selected.label}</strong>
                 </span>
-                <AdminSelect
-                  label="Métrica do gráfico"
-                  value={selected.key}
-                  onValueChange={setMetric}
-                  options={report.metrics.map((m) => ({
-                    value: m.key,
-                    label: m.label,
-                  }))}
-                />
+                {report.id !== "conversion-funnel" && (
+                  <div
+                    className="pitter-chart-switch"
+                    role="group"
+                    aria-label="Estilo do gráfico"
+                  >
+                    <button
+                      onClick={() => setChartMode("depth")}
+                      aria-pressed={chartMode === "depth"}
+                    >
+                      Colunas 3D
+                    </button>
+                    <button
+                      onClick={() => setChartMode("line")}
+                      aria-pressed={chartMode === "line"}
+                    >
+                      {report.series ? "Evolução" : "Barras"}
+                    </button>
+                  </div>
+                )}
               </div>
               {report.id === "conversion-funnel" ? (
                 <SessionJourney table={data.table} />
+              ) : chartMode === "depth" &&
+                (report.series || report.dimensions?.length) ? (
+                <InteractiveColumns
+                  table={data.table}
+                  metric={selected}
+                  dimensions={report.dimensions}
+                  series={report.series}
+                  format={(v) => format(v)}
+                />
               ) : report.series ? (
                 <RevenueChart
                   table={data.table}

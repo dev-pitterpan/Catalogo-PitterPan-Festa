@@ -150,6 +150,7 @@ export async function publishSnapshot(
   db: SqlClient,
   run: string,
   allowShrink = false,
+  expectedBase?: string | null,
 ) {
   await db.query("BEGIN");
   try {
@@ -169,6 +170,10 @@ export async function publishSnapshot(
     const total = Number(info.rows[0].total);
     if (!total) throw new Error("Importação vazia: publicação bloqueada.");
     const old = state.rows[0]?.active_import;
+    if (expectedBase !== undefined && (old || null) !== expectedBase)
+      throw new Error(
+        "A versão ativa mudou durante a sincronização. Inicie novamente.",
+      );
     if (old) {
       const result = await db.query<{ total: string }>(
         "SELECT count(*)::text AS total FROM catalog_items WHERE import_id=$1",

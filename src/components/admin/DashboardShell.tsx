@@ -316,6 +316,14 @@ export default function DashboardShell({
               placeholder="Buscar produto ou SKU…"
             />
           </AutoFilterForm>
+          {(user.role === "admin" || user.role === "gerente_compras") && (
+            <Link
+              className="admin-button admin-sync-shortcut"
+              href="/gestor/sincronizacoes/"
+            >
+              <RefreshCw size={15} /> Sincronizar
+            </Link>
+          )}
           <span className="admin-secure-label">
             <ShieldCheck size={15} aria-hidden="true" />
             Área da equipe

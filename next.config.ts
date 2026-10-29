@@ -1,3 +1,4 @@
+import { withWorkflow } from "workflow/next";
 import type { NextConfig } from "next";
 const config: NextConfig = {
   async redirects() {
@@ -29,4 +30,4 @@ const config: NextConfig = {
     "/*": ["./config/*.json", "./public/data/**/*.json"],
   },
 };
-export default config;
+export default withWorkflow(config);

@@ -116,6 +116,7 @@ try {
     assert.ok(!html.includes('class="admin-stats"'));
   }
   for (const route of [
+    "/api/admin/sync/",
     "/api/admin/sales/",
     "/api/admin/destinations/",
     "/api/admin/analytics/",
@@ -133,10 +134,32 @@ try {
       400,
     );
   }
+  assert.equal(
+    (await rawFetch(base + "/api/admin/sync/", { method: "POST" })).status,
+    401,
+  );
+  assert.equal(
+    (
+      await fetch(base + "/api/admin/sync/", {
+        method: "POST",
+        headers: { origin: "https://evil.example" },
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await fetch(base + "/api/admin/sync/", {
+        method: "POST",
+        headers: { origin: base },
+      })
+    ).status,
+    503,
+  );
   const analyticsPage = await fetch(base + "/gestor/analises/");
   const analyticsHtml = await analyticsPage.text();
   assert.equal(analyticsPage.status, 200);
-  assert.ok(analyticsHtml.includes("Seus resultados, por assunto."));
+  assert.ok(analyticsHtml.includes("Como está a sua loja?"));
   assert.ok(analyticsHtml.includes("Comportamento"));
   assert.ok(!analyticsHtml.includes('class="shopify-report-list"'));
   assert.equal(

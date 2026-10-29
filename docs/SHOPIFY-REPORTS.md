@@ -1,6 +1,8 @@
 # Relatórios Shopify
 
-A seção Análises abre um resumo e oito categorias. Uma categoria lista seus relatórios; os dados detalhados são consultados somente ao abrir um relatório. Busca, período, comparação anterior e exportação CSV compartilham a seleção atual.
+A seção Análises abre um resumo com quatro indicadores, evolução das vendas e seis perguntas práticas. Os relatórios completos ficam em uma biblioteca recolhida, organizada por oito categorias. Cada pergunta abre um relatório separado. Busca, período, comparação anterior e exportação CSV compartilham a seleção atual.
+
+Os gráficos permitem alternar entre evolução/barras e colunas com efeito 3D. As colunas mostram dez grupos/dias por página, valores por mouse/toque/teclado e escala do conjunto visível. A tabela e o CSV continuam disponíveis para conferir os números exatos.
 
 O registro `src/lib/admin/shopify-reports.ts` define as consultas permitidas. O endpoint exige sessão administrativa e aceita um identificador fixo de relatório, nunca ShopifyQL arbitrário. As datas são validadas e os resultados não usam cache HTTP.
 

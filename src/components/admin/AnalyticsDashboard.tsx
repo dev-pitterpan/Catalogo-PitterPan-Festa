@@ -10,8 +10,6 @@ import {
   MousePointerClick,
   Users,
   Megaphone,
-  Boxes,
-  Store,
   ChevronRight,
   RefreshCw,
   Search,
@@ -20,7 +18,8 @@ import {
 import AdminSelect from "./AdminSelect";
 import DateRangePicker from "./DateRangePicker";
 import PitterSpinner from "./PitterSpinner";
-import { shortDate, numberValue } from "./AnalyticsCharts";
+import InteractiveColumns from "./InteractiveColumns";
+import { RevenueChart, shortDate, numberValue } from "./AnalyticsCharts";
 import {
   reportCategories,
   shopifyReports,
@@ -29,16 +28,44 @@ import type { DateRange } from "../../lib/admin/date-range";
 import type { readShopifyOverview } from "../../server/sales/reports";
 import ShopifyReportDetail from "./ShopifyReportDetail";
 type Overview = Awaited<ReturnType<typeof readShopifyOverview>>;
-const icons = {
-  sales: ChartNoAxesCombined,
-  orders: ShoppingBag,
-  acquisition: Globe,
-  behavior: MousePointerClick,
-  customers: Users,
-  marketing: Megaphone,
-  inventory: Boxes,
-  pos: Store,
-};
+const questions = [
+  {
+    id: "sales-time",
+    title: "Quanto vendemos?",
+    description: "Veja a evolução das vendas ao longo dos dias.",
+    icon: ChartNoAxesCombined,
+  },
+  {
+    id: "sales-product",
+    title: "Quais produtos mais venderam?",
+    description: "Encontre os produtos que puxam o resultado.",
+    icon: ShoppingBag,
+  },
+  {
+    id: "marketing-referrer",
+    title: "De onde vieram as vendas?",
+    description: "Descubra os canais e plataformas de origem.",
+    icon: Megaphone,
+  },
+  {
+    id: "sessions-time",
+    title: "Quantas pessoas visitaram a loja?",
+    description: "Acompanhe visitas e visitantes da loja online.",
+    icon: Globe,
+  },
+  {
+    id: "conversion-funnel",
+    title: "As visitas estão virando compras?",
+    description: "Veja o caminho do carrinho até a compra.",
+    icon: MousePointerClick,
+  },
+  {
+    id: "customer-type",
+    title: "Os clientes estão voltando?",
+    description: "Compare clientes novos e recorrentes.",
+    icon: Users,
+  },
+];
 const normalize = (s: string) =>
   s
     .normalize("NFD")
@@ -48,12 +75,12 @@ export default function AnalyticsDashboard() {
   const [days, setDays] = useState("30"),
     [range, setRange] = useState<DateRange>({ start: "", end: "" }),
     [revision, setRevision] = useState(0),
-    [category, setCategory] = useState(""),
     [reportId, setReportId] = useState(""),
     [search, setSearch] = useState(""),
     [data, setData] = useState<Overview | null>(null),
     [busy, setBusy] = useState(true),
     [error, setError] = useState("");
+  const [homeChart, setHomeChart] = useState("line");
   const heading = useRef<HTMLHeadingElement>(null);
   const params = new URLSearchParams({
     days,
@@ -85,21 +112,8 @@ export default function AnalyticsDashboard() {
     return () => controller.abort();
   }, [params]);
   useEffect(() => {
-    if (category || reportId) heading.current?.focus();
-  }, [category, reportId]);
-  const selected = reportCategories.find((c) => c.id === category),
-    report = shopifyReports.find((r) => r.id === reportId);
-  const list = shopifyReports.filter(
-    (r) =>
-      (!category || r.category === category) &&
-      (!search ||
-        normalize(`${r.title} ${r.description}`).includes(normalize(search))),
-  );
-  function openCategory(id: string) {
-    setCategory(id);
-    setReportId("");
-    setSearch("");
-  }
+    heading.current?.focus();
+  }, [reportId]);
   const money = (n: number) =>
     new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -109,11 +123,11 @@ export default function AnalyticsDashboard() {
     <div className="analytics-dashboard shopify-reports">
       <div className="analytics-toolbar">
         <div className="analytics-period">
-          <span className="analytics-eyebrow">SHOPIFY ANALYTICS</span>
+          <span className="analytics-eyebrow">RESULTADOS DA SUA LOJA</span>
           <strong>
             {data
               ? `${shortDate(data.window.start)} a ${shortDate(data.window.end)}`
-              : "Selecione o período"}
+              : "Escolha o período"}
           </strong>
         </div>
         <div className="insights-filters">
@@ -141,62 +155,82 @@ export default function AnalyticsDashboard() {
           </button>
         </div>
       </div>
-      <nav
-        className="shopify-report-navigation"
-        aria-label="Categorias de análises"
-      >
-        <button
-          className={!category ? "is-current" : ""}
-          aria-current={!category ? "page" : undefined}
-          onClick={() => openCategory("")}
-        >
-          Visão geral
-        </button>
-        {reportCategories.map((c) => (
-          <button
-            key={c.id}
-            className={category === c.id ? "is-current" : ""}
-            aria-current={category === c.id ? "page" : undefined}
-            onClick={() => openCategory(c.id)}
-          >
-            {c.title}
-          </button>
-        ))}
-      </nav>
-      {!category && !search && !reportId && (
+      {reportId ? (
         <>
+          <button
+            className="admin-button analytics-back"
+            onClick={() => setReportId("")}
+          >
+            <ArrowLeft size={16} /> Voltar ao resumo
+          </button>
+          <h2 ref={heading} tabIndex={-1} className="admin-sr-only">
+            Detalhes do relatório
+          </h2>
+          <ShopifyReportDetail key={reportId} id={reportId} params={params} />
+        </>
+      ) : (
+        <>
+          <div className="analytics-guide-intro">
+            <span className="analytics-eyebrow">
+              UMA VISÃO CLARA DO NEGÓCIO
+            </span>
+            <h2 ref={heading} tabIndex={-1}>
+              Como está a sua loja?
+            </h2>
+            <p>
+              Comece pelos números principais. Depois, escolha o que quer
+              entender melhor.
+            </p>
+          </div>
           {busy && (
-            <div className="admin-panel analytics-loading" role="status">
-              <PitterSpinner label="Consultando o resumo da Shopify…" />
+            <div className="admin-panel analytics-loading">
+              <PitterSpinner label="Buscando os resultados na Shopify…" />
             </div>
           )}
           {error && (
             <p className="admin-data-notice" role="alert">
-              {error} Você pode consultar os relatórios abaixo individualmente.
+              {error} Você ainda pode abrir os relatórios abaixo.
             </p>
           )}
           {data && (
             <section className="analytics-kpis" aria-label="Resumo do período">
               {[
-                { key: "gross_sales", label: "Vendas brutas", tone: "gold" },
-                { key: "total_sales", label: "Total de vendas", tone: "blue" },
-                { key: "orders", label: "Pedidos", tone: "rose" },
+                {
+                  key: "total_sales",
+                  label: "Total de vendas",
+                  tone: "blue",
+                  hint: "Valor total de vendas conforme o relatório Shopify.",
+                },
+                {
+                  key: "orders",
+                  label: "Pedidos",
+                  tone: "gold",
+                  hint: "Quantidade de pedidos registrados no período.",
+                },
                 {
                   key: "average_order_value",
-                  label: "Valor médio do pedido",
+                  label: "Valor médio por pedido",
+                  tone: "rose",
+                  hint: "Ticket médio calculado pela Shopify.",
+                },
+                {
+                  key: "gross_sales",
+                  label: "Vendas antes dos descontos",
                   tone: "teal",
+                  hint: "Vendas brutas antes de descontos e devoluções.",
                 },
               ].map((k) => {
                 const current = numberValue(data.totals.rows[0]?.[k.key]),
-                  previous = numberValue(data.previous?.rows[0]?.[k.key]);
+                  before = numberValue(data.previous?.rows[0]?.[k.key]);
                 const change =
-                  current !== null && previous !== null && previous !== 0
-                    ? ((current - previous) / Math.abs(previous)) * 100
+                  current !== null && before !== null && before !== 0
+                    ? (100 * (current - before)) / Math.abs(before)
                     : null;
                 return (
                   <article
                     className={`analytics-kpi analytics-kpi--${k.tone}`}
                     key={k.key}
+                    title={k.hint}
                   >
                     <div className="analytics-kpi-top">{k.label}</div>
                     <strong>
@@ -219,6 +253,7 @@ export default function AnalyticsDashboard() {
                             ) : (
                               <ArrowUpRight size={14} />
                             )}{" "}
+                            {change > 0 ? "+" : ""}
                             {change.toLocaleString("pt-BR", {
                               maximumFractionDigits: 1,
                             })}
@@ -233,167 +268,144 @@ export default function AnalyticsDashboard() {
               })}
             </section>
           )}
-          <div className="shopify-library-heading">
-            <span className="analytics-eyebrow">
-              ESCOLHA O QUE QUER ANALISAR
-            </span>
-            <h2>Seus resultados, por assunto.</h2>
-            <p>
-              Abra uma categoria e selecione um relatório para ver os detalhes.
-            </p>
-          </div>
-          <div className="shopify-category-grid">
-            {reportCategories.map((c, i) => {
-              const Icon = icons[c.icon];
-              return (
-                <button
-                  className={`shopify-category-card shopify-category-card--${i % 4}`}
-                  key={c.id}
-                  onClick={() => openCategory(c.id)}
+          {data?.trend && (
+            <section className="admin-panel analytics-featured-chart">
+              <header>
+                <div>
+                  <span className="analytics-eyebrow">
+                    O RITMO DAS SUAS VENDAS
+                  </span>
+                  <h2>Seu resultado, dia após dia.</h2>
+                  <p>Passe pelo gráfico para descobrir o valor de cada dia.</p>
+                </div>
+                <div
+                  className="pitter-chart-switch"
+                  role="group"
+                  aria-label="Visualização das vendas"
                 >
-                  <span className="shopify-category-icon">
-                    <Icon size={23} />
-                  </span>
-                  <span className="shopify-category-copy">
-                    <strong>{c.title}</strong>
-                    <span>{c.description}</span>
-                    <small>
-                      {shopifyReports.filter((r) => r.category === c.id).length}{" "}
-                      relatórios
-                    </small>
-                  </span>
-                  <ChevronRight size={18} />
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-      <div className="shopify-library-heading shopify-library-heading--list">
-        <div>
-          {(category || reportId) && (
-            <button
-              className="shopify-back"
-              onClick={() => {
-                if (reportId) setReportId("");
-                else openCategory("");
-              }}
-            >
-              <ArrowLeft size={15} />
-              {reportId ? "Voltar aos relatórios" : "Todas as categorias"}
-            </button>
-          )}
-          <h2 ref={heading} tabIndex={-1}>
-            {report
-              ? report.title
-              : selected?.title || "Biblioteca de relatórios"}
-          </h2>
-          {!report && (
-            <p>
-              {selected?.description ||
-                "Pesquise um indicador para abrir o relatório correspondente."}
-            </p>
-          )}
-        </div>
-        {!report && (
-          <label className="shopify-report-search">
-            <Search size={16} />
-            <input
-              type="search"
-              aria-label="Pesquisar relatórios"
-              placeholder="Pesquisar relatórios…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </label>
-        )}
-      </div>
-      {report ? (
-        <ShopifyReportDetail key={report.id} id={report.id} params={params} />
-      ) : category || search.trim() ? (
-        <>
-          <div className="shopify-report-list" role="list">
-            {list.map((r) => (
+                  <button
+                    aria-pressed={homeChart === "line"}
+                    onClick={() => setHomeChart("line")}
+                  >
+                    Evolução
+                  </button>
+                  <button
+                    aria-pressed={homeChart === "depth"}
+                    onClick={() => setHomeChart("depth")}
+                  >
+                    Colunas 3D
+                  </button>
+                </div>
+              </header>
+              {homeChart === "depth" ? (
+                <InteractiveColumns
+                  table={data.trend}
+                  metric={{
+                    key: "total_sales",
+                    label: "Total de vendas",
+                    format: "money",
+                  }}
+                  series
+                  format={(v) => {
+                    const n = numberValue(v);
+                    return n === null ? "—" : money(n);
+                  }}
+                />
+              ) : (
+                <RevenueChart
+                  table={data.trend}
+                  currency={data.currency}
+                  money={(v) => (v === null ? "—" : money(v))}
+                  showTable={false}
+                />
+              )}
               <button
-                role="listitem"
-                key={r.id}
-                onClick={() => {
-                  setCategory(r.category);
-                  setReportId(r.id);
-                }}
+                className="analytics-expand"
+                onClick={() => setReportId("sales-time")}
               >
+                Explorar todos os detalhes das vendas <ChevronRight size={14} />
+              </button>
+            </section>
+          )}
+          <div className="analytics-guide-intro">
+            <h2>O que você quer descobrir?</h2>
+            <p>Clique em uma pergunta para explorar o gráfico e os dados.</p>
+          </div>
+          <div className="analytics-question-grid">
+            {questions.map(({ id, title, description, icon: Icon }) => (
+              <button
+                className="analytics-question-card"
+                key={id}
+                onClick={() => setReportId(id)}
+              >
+                <Icon size={22} />
                 <span>
-                  <strong>{r.title}</strong>
-                  <small>{r.description}</small>
-                </span>
-                <span className="shopify-report-category-label">
-                  {reportCategories.find((c) => c.id === r.category)?.title}
+                  <strong>{title}</strong>
+                  <small>{description}</small>
                 </span>
                 <ChevronRight size={17} />
               </button>
             ))}
           </div>
-          {!list.length && (
-            <div className="analytics-empty">
-              Nenhum relatório encontrado. Tente outro termo.
-            </div>
-          )}
-          {category === "customers" && (
-            <div className="shopify-native-notice">
-              <Users size={20} />
-              <div>
-                <strong>Coortes e análise RFM</strong>
-                <p>
-                  Esses relatórios especializados continuam disponíveis no
-                  painel da Shopify. Não estimamos os resultados a partir dos
-                  pedidos do catálogo.
-                </p>
-                <a
-                  href="https://admin.shopify.com/store/pitter-pan/analytics/reports"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Abrir relatórios na Shopify <ExternalLink size={13} />
-                </a>
-              </div>
-            </div>
-          )}
-        </>
-      ) : null}
-      {!category && !report && (
-        <div className="shopify-native-notice">
-          <Globe size={23} />
-          <div>
-            <strong>Live View da Shopify</strong>
-            <p>
-              Visitantes agora, carrinhos ativos e o globo ao vivo são
-              consultados na Shopify. Os relatórios acima seguem o processamento
-              do Analytics e não representam atividade em tempo real.
+          <details className="analytics-all-reports">
+            <summary>
+              Todos os relatórios · vendas, clientes, estoque e mais
+            </summary>
+            <p className="analytics-session-note">
+              Encontre uma informação específica. Cada relatório abre
+              separadamente.
             </p>
-            <a
-              href="https://admin.shopify.com/store/pitter-pan/analytics/live"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Abrir Live View <ExternalLink size={13} />
-            </a>
-          </div>
-        </div>
+            <label className="shopify-report-search">
+              <Search size={16} />
+              <input
+                type="search"
+                aria-label="Pesquisar relatórios"
+                placeholder="Busque por produto, estoque, entrega…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </label>
+            {reportCategories.map((c) => {
+              const reports = shopifyReports.filter(
+                (r) =>
+                  r.category === c.id &&
+                  normalize(`${r.title} ${r.description}`).includes(
+                    normalize(search.trim()),
+                  ),
+              );
+              return reports.length ? (
+                <section className="analytics-report-group" key={c.id}>
+                  <h3>{c.title}</h3>
+                  {reports.map((r) => (
+                    <button key={r.id} onClick={() => setReportId(r.id)}>
+                      {r.title}
+                      <ChevronRight size={15} />
+                    </button>
+                  ))}
+                </section>
+              ) : null;
+            })}
+            {!shopifyReports.some((r) =>
+              normalize(`${r.title} ${r.description}`).includes(
+                normalize(search.trim()),
+              ),
+            ) && <p>Nenhum relatório encontrado para essa busca.</p>}
+          </details>
+        </>
       )}
-      {!report && (
-        <footer className="analytics-source">
-          <span>
-            <i /> Fonte: Shopify Analytics
-          </span>
-          <p>
-            {data
-              ? `Atualizado em ${new Date(data.generatedAt).toLocaleString("pt-BR", { timeZone: data.timezone })} · ${data.timezone}. `
-              : ""}
-            Os detalhes são consultados ao abrir cada relatório. A
-            disponibilidade depende dos dados e acessos da loja.
-          </p>
-        </footer>
-      )}
+      <footer className="analytics-simple-footer">
+        <span>
+          Fonte: Shopify Analytics{data ? ` · ${data.timezone}` : ""}. Alguns
+          dados dependem do processamento da Shopify.
+        </span>
+        <a
+          href="https://admin.shopify.com/store/pitter-pan/analytics/reports"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Abrir painel da Shopify <ExternalLink size={12} />
+        </a>
+      </footer>
     </div>
   );
 }

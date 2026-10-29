@@ -7,3 +7,6 @@ dist/
 !.env.example
 *.log
 *.tsbuildinfo
+/.swc
+
+.workflow-data/

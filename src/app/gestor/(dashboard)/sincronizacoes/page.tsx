@@ -1,3 +1,5 @@
+import SyncControl from "../../../../components/admin/SyncControl";
+import { requireSession } from "../../../../server/auth/session";
 import { adminContext } from "../../../../server/admin/repository";
 import {
   PageHeading,
@@ -7,42 +9,21 @@ import {
   number,
   statusLabels,
 } from "../../../../components/admin/Primitives";
-import { ShieldCheck, Database, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Database } from "lucide-react";
 export default async function Sync() {
+  const user = await requireSession();
   const context = await adminContext();
   return (
     <>
       <PageHeading
         eyebrow="DADOS EM QUE VOCÊ PODE CONFIAR"
-        title="Sincronizações, com clareza."
-        description="Acompanhe importações e publicações. Uma versão em preparação nunca substitui os dados publicados."
+        title="Sincronização da loja."
+        description="Atualize os dados da Shopify e acompanhe o andamento por aqui."
       />
       <DataNotice context={context} />
-      <div className="admin-process-grid">
-        {[
-          {
-            icon: RefreshCw,
-            title: "1. Importar",
-            text: "Produtos, variantes e coleções chegam a uma versão de preparação.",
-          },
-          {
-            icon: ShieldCheck,
-            title: "2. Conferir",
-            text: "Revise contagens, preços e coleções antes de publicar.",
-          },
-          {
-            icon: CheckCircle2,
-            title: "3. Publicar",
-            text: "A troca é atômica: o cliente vê uma versão completa.",
-          },
-        ].map(({ icon: Icon, title, text }) => (
-          <div className="admin-panel" key={title}>
-            <Icon size={24} />
-            <h2>{title}</h2>
-            <p>{text}</p>
-          </div>
-        ))}
-      </div>
+      {(user.role === "admin" || user.role === "gerente_compras") && (
+        <SyncControl />
+      )}
       <section className="admin-panel">
         <header>
           <div>
@@ -95,11 +76,6 @@ export default async function Sync() {
           />
         )}
       </section>
-      <p className="admin-footnote">
-        A sincronização continua sob responsabilidade do administrador. Este
-        painel acompanha o processo; não inicia exportações longas durante a
-        navegação.
-      </p>
     </>
   );
 }

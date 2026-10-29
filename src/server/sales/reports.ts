@@ -147,7 +147,12 @@ export async function readShopifyOverview(
   const previous = await query(window.previousStart, window.previousEnd).catch(
     () => null,
   );
+  const trend = await queryAnalyticsTable(
+    client,
+    `FROM sales SHOW total_sales TIMESERIES day SINCE ${window.start} UNTIL ${window.end} ORDER BY day ASC`,
+  ).catch(() => null);
   return {
+    trend,
     totals,
     previous,
     currency: shop.currencyCode,

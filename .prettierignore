@@ -4,3 +4,8 @@ out
 dist
 public/assets
 package-lock.json
+
+src/app/.well-known/workflow/
+.swc/
+
+.workflow-data/

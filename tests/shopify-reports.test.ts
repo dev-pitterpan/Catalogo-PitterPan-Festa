@@ -134,16 +134,12 @@ test("unavailable comparison stays null while a failed current report fails expl
     ),
   );
 });
-test("overview requests totals only without loading category reports", async () => {
+test("overview loads only totals and the sales trend without loading other categories", async () => {
   const c = client();
   const result = await readShopifyOverview(c, 7, range);
-  assert.equal(c.queries.length, 2);
-  assert.ok(
-    c.queries.every((q) =>
-      q.startsWith(
-        "FROM sales SHOW gross_sales, total_sales, orders, average_order_value",
-      ),
-    ),
-  );
+  assert.equal(c.queries.length, 3);
+  assert.ok(c.queries.every((q) => q.startsWith("FROM sales SHOW")));
+  assert.equal(c.queries.filter((q) => q.includes("TIMESERIES day")).length, 1);
+  assert.ok(result.trend);
   assert.equal(result.totals.rows[0].total_sales, 230);
 });

@@ -1,4 +1,41 @@
 import { z } from "zod";
+import { ShopifyGraphQLError } from "../shopify/client.ts";
+export class AnalyticsResponseError extends Error {
+  readonly code: "QUERY_INVALID" | "RESPONSE_INVALID" | "NO_TABLE";
+  constructor(code: "QUERY_INVALID" | "RESPONSE_INVALID" | "NO_TABLE") {
+    super(code);
+    this.code = code;
+  }
+}
+export function analyticsFailure(error: unknown) {
+  if (error instanceof ShopifyGraphQLError) {
+    return error.accessDenied
+      ? {
+          code: "ACCESS_DENIED",
+          error:
+            "A Shopify negou acesso às análises. Confira read_reports na instalação e a autorização de dados protegidos de nível 2 do app de vendas.",
+        }
+      : {
+          code: "GRAPHQL_ERROR",
+          error:
+            "A Shopify recusou a consulta GraphQL. É necessário revisar os campos e a versão da API no código.",
+        };
+  }
+  if (error instanceof AnalyticsResponseError) {
+    return {
+      code: error.code,
+      error:
+        error.code === "QUERY_INVALID"
+          ? "A Shopify recusou a sintaxe ou uma métrica do relatório. É necessário revisar a consulta ShopifyQL no código."
+          : "A resposta do relatório não corresponde ao formato esperado. É necessário revisar a integração de análises.",
+    };
+  }
+  return {
+    code: "ANALYTICS_UNAVAILABLE",
+    error:
+      "Não foi possível concluir a consulta de análises. Verifique a configuração do app de vendas, a conexão e o tempo de resposta. Nenhuma métrica foi estimada.",
+  };
+}
 type Client = { query<T>(q: string, v?: Record<string, unknown>): Promise<T> };
 const scalar = z.union([z.string(), z.number(), z.null()]);
 const tableSchema = z.object({
@@ -42,7 +79,7 @@ export async function queryAnalyticsTable(client: Client, query: string) {
     `query($query:String!){shopifyqlQuery(query:$query){tableData{columns{name dataType displayName} rows} parseErrors}}`,
     { query },
   );
-  const body = z
+  const parsed = z
     .object({
       shopifyqlQuery: z
         .object({
@@ -51,9 +88,12 @@ export async function queryAnalyticsTable(client: Client, query: string) {
         })
         .nullable(),
     })
-    .parse(raw).shopifyqlQuery;
-  if (!body || body.parseErrors.length || !body.tableData)
-    throw new Error("Relatório indisponível.");
+    .safeParse(raw);
+  if (!parsed.success) throw new AnalyticsResponseError("RESPONSE_INVALID");
+  const body = parsed.data.shopifyqlQuery;
+  if (body?.parseErrors.length)
+    throw new AnalyticsResponseError("QUERY_INVALID");
+  if (!body?.tableData) throw new AnalyticsResponseError("NO_TABLE");
   return body.tableData;
 }
 const metrics =

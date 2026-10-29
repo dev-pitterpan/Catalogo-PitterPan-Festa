@@ -1,4 +1,15 @@
 import { z } from "zod";
+/** Preserves diagnostic codes, never upstream messages, tokens or response bodies. */
+export class ShopifyGraphQLError extends Error {
+  readonly accessDenied: boolean;
+  constructor(codes: (string | undefined)[]) {
+    super(
+      "Erro GraphQL Shopify. Confira os campos da versão e as permissões do aplicativo.",
+    );
+    this.name = "ShopifyGraphQLError";
+    this.accessDenied = codes.includes("ACCESS_DENIED");
+  }
+}
 const configSchema = z.object({
   SHOPIFY_STORE_DOMAIN: z
     .string()
@@ -156,8 +167,8 @@ export class ShopifyClient {
           );
           continue;
         }
-        throw new Error(
-          "Erro GraphQL Shopify. Confira os campos da versão e as permissões do aplicativo.",
+        throw new ShopifyGraphQLError(
+          payload.errors.map((error) => error.extensions?.code),
         );
       }
       if (!payload.data) throw new Error("Resposta Shopify sem dados.");

@@ -11,7 +11,33 @@ import {
   analyticsWindow,
   queryAnalyticsTable,
   readShopifyAnalytics,
+  analyticsFailure,
+  AnalyticsResponseError,
 } from "../src/server/sales/analytics.ts";
+import { ShopifyGraphQLError } from "../src/server/shopify/client.ts";
+test("diagnóstico distingue acesso, consulta e formato sem revelar mensagens externas", () => {
+  assert.equal(
+    analyticsFailure(new ShopifyGraphQLError(["ACCESS_DENIED"])).code,
+    "ACCESS_DENIED",
+  );
+  assert.equal(
+    analyticsFailure(new ShopifyGraphQLError(["undefinedField"])).code,
+    "GRAPHQL_ERROR",
+  );
+  assert.equal(
+    analyticsFailure(new AnalyticsResponseError("QUERY_INVALID")).code,
+    "QUERY_INVALID",
+  );
+  assert.equal(
+    analyticsFailure(new AnalyticsResponseError("RESPONSE_INVALID")).code,
+    "RESPONSE_INVALID",
+  );
+  assert.ok(
+    !JSON.stringify(
+      analyticsFailure(new Error("secret-token customer@example.com")),
+    ).includes("secret-token"),
+  );
+});
 test("destino lê apenas cidade/UF/país e não bloqueia pedidos sem permissão", async () => {
   const calls: string[] = [];
   const client = {

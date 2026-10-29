@@ -1,4 +1,4 @@
-import { Package, PersonStanding, Truck, HelpCircle } from "lucide-react";
+import { Package, PersonStanding, HelpCircle } from "lucide-react";
 import { deliveryLabels, type DeliveryKind } from "../../lib/admin/delivery";
 export default function DeliveryMark({
   kind,
@@ -57,10 +57,8 @@ export default function DeliveryMark({
             SEDEX
           </text>
         </svg>
-      ) : safe === "PICKUP" ? (
+      ) : safe === "PICKUP" || safe === "OTHER" ? (
         <PersonStanding aria-hidden="true" />
-      ) : safe === "OTHER" ? (
-        <Truck aria-hidden="true" />
       ) : safe === "MIXED" ? (
         <Package aria-hidden="true" />
       ) : (

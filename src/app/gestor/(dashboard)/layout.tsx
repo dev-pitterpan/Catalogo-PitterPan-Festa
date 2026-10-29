@@ -4,6 +4,7 @@ import { requireSession } from "../../../server/auth/session";
 import "../../../styles/admin.css";
 import "../../../styles/admin/dashboard.css";
 import "../../../styles/admin/sales.css";
+import "../../../styles/admin/analytics.css";
 export const metadata = { title: "Central de gestão" };
 export default async function DashboardLayout({
   children,

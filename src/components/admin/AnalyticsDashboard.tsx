@@ -1,6 +1,26 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Download, RefreshCw } from "lucide-react";
+import {
+  Download,
+  RefreshCw,
+  ArrowUpRight,
+  ArrowDownRight,
+  ShoppingBag,
+  Wallet,
+  ReceiptText,
+  ChartNoAxesCombined,
+  Store,
+  Package,
+  Globe,
+  CalendarDays,
+} from "lucide-react";
+import {
+  RevenueChart,
+  RankedBars,
+  SessionJourney,
+  ChartEmpty,
+  shortDate,
+} from "./AnalyticsCharts";
 import AdminSelect from "./AdminSelect";
 import PitterSpinner from "./PitterSpinner";
 import { csvCell } from "../../lib/admin/csv";
@@ -110,71 +130,90 @@ export default function AnalyticsDashboard() {
     a.click();
     URL.revokeObjectURL(url);
   }
-  const trend = data?.trend.table?.rows || [];
-  const points = trend.map((row) => numeric(row.total_sales));
-  const low = Math.min(0, ...points.filter((p): p is number => p !== null));
-  const high = Math.max(0, ...points.filter((p): p is number => p !== null));
-  const span = high - low || 1;
-  const xy = points.map((p, i) =>
-    p === null
-      ? null
-      : [
-          40 + (i * 620) / Math.max(1, points.length - 1),
-          220 - ((p - low) * 180) / span,
-        ],
-  );
-  const paths: string[] = [];
-  let segment = "";
-  for (const p of xy) {
-    if (p) segment += `${segment ? "L" : "M"}${p[0]},${p[1]}`;
-    else if (segment) {
-      paths.push(segment);
-      segment = "";
-    }
-  }
-  if (segment) paths.push(segment);
-  const sessionCount = value(data?.sessions.table, "sessions"),
-    completed = value(data?.sessions.table, "sessions_that_completed_checkout");
+  const period = data
+    ? `${shortDate(data.window.start)} a ${shortDate(data.window.end)}`
+    : "";
+  const kpis = [
+    {
+      key: "total_sales",
+      icon: Wallet,
+      tone: "blue",
+      note: "Inclui frete e tributos",
+    },
+    {
+      key: "gross_sales",
+      icon: ChartNoAxesCombined,
+      tone: "gold",
+      note: "Antes de descontos e estornos",
+    },
+    {
+      key: "orders",
+      icon: ShoppingBag,
+      tone: "rose",
+      note: "Pedidos no período selecionado",
+    },
+    {
+      key: "average_order_value",
+      icon: ReceiptText,
+      tone: "teal",
+      note: "Ticket médio da Shopify",
+    },
+  ];
   return (
-    <>
-      <div className="insights-filters">
-        <AdminSelect
-          label="Período das análises"
-          value={days}
-          onValueChange={setDays}
-          options={[
-            { value: "1", label: "Hoje" },
-            { value: "7", label: "Últimos 7 dias" },
-            { value: "30", label: "Últimos 30 dias" },
-            { value: "60", label: "Últimos 60 dias" },
-          ]}
-        />
-        <button
-          className="admin-button"
-          onClick={() => setRevision((n) => n + 1)}
-          disabled={busy}
-        >
-          <RefreshCw size={16} />
-          Atualizar
-        </button>
-        <button
-          className="admin-button"
-          onClick={download}
-          disabled={!data || busy}
-        >
-          <Download size={16} />
-          Exportar relatório
-        </button>
+    <div className="analytics-dashboard">
+      <div className="analytics-toolbar">
+        <div className="analytics-period">
+          <span className="analytics-eyebrow">
+            <CalendarDays size={14} /> VISÃO DO NEGÓCIO
+          </span>
+          <strong>
+            {busy
+              ? "Consultando resultados…"
+              : data
+                ? period
+                : "Análises da loja"}
+          </strong>
+        </div>
+        <div className="insights-filters">
+          <AdminSelect
+            label="Período das análises"
+            value={days}
+            onValueChange={setDays}
+            options={[
+              { value: "1", label: "Hoje" },
+              { value: "7", label: "Últimos 7 dias" },
+              { value: "30", label: "Últimos 30 dias" },
+              { value: "60", label: "Últimos 60 dias" },
+            ]}
+          />
+          <button
+            className="admin-button analytics-refresh"
+            onClick={() => setRevision((n) => n + 1)}
+            disabled={busy}
+            aria-label="Atualizar análises"
+          >
+            <RefreshCw size={16} />
+            <span>Atualizar</span>
+          </button>
+          <button
+            className="admin-button analytics-export"
+            onClick={download}
+            disabled={!data || busy}
+          >
+            <Download size={16} /> Exportar
+          </button>
+        </div>
       </div>
       {busy && (
-        <div className="admin-panel">
-          <PitterSpinner label="Consultando Shopify Analytics…" />
+        <div className="admin-panel analytics-loading" role="status">
+          <PitterSpinner label="Buscando os resultados da sua loja…" />
+          <p>Preparando vendas, canais e comportamento de compra.</p>
         </div>
       )}
       {error && (
         <div className="admin-data-notice" role="alert">
           <div>
-            <strong>As análises ainda não puderam ser consultadas</strong>
+            <strong>Não foi possível consultar as análises</strong>
             <p>{error}</p>
             <a className="admin-text-link" href="/gestor/vendas/">
               Ver pedidos já importados
@@ -184,213 +223,210 @@ export default function AnalyticsDashboard() {
       )}
       {data && (
         <>
-          <p className="sales-definition">
-            Fonte: Shopify Analytics · {data.window.start} a {data.window.end} ·
-            Fuso {data.timezone}. Consultado em{" "}
-            {new Date(data.generatedAt).toLocaleString("pt-BR")}. Os relatórios
-            podem ter atraso de processamento na Shopify. A comparação usa o
-            período anterior de mesma duração.
-          </p>
           <section
-            className="admin-stats"
+            className="analytics-kpis"
             aria-label="Indicadores reais de vendas"
           >
-            {[
-              "gross_sales",
-              "total_sales",
-              "orders",
-              "average_order_value",
-            ].map((key) => {
+            {kpis.map(({ key, icon: Icon, tone, note }) => {
               const current = value(data.totals, key),
                 previous = value(data.previous.table, key);
+              const change =
+                current !== null && previous !== null && previous !== 0
+                  ? ((current - previous) / Math.abs(previous)) * 100
+                  : null;
               return (
-                <div className="admin-stat admin-stat--blue" key={key}>
-                  <span>{names[key]}</span>
+                <article
+                  className={`analytics-kpi analytics-kpi--${tone}`}
+                  key={key}
+                >
+                  <div className="analytics-kpi-top">
+                    <span>{names[key]}</span>
+                    <span className="analytics-kpi-icon">
+                      <Icon size={19} />
+                    </span>
+                  </div>
                   <strong>
                     {key === "orders" ? num(current) : money(current)}
                   </strong>
-                  <small>
-                    {current !== null && previous !== null && previous !== 0
-                      ? `${num(((current - previous) / Math.abs(previous)) * 100)}% em relação ao período anterior`
-                      : "Comparação indisponível ou base anterior igual a zero"}
-                  </small>
-                </div>
+                  <div className="analytics-kpi-comparison">
+                    {change !== null ? (
+                      <>
+                        <span
+                          className={`analytics-change ${change < 0 ? "is-down" : "is-up"}`}
+                        >
+                          {change < 0 ? (
+                            <ArrowDownRight size={14} />
+                          ) : (
+                            <ArrowUpRight size={14} />
+                          )}{" "}
+                          {change > 0 ? "+" : ""}
+                          {num(change)}%
+                        </span>
+                        <small>vs. período anterior</small>
+                      </>
+                    ) : (
+                      <small>Sem base para comparação</small>
+                    )}
+                  </div>
+                  <p>{note}</p>
+                </article>
               );
             })}
           </section>
-          <div className="insights-map-grid">
-            <section className="admin-panel">
-              <header>
-                <h2>Total de vendas ao longo do tempo</h2>
+          <div className="analytics-main-grid">
+            <section className="admin-panel analytics-panel analytics-revenue">
+              <header className="analytics-panel-heading">
+                <div>
+                  <span className="analytics-eyebrow">EVOLUÇÃO</span>
+                  <h2>O ritmo das suas vendas</h2>
+                  <p>Acompanhe os resultados de cada dia.</p>
+                </div>
+                <span className="analytics-panel-icon">
+                  <ChartNoAxesCombined size={20} />
+                </span>
               </header>
-              {trend.length ? (
-                <>
-                  <svg
-                    viewBox="0 0 700 270"
-                    className="analytics-trend"
-                    role="img"
-                    aria-label="Vendas diárias reais da Shopify"
-                  >
-                    <line
-                      x1="40"
-                      y1={220 - ((0 - low) * 180) / span}
-                      x2="660"
-                      y2={220 - ((0 - low) * 180) / span}
-                      stroke="#dce3f2"
-                    />
-                    {paths.map((d, i) => (
-                      <path
-                        key={i}
-                        d={d}
-                        fill="none"
-                        stroke="#405bc1"
-                        strokeWidth="3"
-                      />
-                    ))}
-                    {xy.map(
-                      (p, i) =>
-                        p && (
-                          <circle
-                            key={i}
-                            cx={p[0]}
-                            cy={p[1]}
-                            r="3"
-                            fill="#405bc1"
-                          >
-                            <title>
-                              {String(trend[i].day)}: {money(points[i])}
-                            </title>
-                          </circle>
-                        ),
-                    )}
-                    <text x="40" y="255">
-                      {String(trend[0]?.day || "")}
-                    </text>
-                    <text x="660" y="255" textAnchor="end">
-                      {String(trend.at(-1)?.day || "")}
-                    </text>
-                    <text x="40" y="25">
-                      {money(high)}
-                    </text>
-                  </svg>
-                  <details>
-                    <summary>Conferir os valores por dia</summary>
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Data</th>
-                          <th>Vendas</th>
-                          <th>Pedidos</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {trend.map((row, i) => (
-                          <tr key={i}>
-                            <td>{String(row.day)}</td>
-                            <td>{money(numeric(row.total_sales))}</td>
-                            <td>{num(numeric(row.orders))}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </details>
-                </>
+              {data.trend.table?.rows.length ? (
+                <RevenueChart
+                  key={`${data.generatedAt}`}
+                  table={data.trend.table}
+                  money={money}
+                  currency={data.currency}
+                />
               ) : (
-                <p>
-                  {data.trend.error ||
-                    "Nenhuma série retornada para o período."}
-                </p>
+                <ChartEmpty
+                  text={
+                    data.trend.error || "Sem vendas diárias para este período."
+                  }
+                />
               )}
             </section>
-            <section className="admin-panel">
-              <header>
-                <h2>Discriminação das vendas</h2>
+            <section className="admin-panel analytics-panel analytics-composition">
+              <header className="analytics-panel-heading">
+                <div>
+                  <span className="analytics-eyebrow">COMPOSIÇÃO</span>
+                  <h2>Por dentro das vendas</h2>
+                  <p>Do valor bruto ao total do período.</p>
+                </div>
               </header>
-              <dl className="analytics-breakdown">
+              <dl className="analytics-financials">
                 {Object.entries(names)
                   .filter(
-                    ([key]) => !["orders", "average_order_value"].includes(key),
+                    ([key]) =>
+                      ![
+                        "orders",
+                        "average_order_value",
+                        "total_sales",
+                      ].includes(key),
                   )
                   .map(([key, name]) => (
                     <div key={key}>
-                      <dt>{name}</dt>
+                      <dt>
+                        <i
+                          className={`analytics-financial-dot analytics-financial-dot--${key}`}
+                        />
+                        {name}
+                      </dt>
                       <dd>{money(value(data.totals, key))}</dd>
                     </div>
                   ))}
               </dl>
+              <div className="analytics-financial-total">
+                <span>Total de vendas</span>
+                <strong>{money(value(data.totals, "total_sales"))}</strong>
+                <small>Conforme o relatório da Shopify</small>
+              </div>
             </section>
           </div>
-          <div className="insights-map-grid">
+          <div className="analytics-rank-grid">
             {[
-              ["channels", "Vendas por canal", "sales_channel"],
-              ["products", "Vendas por produto", "product_title"],
-            ].map(([key, title, dimension]) => {
-              const section = data[key as "channels" | "products"];
+              {
+                key: "channels" as const,
+                title: "Onde os clientes compram",
+                caption: "CANAIS DE VENDA",
+                dimension: "sales_channel",
+                icon: Store,
+              },
+              {
+                key: "products" as const,
+                title: "Produtos em destaque",
+                caption: "RANKING POR VENDAS",
+                dimension: "product_title",
+                icon: Package,
+              },
+            ].map(({ key, title, caption, dimension, icon: Icon }) => {
+              const section = data[key];
               return (
-                <section className="admin-panel" key={key}>
-                  <header>
-                    <h2>{title}</h2>
+                <section className="admin-panel analytics-panel" key={key}>
+                  <header className="analytics-panel-heading">
+                    <div>
+                      <span className="analytics-eyebrow">{caption}</span>
+                      <h2>{title}</h2>
+                      <p>Ordenados pelo valor de vendas no período.</p>
+                    </div>
+                    <span className="analytics-panel-icon">
+                      <Icon size={20} />
+                    </span>
                   </header>
                   {section.table?.rows.length ? (
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>
-                            {dimension === "sales_channel"
-                              ? "Canal"
-                              : "Produto"}
-                          </th>
-                          <th>Vendas</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {section.table.rows.map((r, i) => (
-                          <tr key={i}>
-                            <td>{String(r[dimension] ?? "Não informado")}</td>
-                            <td>{money(numeric(r.total_sales))}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <RankedBars
+                      key={data.generatedAt}
+                      table={section.table}
+                      dimension={dimension}
+                      money={money}
+                    />
                   ) : (
-                    <p>{section.error || "Nenhum resultado no período."}</p>
+                    <ChartEmpty
+                      text={section.error || "Nenhum resultado no período."}
+                    />
                   )}
                 </section>
               );
             })}
           </div>
-          <section className="admin-panel">
-            <header>
-              <h2>Comportamento da loja online</h2>
+          <section className="admin-panel analytics-panel">
+            <header className="analytics-panel-heading">
+              <div>
+                <span className="analytics-eyebrow">JORNADA DE COMPRA</span>
+                <h2>Da visita à compra</h2>
+                <p>Sessões e etapas de compra da loja online.</p>
+              </div>
+              <span className="analytics-panel-icon">
+                <Globe size={20} />
+              </span>
             </header>
             {data.sessions.table ? (
-              <div className="admin-mini-stats">
-                {[
-                  ["Sessões", num(sessionCount)],
-                  [
-                    "Visitantes",
-                    num(value(data.sessions.table, "online_store_visitors")),
-                  ],
-                  ["Sessões com compra", num(completed)],
-                  [
-                    "Conversão de sessões",
-                    sessionCount && completed !== null
-                      ? `${num((completed / sessionCount) * 100)}%`
-                      : "—",
-                  ],
-                ].map(([label, v]) => (
-                  <div key={label}>
-                    <span>{label}</span>
-                    <strong>{v}</strong>
-                  </div>
-                ))}
-              </div>
+              <>
+                <SessionJourney table={data.sessions.table} />
+                <p className="analytics-session-note">
+                  {num(value(data.sessions.table, "online_store_visitors"))}{" "}
+                  visitantes no período · Cada etapa mostra sessões, não pessoas
+                  únicas.
+                </p>
+              </>
             ) : (
-              <p>{data.sessions.error}</p>
+              <ChartEmpty
+                text={
+                  data.sessions.error ||
+                  "Comportamento indisponível para este período."
+                }
+              />
             )}
           </section>
+          <footer className="analytics-source">
+            <span>
+              <i /> Shopify Analytics · Dados reais da loja
+            </span>
+            <p>
+              Consultado em{" "}
+              {new Date(data.generatedAt).toLocaleString("pt-BR", {
+                timeZone: data.timezone,
+              })}{" "}
+              · {data.timezone}. A Shopify pode levar algum tempo para processar
+              os relatórios. Comparação com o período anterior de mesma duração.
+            </p>
+          </footer>
         </>
       )}
-    </>
+    </div>
   );
 }

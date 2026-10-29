@@ -1,3 +1,5 @@
+import { getConfig } from "../../server/catalogs";
+import { publicCatalogUrl } from "../../lib/routes";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
@@ -19,11 +21,15 @@ export default async function LoginPage({
 }) {
   const next = safeDestination((await searchParams).next);
   if (await currentSession()) redirect(next);
+  const catalogUrl = publicCatalogUrl(
+    "",
+    (await getConfig()).catalog.publicBaseUrl,
+  );
   return (
     <main className="admin-login party-login">
       <section className="admin-login-story party-login-story">
         <a
-          href="/"
+          href={catalogUrl}
           className="party-login-wordmark"
           aria-label="Pitter Pan Festas · início"
         >
@@ -67,7 +73,7 @@ export default async function LoginPage({
           <h2 id="login-title">Bom ter você aqui.</h2>
           <p>Entre para fazer a festa acontecer.</p>
           <LoginForm configured={authConfigured()} next={next} />
-          <a className="admin-login-back" href="/">
+          <a className="admin-login-back" href={catalogUrl}>
             Explorar os catálogos públicos
             <ArrowUpRight size={19} aria-hidden="true" />
           </a>

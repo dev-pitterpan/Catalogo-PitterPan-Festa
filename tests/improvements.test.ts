@@ -205,3 +205,17 @@ test("Shopify limita tempo de falha em vez de aguardar múltiplos timeouts longo
     else process.env.SHOPIFY_ADMIN_ACCESS_TOKEN = originalToken;
   }
 });
+
+test("compartilhamento no domínio de gestão mantém o endereço público do catálogo", () => {
+  assert.equal(
+    publicCatalogUrl(
+      "halloween",
+      "https://catalogopitterpanfesta.vercel.app/",
+      {
+        hostname: "gestaopitterpan.vercel.app",
+        origin: "https://gestaopitterpan.vercel.app",
+      },
+    ),
+    "https://catalogopitterpanfesta.vercel.app/halloween/",
+  );
+});

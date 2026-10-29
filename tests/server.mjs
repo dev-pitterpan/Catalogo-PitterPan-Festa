@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { request as httpRequest } from "node:http";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
@@ -70,6 +71,33 @@ try {
     });
   });
   const base = `http://127.0.0.1:${port}`;
+  const hostEntry = (host) =>
+    new Promise((resolve, reject) => {
+      const request = httpRequest(
+        base + "/",
+        { headers: { Host: host } },
+        (response) => {
+          response.resume();
+          response.on("end", () =>
+            resolve({
+              status: response.statusCode,
+              location: response.headers.location,
+            }),
+          );
+        },
+      );
+      request.on("error", reject);
+      request.end();
+    });
+  const managerEntry = await hostEntry("gestaopitterpan.vercel.app");
+  assert.equal(managerEntry.status, 307);
+  assert.equal(new URL(managerEntry.location, base).pathname, "/gestor/");
+  const publicEntry = await hostEntry("catalogopitterpanfesta.vercel.app");
+  assert.equal(publicEntry.status, 200);
+  assert.equal(publicEntry.location, undefined);
+  console.log(
+    "Domínios OK: entrada de gestão redireciona; catálogo público permanece acessível.",
+  );
   for (const route of [
     "/gestor/",
     "/gestor/produtos/",

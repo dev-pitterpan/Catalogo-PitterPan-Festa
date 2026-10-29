@@ -1,5 +1,15 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/",
+        has: [{ type: "host", value: "gestaopitterpan\\.vercel\\.app" }],
+        destination: "/gestor/",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

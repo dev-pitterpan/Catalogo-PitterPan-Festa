@@ -107,13 +107,13 @@ export async function readShopifyAnalytics(
     shop: { currencyCode: string; ianaTimezone: string };
   }>("{shop{currencyCode ianaTimezone}}");
   const window = analyticsWindow(days, shop.ianaTimezone, now);
-  const range = `SINCE '${window.start}' UNTIL '${window.end}'`;
+  const range = `SINCE ${window.start} UNTIL ${window.end}`;
   const totals = await queryAnalyticsTable(
     client,
     `FROM sales SHOW ${metrics} ${range}`,
   );
   const requests = {
-    previous: `FROM sales SHOW ${metrics} SINCE '${window.previousStart}' UNTIL '${window.previousEnd}'`,
+    previous: `FROM sales SHOW ${metrics} SINCE ${window.previousStart} UNTIL ${window.previousEnd}`,
     trend: `FROM sales SHOW total_sales, orders TIMESERIES day ${range} ORDER BY day ASC`,
     channels: `FROM sales SHOW total_sales GROUP BY sales_channel ${range} ORDER BY total_sales DESC LIMIT 10`,
     products: `FROM sales SHOW total_sales, net_items_sold GROUP BY product_title ${range} ORDER BY total_sales DESC LIMIT 10`,

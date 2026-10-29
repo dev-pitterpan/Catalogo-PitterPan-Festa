@@ -19,10 +19,16 @@ Escopo: autenticação Shopify, consulta ShopifyQL, validação da resposta, rot
 
 Correção preparada: códigos seguros ACCESS_DENIED, GRAPHQL_ERROR, QUERY_INVALID, RESPONSE_INVALID, NO_TABLE e ANALYTICS_UNAVAILABLE. O log não contém token, credenciais, dados de clientes, resposta bruta ou mensagens externas. A interface já exibe o campo error retornado pela rota.
 
+## Causa de sintaxe confirmada após o diagnóstico
+
+O painel retornou QUERY_INVALID após a publicação do diagnóstico. As consultas geravam `SINCE '2026-09-30' UNTIL '2026-10-29'`. A documentação oficial exige datas absolutas sem aspas: `SINCE 2026-09-30 UNTIL 2026-10-29`.
+
+Correção: remover as aspas do período atual e anterior, incluindo vendas, evolução, canais, produtos e sessões. O teste verifica as seis consultas geradas e as datas dos dois períodos, além da independência da seção de sessões.
+
+Referência de sintaxe: https://shopify.dev/docs/api/shopifyql/latest/syntax/since-until-during
+
 ## Limites e próximo passo
 
-Não foi possível executar a consulta autenticada real neste workspace: não há credenciais locais e o painel gestor no navegador disponível exige login. Não foi comprovada a causa atual depois da autorização de read_reports. A correção de diagnóstico não é uma promessa de correção da autorização ou da consulta real.
-
-Após publicar a correção, repetir uma consulta em Análises e observar o código no log da Vercel. ACCESS_DENIED exige verificar os acessos efetivos em produção e a aprovação de dados protegidos de nível 2; QUERY_INVALID exige revisar a consulta; RESPONSE_INVALID exige comparar o formato real com o validador. Não repetir redeploys sem nova evidência.
+A correção resolve o defeito de sintaxe identificado. A execução autenticada em produção ainda depende de uma nova consulta pelo gestor: não há credenciais locais e o painel no navegador disponível exige login. Os testes com cliente simulado não comprovam permissões ou disponibilidade de todas as métricas na loja.
 
 Referências: https://shopify.dev/docs/api/admin-graphql/latest/queries/shopifyqlQuery e https://shopify.dev/docs/apps/build/authentication-authorization/manage-access-scopes

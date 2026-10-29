@@ -238,4 +238,15 @@ test("Analytics mantém vendas reais se sessões não estiverem disponíveis", a
   assert.ok(result.sessions.error);
   assert.equal(result.trend.table?.rows[0].total_sales, "123.45");
   assert.ok(queries.every((q) => !q.includes("email")));
+  // ShopifyQL absolute dates are unquoted, including the comparison period.
+  assert.equal(queries.length, 6);
+  assert.ok(queries[0].endsWith("SINCE 2026-10-23 UNTIL 2026-10-29"));
+  assert.ok(queries[1].endsWith("SINCE 2026-10-16 UNTIL 2026-10-22"));
+  for (const query of queries) {
+    assert.match(
+      query,
+      /SINCE \d{4}-\d{2}-\d{2} UNTIL \d{4}-\d{2}-\d{2}(?: |$)/,
+    );
+    assert.doesNotMatch(query, /(?:SINCE|UNTIL) ['"]/);
+  }
 });

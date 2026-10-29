@@ -7,7 +7,11 @@ import {
   validSignature,
   webhookOrderId,
 } from "../src/server/sales/security.ts";
-import { saveOrder, readSales } from "../src/server/sales/repository.ts";
+import {
+  saveOrder,
+  readSales,
+  readSalesOrders,
+} from "../src/server/sales/repository.ts";
 import { orderSchema, type SalesOrder } from "../src/server/sales/model.ts";
 import { ShopifyClient } from "../src/server/shopify/client.ts";
 const store = "fixture.myshopify.com";
@@ -591,6 +595,33 @@ test("vendas preservam fotos, agrupam modalidades por produto e filtram entregas
     assert.equal(sedex.orders[0].delivery_kind, "SEDEX");
     assert.equal(sedex.top[0].units, "3");
     assert.equal(sedex.totals[0].orders, "1");
+    await db.exec(
+      "UPDATE pitterpan_sales_orders SET processed_at='2026-10-02T03:00:00Z' WHERE id='gid://shopify/Order/2'",
+    );
+    const customFilter = {
+      status: "PAID" as const,
+      category: "",
+      delivery: "SEDEX" as const,
+      start: "2026-10-02",
+      end: "2026-10-02",
+    };
+    const custom = await readSales(db, store, 30, undefined, customFilter);
+    assert.equal(custom.totals[0].orders, "1");
+    assert.equal(custom.orders[0].id, "gid://shopify/Order/2");
+    assert.equal(
+      (
+        await readSalesOrders(db, store, 30, {
+          ...customFilter,
+          end: "2026-10-01",
+          start: "2026-10-01",
+        })
+      ).orders.length,
+      0,
+    );
+    await db.exec(
+      "UPDATE pitterpan_sales_orders SET processed_at=now() WHERE id='gid://shopify/Order/2'",
+    );
+
     const invalidPhoto = order("6");
     invalidPhoto.lineItems.nodes[0].image = {
       url: "https://untrusted.example/photo.png",

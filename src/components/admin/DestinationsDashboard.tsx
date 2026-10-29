@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import AdminSelect from "./AdminSelect";
+import DateRangePicker from "./DateRangePicker";
+import type { DateRange } from "../../lib/admin/date-range";
 import PitterSpinner from "./PitterSpinner";
 import DeliveryMark from "./DeliveryMark";
 import DeliveryMap from "./DeliveryMap";
@@ -9,6 +11,7 @@ import type { readDestinations } from "../../server/sales/destinations";
 type Data = Awaited<ReturnType<typeof readDestinations>>;
 const number = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
 export default function DestinationsDashboard() {
+  const [range, setRange] = useState<DateRange>({ start: "", end: "" });
   const [days, setDays] = useState("30"),
     [delivery, setDelivery] = useState("all"),
     [fulfillment, setFulfillment] = useState("all"),
@@ -31,6 +34,8 @@ export default function DestinationsDashboard() {
     setLimit(10);
     const params = new URLSearchParams({
       days,
+      start: range.start,
+      end: range.end,
       delivery,
       fulfillment,
       state,
@@ -53,7 +58,7 @@ export default function DestinationsDashboard() {
         if (!controller.signal.aborted) setBusy(false);
       });
     return () => controller.abort();
-  }, [days, delivery, fulfillment, state, search]);
+  }, [days, delivery, fulfillment, state, search, range.start, range.end]);
 
   return (
     <>
@@ -61,12 +66,16 @@ export default function DestinationsDashboard() {
         <AdminSelect
           label="Período dos destinos"
           value={days}
-          onValueChange={setDays}
+          onValueChange={(v) => {
+            setDays(v);
+            setRange({ start: "", end: "" });
+          }}
           options={[7, 30, 60].map((n) => ({
             value: String(n),
             label: `Últimos ${n} dias`,
           }))}
         />
+        <DateRangePicker value={range} onChange={setRange} />
         <AdminSelect
           label="Entrega"
           value={delivery}
@@ -138,8 +147,9 @@ export default function DestinationsDashboard() {
           <p className="sales-definition">
             Destinos de pedidos pagos ou reembolsados, com cancelados e testes
             excluídos. Atendimento concluído na Shopify não comprova entrega ao
-            cliente. Retiradas não entram no mapa. Cidades e quantidades são da
-            seleção; o mapa e a tabela seguem os mesmos filtros.
+            cliente. Retiradas não entram no mapa. Datas personalizadas usam o
+            horário de Brasília. Cidades e quantidades são da seleção; o mapa e
+            a tabela seguem os mesmos filtros.
           </p>
           {data.missing > 0 && (
             <p className="admin-data-notice">

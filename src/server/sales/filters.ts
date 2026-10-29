@@ -1,28 +1,41 @@
 import { deliveryKinds } from "../../lib/admin/delivery.ts";
 import { z } from "zod";
-export const salesFilterSchema = z.object({
-  status: z
-    .enum([
-      "all",
-      "PAID",
-      "PENDING",
-      "AUTHORIZED",
-      "PARTIALLY_PAID",
-      "PARTIALLY_REFUNDED",
-      "REFUNDED",
-      "VOIDED",
-      "EXPIRED",
-      "UNKNOWN",
-      "CANCELLED",
-    ])
-    .default("all"),
-  delivery: z.enum(["all", ...deliveryKinds]).default("all"),
-  category: z.string().trim().max(200).default(""),
-});
+import {
+  dateRangeFields,
+  dateRangeSchema,
+} from "../../lib/admin/date-range.ts";
+export const salesFilterSchema = z
+  .object({
+    ...dateRangeFields,
+    status: z
+      .enum([
+        "all",
+        "PAID",
+        "PENDING",
+        "AUTHORIZED",
+        "PARTIALLY_PAID",
+        "PARTIALLY_REFUNDED",
+        "REFUNDED",
+        "VOIDED",
+        "EXPIRED",
+        "UNKNOWN",
+        "CANCELLED",
+      ])
+      .default("all"),
+    delivery: z.enum(["all", ...deliveryKinds]).default("all"),
+    category: z.string().trim().max(200).default(""),
+  })
+  .refine((r) => dateRangeSchema.safeParse(r).success, {
+    message: "Período inválido.",
+  });
 export type SalesFilters = Omit<
   z.infer<typeof salesFilterSchema>,
-  "delivery"
-> & { delivery?: z.infer<typeof salesFilterSchema>["delivery"] };
+  "delivery" | "start" | "end"
+> & {
+  delivery?: z.infer<typeof salesFilterSchema>["delivery"];
+  start?: string;
+  end?: string;
+};
 export const orderCursorSchema = z.object({
   date: z
     .string()

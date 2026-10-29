@@ -100,8 +100,8 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
               icon: L.divIcon({
                 className: "delivery-map-pin",
                 html: `<span class="${places.length > 1 ? "is-cluster" : ""}">${number(orders)}</span>`,
-                iconSize: [48, 48],
-                iconAnchor: [24, 24],
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
               }),
               riseOnHover: true,
             }).addTo(markers);
@@ -121,6 +121,28 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
                 ? "Ponto aproximado do município"
                 : "Aproxime o mapa para separar os destinos.";
             popup.append(heading, metrics, note);
+            const tooltip = document.createElement("div");
+            const tooltipTitle = document.createElement("strong");
+            tooltipTitle.textContent =
+              places.length === 1
+                ? places[0]
+                : `${places.length} cidades próximas`;
+            const tooltipCount = document.createElement("span");
+            tooltipCount.textContent = `${number(orders)} pedidos · ${number(units)} unidades`;
+            tooltip.append(tooltipTitle, tooltipCount);
+            if (places.length > 1) {
+              const list = document.createElement("small");
+              list.textContent =
+                places.slice(0, 5).join(" / ") + (places.length > 5 ? "…" : "");
+              tooltip.append(list);
+            }
+            marker.bindTooltip(tooltip, {
+              direction: "top",
+              offset: [0, -14],
+              className: "delivery-map-hover",
+            });
+            marker.on("focus", () => marker.openTooltip());
+            marker.on("blur", () => marker.closeTooltip());
             marker.bindPopup(popup);
             if (places.length > 1)
               marker.on("click", () => {

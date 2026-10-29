@@ -135,6 +135,23 @@ test("mapa contabiliza cidade, unidades, retirada, internacional e destino ausen
     );
     assert.equal(moto.total, 1);
     await db.exec(
+      "UPDATE pitterpan_sales_orders SET processed_at='2026-10-02T02:59:59Z' WHERE id='1'; UPDATE pitterpan_sales_orders SET processed_at='2026-10-02T03:00:00Z' WHERE id='2'",
+    );
+    const custom = await readDestinations(
+      db,
+      "fixture",
+      destinationFilterSchema.parse({
+        start: "2026-10-01",
+        end: "2026-10-01",
+        state: "SC",
+      }),
+    );
+    assert.equal(custom.total, 1);
+    assert.equal(custom.cities[0].orders, 1);
+    await db.exec(
+      "UPDATE pitterpan_sales_orders SET processed_at=now() WHERE id IN ('1','2')",
+    );
+    await db.exec(
       "UPDATE pitterpan_sales_orders SET cancelled_at=now() WHERE id='2'",
     );
     assert.equal(
@@ -217,7 +234,11 @@ test("Analytics mantém vendas reais se sessões não estiverem disponíveis", a
         } as T;
       const query = String(v?.query);
       queries.push(query);
-      if (query.includes("FROM sessions")) throw new Error("Unavailable");
+      if (
+        query.includes("FROM sessions") ||
+        query.includes("FROM fulfillments")
+      )
+        throw new Error("Unavailable");
       return {
         shopifyqlQuery: {
           parseErrors: [],
@@ -238,13 +259,17 @@ test("Analytics mantém vendas reais se sessões não estiverem disponíveis", a
   );
   assert.equal(result.totals.rows[0].total_sales, "123.45");
   assert.equal(result.sessions.table, null);
+  assert.equal(result.fulfillment.table, null);
+  assert.ok(result.fulfillment.error);
   assert.ok(result.sessions.error);
   assert.equal(result.trend.table?.rows[0].total_sales, "123.45");
   assert.ok(queries.every((q) => !q.includes("email")));
   // ShopifyQL absolute dates are unquoted, including the comparison period.
-  assert.equal(queries.length, 6);
+  assert.equal(queries.length, 8);
   assert.ok(queries[0].endsWith("SINCE 2026-10-23 UNTIL 2026-10-29"));
-  assert.ok(queries[1].endsWith("SINCE 2026-10-16 UNTIL 2026-10-22"));
+  assert.ok(
+    queries.some((q) => q.endsWith("SINCE 2026-10-16 UNTIL 2026-10-22")),
+  );
   for (const query of queries) {
     assert.match(
       query,

@@ -22,6 +22,8 @@ import {
   shortDate,
 } from "./AnalyticsCharts";
 import AdminSelect from "./AdminSelect";
+import DateRangePicker from "./DateRangePicker";
+import type { DateRange } from "../../lib/admin/date-range";
 import PitterSpinner from "./PitterSpinner";
 import { csvCell } from "../../lib/admin/csv";
 import type {
@@ -57,6 +59,7 @@ const names: Record<string, string> = {
   average_order_value: "Valor médio do pedido",
 };
 export default function AnalyticsDashboard() {
+  const [range, setRange] = useState<DateRange>({ start: "", end: "" });
   const [days, setDays] = useState("30"),
     [revision, setRevision] = useState(0),
     [data, setData] = useState<Data | null>(null),
@@ -67,10 +70,16 @@ export default function AnalyticsDashboard() {
     setBusy(true);
     setError("");
     setData(null);
-    void fetch(`/api/admin/analytics/?days=${days}`, {
-      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(55000)]),
-      cache: "no-store",
-    })
+    void fetch(
+      `/api/admin/analytics/?${new URLSearchParams({ days, start: range.start, end: range.end })}`,
+      {
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(55000),
+        ]),
+        cache: "no-store",
+      },
+    )
       .then(async (r) => {
         const body = await r.json();
         if (!r.ok) throw new Error(body.error);
@@ -84,7 +93,7 @@ export default function AnalyticsDashboard() {
         if (!controller.signal.aborted) setBusy(false);
       });
     return () => controller.abort();
-  }, [days, revision]);
+  }, [days, revision, range.start, range.end]);
   const money = (n: number | null) =>
     n === null
       ? "—"
@@ -107,6 +116,8 @@ export default function AnalyticsDashboard() {
     ];
     for (const [title, table] of [
       ["Vendas por dia", data.trend.table],
+      ["Itens pedidos", data.orderMetrics.table],
+      ["Processamento e entregas", data.fulfillment.table],
       ["Canais", data.channels.table],
       ["Produtos", data.products.table],
     ] as const) {
@@ -178,7 +189,10 @@ export default function AnalyticsDashboard() {
           <AdminSelect
             label="Período das análises"
             value={days}
-            onValueChange={setDays}
+            onValueChange={(v) => {
+              setDays(v);
+              setRange({ start: "", end: "" });
+            }}
             options={[
               { value: "1", label: "Hoje" },
               { value: "7", label: "Últimos 7 dias" },
@@ -186,6 +200,7 @@ export default function AnalyticsDashboard() {
               { value: "60", label: "Últimos 60 dias" },
             ]}
           />
+          <DateRangePicker value={range} onChange={setRange} />
           <button
             className="admin-button analytics-refresh"
             onClick={() => setRevision((n) => n + 1)}
@@ -272,6 +287,76 @@ export default function AnalyticsDashboard() {
                 </article>
               );
             })}
+          </section>
+          <section className="admin-panel analytics-panel analytics-order-operations">
+            <header className="analytics-panel-heading">
+              <div>
+                <span className="analytics-eyebrow">OPERAÇÃO DOS PEDIDOS</span>
+                <h2>Do pedido à entrega</h2>
+                <p>
+                  Indicadores oficiais da Shopify para o período selecionado.
+                </p>
+              </div>
+              <span className="analytics-panel-icon">
+                <Package size={20} />
+              </span>
+            </header>
+            <div className="analytics-operations-grid">
+              {[
+                [
+                  "Pedidos",
+                  num(value(data.totals, "orders")),
+                  "Pedidos registrados no relatório de vendas",
+                ],
+                [
+                  "Itens pedidos",
+                  num(value(data.orderMetrics.table, "quantity_ordered")),
+                  "Quantidade pedida antes de estornos",
+                ],
+                [
+                  "Estornos de vendas",
+                  money(value(data.totals, "returns")),
+                  "Estornos de vendas informados pela Shopify",
+                ],
+                [
+                  "Pedidos processados",
+                  num(value(data.fulfillment.table, "orders_fulfilled")),
+                  "Pedidos com processamento registrado no período",
+                ],
+                [
+                  "Pedidos entregues",
+                  num(value(data.fulfillment.table, "orders_delivered")),
+                  "Entregas confirmadas na Shopify",
+                ],
+                [
+                  "Tempo até processamento",
+                  value(
+                    data.fulfillment.table,
+                    "median_hours_order_to_fulfillment",
+                  ) === null
+                    ? "—"
+                    : `${num(value(data.fulfillment.table, "median_hours_order_to_fulfillment"))} h`,
+                  "Mediana entre o pedido e o processamento",
+                ],
+              ].map(([label, note, hint]) => (
+                <div key={label} title={hint}>
+                  <span>{label}</span>
+                  <strong>{note}</strong>
+                  <small>{hint}</small>
+                </div>
+              ))}
+            </div>
+            {(data.fulfillment.error || data.orderMetrics.error) && (
+              <p className="analytics-session-note" role="status">
+                Alguns indicadores operacionais não estão disponíveis nesta
+                consulta. “—” indica ausência de dados, não zero.
+              </p>
+            )}
+            <p className="analytics-session-note">
+              Vendas e eventos de processamento/entrega usam suas respectivas
+              datas na Shopify. Processado não significa entregue; o tempo é a
+              mediana, não a média.
+            </p>
           </section>
           <div className="analytics-main-grid">
             <section className="admin-panel analytics-panel analytics-revenue">

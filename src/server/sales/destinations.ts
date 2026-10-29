@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  dateRangeFields,
+  dateRangeSchema,
+} from "../../lib/admin/date-range.ts";
 import { municipalityLocation } from "./municipality-location.ts";
 import type { SqlClient } from "../database/catalog-repository.ts";
 export const destinationSchema = z.object({
@@ -46,32 +50,46 @@ export async function readOrderDestination(
     return null;
   }
 }
-export const destinationFilterSchema = z.object({
-  days: z.coerce
-    .number()
-    .refine((n) => [7, 30, 60].includes(n))
-    .default(30),
-  delivery: z
-    .enum(["all", "SEDEX", "MOTOBOY", "OTHER", "MIXED", "UNKNOWN"])
-    .default("all"),
-  fulfillment: z
-    .enum(["all", "FULFILLED", "UNFULFILLED", "PARTIALLY_FULFILLED"])
-    .default("all"),
-  state: z
-    .string()
-    .regex(/^[A-Z]{2}$/)
-    .or(z.literal(""))
-    .default(""),
-  q: z.string().trim().max(150).default(""),
-});
+export const destinationFilterSchema = z
+  .object({
+    ...dateRangeFields,
+    days: z.coerce
+      .number()
+      .refine((n) => [7, 30, 60].includes(n))
+      .default(30),
+    delivery: z
+      .enum(["all", "SEDEX", "MOTOBOY", "OTHER", "MIXED", "UNKNOWN"])
+      .default("all"),
+    fulfillment: z
+      .enum(["all", "FULFILLED", "UNFULFILLED", "PARTIALLY_FULFILLED"])
+      .default("all"),
+    state: z
+      .string()
+      .regex(/^[A-Z]{2}$/)
+      .or(z.literal(""))
+      .default(""),
+    q: z.string().trim().max(150).default(""),
+  })
+  .refine((r) => dateRangeSchema.safeParse(r).success, {
+    message: "Período inválido.",
+  });
 export async function readDestinations(
   db: SqlClient,
   store: string,
   input: z.infer<typeof destinationFilterSchema>,
 ) {
   const f = destinationFilterSchema.parse(input);
-  const values = [store, f.days, f.delivery, f.fulfillment];
-  const where = `o.store=$1 AND NOT o.test AND o.cancelled_at IS NULL AND o.financial_status IN ('PAID','PARTIALLY_REFUNDED','REFUNDED') AND o.processed_at>=now()-($2*interval '1 day') AND ($3='all' OR COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')=$3) AND ($4='all' OR o.fulfillment_status=$4)`;
+  const values: (string | number)[] = [
+    store,
+    f.start || f.days,
+    f.delivery,
+    f.fulfillment,
+  ];
+  const period = f.start
+    ? "o.processed_at>=($2::date::timestamp AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((($5::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')"
+    : "o.processed_at>=now()-($2*interval '1 day')";
+  if (f.start) values.push(f.end);
+  const where = `o.store=$1 AND NOT o.test AND o.cancelled_at IS NULL AND o.financial_status IN ('PAID','PARTIALLY_REFUNDED','REFUNDED') AND ${period} AND ($3='all' OR COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')=$3) AND ($4='all' OR o.fulfillment_status=$4)`;
   const { rows } = await db.query<{
     city: string | null;
     state: string | null;

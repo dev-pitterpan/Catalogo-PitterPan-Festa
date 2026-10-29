@@ -20,6 +20,7 @@ import { cardImage } from "../../lib/catalog/image";
 import PitterSpinner from "./PitterSpinner";
 import type { SalesFilters } from "../../server/sales/filters";
 import AdminSelect from "./AdminSelect";
+import DateRangePicker from "./DateRangePicker";
 import { usePartyMotion } from "./PartyExperience";
 import type { readSales } from "../../server/sales/repository";
 type Data = Awaited<ReturnType<typeof readSales>>;
@@ -95,6 +96,8 @@ export default function SalesDashboard() {
       try {
         const params = new URLSearchParams({
           days: String(days),
+          start: filters.start || "",
+          end: filters.end || "",
           status: filters.status,
           category: filters.category,
           delivery: filters.delivery || "all",
@@ -182,6 +185,8 @@ export default function SalesDashboard() {
       const params = new URLSearchParams({
         view: "orders",
         days: String(days),
+        start: filters.start || "",
+        end: filters.end || "",
         status: filters.status,
         category: filters.category,
         delivery: filters.delivery || "all",
@@ -264,10 +269,11 @@ export default function SalesDashboard() {
             value={String(days)}
             label="Período dos pedidos"
             onValueChange={(value) => {
-              if (Number(value) === days) return;
+              if (Number(value) === days && !filters.start) return;
               resetList();
               setCelebration(null);
               setDays(Number(value));
+              setFilters((old) => ({ ...old, start: "", end: "" }));
             }}
             options={[
               { value: "7", label: "Últimos 7 dias" },
@@ -276,6 +282,13 @@ export default function SalesDashboard() {
             ]}
           />
         </div>
+        <DateRangePicker
+          value={{ start: filters.start || "", end: filters.end || "" }}
+          onChange={(range) => {
+            resetList();
+            setFilters((old) => ({ ...old, ...range }));
+          }}
+        />
         <div>
           <label htmlFor="sales-status">Situação do pagamento</label>
           <AdminSelect

@@ -34,6 +34,8 @@ export async function GET(request: Request) {
   )
     return Response.json({ error: "Filtro inválido." }, { status: 400 });
   const parsed = salesFilterSchema.safeParse({
+    start: url.searchParams.get("start") || "",
+    end: url.searchParams.get("end") || "",
     status: url.searchParams.get("status") || "all",
     delivery: url.searchParams.get("delivery") || "all",
     category: url.searchParams.get("category") || "",

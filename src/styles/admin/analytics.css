@@ -611,3 +611,43 @@
     padding: 13px;
   }
 }
+.admin-app .analytics-order-operations {
+  margin-bottom: 20px;
+}
+.analytics-operations-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.analytics-operations-grid > div {
+  padding: 17px;
+  border: 1px solid #e1eaf3;
+  background: linear-gradient(135deg, #f7fafe, #fff);
+  border-radius: 13px;
+  min-width: 0;
+}
+.analytics-operations-grid span {
+  display: block;
+  font-size: 11px;
+  color: #668099;
+}
+.analytics-operations-grid strong {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #355b81;
+  margin: 9px 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.analytics-operations-grid small {
+  font-size: 10px;
+  color: #8a9bad;
+  display: block;
+}
+@media (max-width: 650px) {
+  .analytics-operations-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

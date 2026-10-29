@@ -102,6 +102,11 @@ export async function saveOrder(
 
 /** Category membership is resolved over the complete published snapshot, never a top-N list. */
 function selection(filters: SalesFilters) {
+  const endIndex =
+    4 + (filters.category ? 1 : 0) + (filters.delivery !== "all" ? 1 : 0);
+  const period = filters.start
+    ? `o.processed_at>=($2::date::timestamp AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((($${endIndex}::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')`
+    : "o.processed_at>=now()-($2*interval '1 day')";
   const status = `($3='all' OR ($3='CANCELLED' AND o.cancelled_at IS NOT NULL) OR (o.financial_status=$3 AND o.cancelled_at IS NULL))`;
   const delivery =
     filters.delivery === "all"
@@ -114,15 +119,16 @@ function selection(filters: SalesFilters) {
     WHERE si.store=o.store AND si.order_id=o.id AND ci.category ILIKE $4
   )`
     : "";
-  return `o.store=$1 AND NOT o.test AND o.processed_at>=now()-($2*interval '1 day') AND ${status}${category}${delivery}`;
+  return `o.store=$1 AND NOT o.test AND ${period} AND ${status}${category}${delivery}`;
 }
 function filterValues(store: string, days: number, filters: SalesFilters) {
   return [
     store,
-    days,
+    filters.start || days,
     filters.status,
     ...(filters.category ? [containsPattern(filters.category)] : []),
     ...(filters.delivery !== "all" ? [filters.delivery] : []),
+    ...(filters.start ? [filters.end] : []),
   ];
 }
 export async function readSalesOrders(

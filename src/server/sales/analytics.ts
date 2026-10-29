@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  dateRangeSchema,
+  shiftDate,
+  type DateRange,
+} from "../../lib/admin/date-range.ts";
 import { ShopifyGraphQLError } from "../shopify/client.ts";
 export class AnalyticsResponseError extends Error {
   readonly code: "QUERY_INVALID" | "RESPONSE_INVALID" | "NO_TABLE";
@@ -53,7 +58,9 @@ export function analyticsWindow(
   days: number,
   timezone: string,
   now = new Date(),
+  custom: DateRange = { start: "", end: "" },
 ) {
+  dateRangeSchema.parse(custom);
   if (![1, 7, 30, 60].includes(days)) throw new Error("Período inválido.");
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: timezone,
@@ -63,6 +70,18 @@ export function analyticsWindow(
   }).formatToParts(now);
   const part = (type: string) => parts.find((p) => p.type === type)!.value;
   const end = `${part("year")}-${part("month")}-${part("day")}`;
+  if (custom.start) {
+    const duration =
+      Math.round(
+        (Date.parse(custom.end) - Date.parse(custom.start)) / 86400000,
+      ) + 1;
+    return {
+      start: custom.start,
+      end: custom.end,
+      previousStart: shiftDate(custom.start, -duration),
+      previousEnd: shiftDate(custom.start, -1),
+    };
+  }
   const shift = (n: number) =>
     new Date(Date.parse(`${end}T12:00:00Z`) + n * 86400000)
       .toISOString()
@@ -102,17 +121,20 @@ export async function readShopifyAnalytics(
   client: Client,
   days: number,
   now = new Date(),
+  custom: DateRange = { start: "", end: "" },
 ) {
   const { shop } = await client.query<{
     shop: { currencyCode: string; ianaTimezone: string };
   }>("{shop{currencyCode ianaTimezone}}");
-  const window = analyticsWindow(days, shop.ianaTimezone, now);
+  const window = analyticsWindow(days, shop.ianaTimezone, now, custom);
   const range = `SINCE ${window.start} UNTIL ${window.end}`;
   const totals = await queryAnalyticsTable(
     client,
     `FROM sales SHOW ${metrics} ${range}`,
   );
   const requests = {
+    orderMetrics: `FROM sales SHOW quantity_ordered ${range}`,
+    fulfillment: `FROM fulfillments SHOW orders_fulfilled, orders_delivered, median_hours_order_to_fulfillment ${range}`,
     previous: `FROM sales SHOW ${metrics} SINCE ${window.previousStart} UNTIL ${window.previousEnd}`,
     trend: `FROM sales SHOW total_sales, orders TIMESERIES day ${range} ORDER BY day ASC`,
     channels: `FROM sales SHOW total_sales GROUP BY sales_channel ${range} ORDER BY total_sales DESC LIMIT 10`,

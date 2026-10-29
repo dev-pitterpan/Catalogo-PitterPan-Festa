@@ -96,6 +96,7 @@ test("mapa contabiliza cidade, unidades, retirada, internacional e destino ausen
       ["4", "PICKUP", null, null, null],
       ["5", "UNKNOWN", null, null, null],
       ["6", "SEDEX", "Lisboa", null, "PT"],
+      ["7", "OTHER", "Joinville", "SC", "BR"],
     ];
     for (const [id, kind, city, state, country] of rows) {
       await db.query(
@@ -113,7 +114,7 @@ test("mapa contabiliza cidade, unidades, retirada, internacional e destino ausen
       destinationFilterSchema.parse({}),
     );
     assert.equal(result.total, 5);
-    assert.equal(result.pickup, 1);
+    assert.equal(result.pickup, 2);
     assert.equal(result.international, 1);
     assert.equal(result.missing, 2);
     assert.equal(result.states.find((r) => r.state === "SC")?.orders, 2);
@@ -122,7 +123,9 @@ test("mapa contabiliza cidade, unidades, retirada, internacional e destino ausen
       "fixture",
       destinationFilterSchema.parse({ state: "SC", q: "join" }),
     );
+    assert.equal(sc.total, 2);
     assert.equal(sc.cities.length, 1);
+    assert.ok(sc.cities[0].location);
     assert.equal(sc.cities[0].orders, 2);
     assert.equal(sc.cities[0].units, 6);
     const moto = await readDestinations(

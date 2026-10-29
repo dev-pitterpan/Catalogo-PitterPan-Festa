@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { municipalityLocation } from "./municipality-location.ts";
 import type { SqlClient } from "../database/catalog-repository.ts";
 export const destinationSchema = z.object({
   city: z.string().trim().max(150).nullable(),
@@ -79,7 +80,7 @@ export async function readDestinations(
     units: string;
     pickup: boolean;
   }>(
-    `SELECT NULLIF(trim(to_jsonb(o)->'destination'->>'city'),'') AS city,NULLIF(trim(to_jsonb(o)->'destination'->>'state'),'') AS state,NULLIF(to_jsonb(o)->'destination'->>'country','') AS country,COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='PICKUP' AS pickup,count(*)::text AS orders,COALESCE(sum((SELECT COALESCE(sum(i.current_quantity),0) FROM pitterpan_sales_items i WHERE i.store=o.store AND i.order_id=o.id)),0)::text AS units FROM pitterpan_sales_orders o WHERE ${where} GROUP BY 1,2,3,4 ORDER BY count(*) DESC,city,state`,
+    `SELECT NULLIF(trim(to_jsonb(o)->'destination'->>'city'),'') AS city,NULLIF(trim(to_jsonb(o)->'destination'->>'state'),'') AS state,NULLIF(to_jsonb(o)->'destination'->>'country','') AS country,COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN') IN ('PICKUP','OTHER') AS pickup,count(*)::text AS orders,COALESCE(sum((SELECT COALESCE(sum(i.current_quantity),0) FROM pitterpan_sales_items i WHERE i.store=o.store AND i.order_id=o.id)),0)::text AS units FROM pitterpan_sales_orders o WHERE ${where} GROUP BY 1,2,3,4 ORDER BY count(*) DESC,city,state`,
     values,
   );
   const delivery = rows.filter((r) => !r.pickup);
@@ -107,12 +108,13 @@ export async function readDestinations(
       ...r,
       orders: Number(r.orders),
       units: Number(r.units),
+      location: municipalityLocation(r.city, r.state, r.country),
     })),
     states: [...states].map(([state, orders]) => ({ state, orders })),
-    total: sum(delivery),
+    total: sum(cities),
     pickup: sum(rows.filter((r) => r.pickup)),
-    missing: sum(delivery.filter((r) => !r.city || !r.state || !r.country)),
-    international: sum(delivery.filter((r) => r.country && r.country !== "BR")),
+    missing: sum(cities.filter((r) => !r.city || !r.state || !r.country)),
+    international: sum(cities.filter((r) => r.country && r.country !== "BR")),
     generatedAt: new Date().toISOString(),
   };
 }

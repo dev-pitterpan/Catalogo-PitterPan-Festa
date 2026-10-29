@@ -5,6 +5,8 @@ import "../../../styles/admin.css";
 import "../../../styles/admin/dashboard.css";
 import "../../../styles/admin/sales.css";
 import "../../../styles/admin/analytics.css";
+import "leaflet/dist/leaflet.css";
+import "../../../styles/admin/delivery-map.css";
 export const metadata = { title: "Central de gestão" };
 export default async function DashboardLayout({
   children,

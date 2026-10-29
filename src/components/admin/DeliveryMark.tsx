@@ -1,4 +1,4 @@
-import { Package, PersonStanding, HelpCircle } from "lucide-react";
+import { Package, HelpCircle } from "lucide-react";
 import { deliveryLabels, type DeliveryKind } from "../../lib/admin/delivery";
 export default function DeliveryMark({
   kind,
@@ -58,7 +58,63 @@ export default function DeliveryMark({
           </text>
         </svg>
       ) : safe === "PICKUP" || safe === "OTHER" ? (
-        <PersonStanding aria-hidden="true" />
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="32" cy="59" rx="21" ry="3" fill="#dce6f3" />
+          <path
+            d="M23 42L21 56M35 43L38 56"
+            stroke="#344c90"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+          <path
+            d="M20 58H26M36 58H43"
+            stroke="#263b77"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path d="M19 29Q19 24 26 23H32Q39 24 39 30V43H20Z" fill="#4c74b9" />
+          <path
+            d="M21 28L15 39L23 43M37 28L43 38"
+            stroke="#e7b692"
+            strokeWidth="5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="29" cy="14" r="9" fill="#f1c7a4" />
+          <path
+            d="M20 14Q18 2 29 3Q40 3 38 13L33 8Q28 13 20 10Z"
+            fill="#34466d"
+          />
+          <path
+            d="M27 17Q29 19 32 17"
+            stroke="#ab7968"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <rect
+            x="32"
+            y="32"
+            width="21"
+            height="18"
+            rx="3"
+            fill="#ffd75e"
+            stroke="#d6a62e"
+            strokeWidth="1.5"
+          />
+          <path d="M39 32V39H45V32" fill="#fff2ba" />
+          <path
+            d="M37 43H43"
+            stroke="#bc8c26"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M25 36L32 40"
+            stroke="#f1c7a4"
+            strokeWidth="5"
+            strokeLinecap="round"
+          />
+        </svg>
       ) : safe === "MIXED" ? (
         <Package aria-hidden="true" />
       ) : (

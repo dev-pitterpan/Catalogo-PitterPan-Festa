@@ -11,7 +11,7 @@ export const deliveryLabels: Record<DeliveryKind, string> = {
   PICKUP: "Retirada na loja",
   MOTOBOY: "Motoboy",
   SEDEX: "Sedex",
-  OTHER: "Outro",
+  OTHER: "Retirada na loja",
   MIXED: "Modalidades múltiplas",
   UNKNOWN: "Não identificado",
 };

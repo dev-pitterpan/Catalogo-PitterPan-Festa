@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import AdminSelect from "./AdminSelect";
 import PitterSpinner from "./PitterSpinner";
 import DeliveryMark from "./DeliveryMark";
-import states from "../../lib/admin/brazil-states.json";
+import DeliveryMap from "./DeliveryMap";
+import { deliveryLabels } from "../../lib/admin/delivery";
 import type { readDestinations } from "../../server/sales/destinations";
 type Data = Awaited<ReturnType<typeof readDestinations>>;
 const number = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
@@ -53,8 +54,7 @@ export default function DestinationsDashboard() {
       });
     return () => controller.abort();
   }, [days, delivery, fulfillment, state, search]);
-  const countByState = new Map(data?.states.map((s) => [s.state, s.orders]));
-  const max = Math.max(1, ...countByState.values());
+
   return (
     <>
       <div className="insights-filters">
@@ -75,7 +75,7 @@ export default function DestinationsDashboard() {
             { value: "all", label: "Todas as entregas" },
             { value: "MOTOBOY", label: "Motoboy" },
             { value: "SEDEX", label: "Sedex" },
-            { value: "OTHER", label: "Outra entrega" },
+            { value: "OTHER", label: deliveryLabels.OTHER },
             { value: "MIXED", label: "Modalidades múltiplas" },
             { value: "UNKNOWN", label: "Não identificado" },
           ]}
@@ -89,6 +89,17 @@ export default function DestinationsDashboard() {
             { value: "FULFILLED", label: "Atendimento concluído" },
             { value: "PARTIALLY_FULFILLED", label: "Atendimento parcial" },
             { value: "UNFULFILLED", label: "Atendimento pendente" },
+          ]}
+        />
+        <AdminSelect
+          label="Estado de destino"
+          value={state}
+          onValueChange={setState}
+          options={[
+            { value: "", label: "Todos os estados" },
+            ..."AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO"
+              .split(" ")
+              .map((uf) => ({ value: uf, label: uf })),
           ]}
         />
         <input
@@ -114,7 +125,7 @@ export default function DestinationsDashboard() {
           <div className="admin-mini-stats">
             {[
               ["Pedidos de entrega", data.total],
-              ["Retiradas na loja", data.pickup],
+              ["Retiradas no período", data.pickup],
               ["Destinos incompletos", data.missing],
               ["Internacionais", data.international],
             ].map(([label, value]) => (
@@ -128,7 +139,7 @@ export default function DestinationsDashboard() {
             Destinos de pedidos pagos ou reembolsados, com cancelados e testes
             excluídos. Atendimento concluído na Shopify não comprova entrega ao
             cliente. Retiradas não entram no mapa. Cidades e quantidades são da
-            seleção; o mapa resume estados dentro do período e da modalidade.
+            seleção; o mapa e a tabela seguem os mesmos filtros.
           </p>
           {data.missing > 0 && (
             <p className="admin-data-notice">
@@ -137,7 +148,7 @@ export default function DestinationsDashboard() {
               Esses pedidos permanecem contabilizados como não informados.
             </p>
           )}
-          <div className="insights-map-grid">
+          <div className="delivery-destinations-layout">
             <section className="admin-panel">
               <header>
                 <div>
@@ -145,46 +156,7 @@ export default function DestinationsDashboard() {
                   <h2>Entregas pelo Brasil</h2>
                 </div>
               </header>
-              <svg
-                viewBox="0 0 540 530"
-                className="brazil-delivery-map"
-                aria-label="Mapa do Brasil por quantidade de pedidos; selecione um estado"
-              >
-                {states.map((s) => {
-                  const n = countByState.get(s.state) || 0;
-                  return (
-                    <path
-                      key={s.state}
-                      d={s.path}
-                      fill={
-                        n ? `hsl(225 50% ${88 - (45 * n) / max}%)` : "#edf1f8"
-                      }
-                      stroke={state === s.state ? "#f2b51f" : "#fff"}
-                      strokeWidth={state === s.state ? 2.5 : 0.8}
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={state === s.state}
-                      aria-label={`${s.name}: ${n} pedidos`}
-                      onClick={() => setState(state === s.state ? "" : s.state)}
-                      onKeyDown={(e) => {
-                        if (["Enter", " "].includes(e.key)) {
-                          e.preventDefault();
-                          setState(state === s.state ? "" : s.state);
-                        }
-                      }}
-                    >
-                      <title>
-                        {s.name} · {number(n)} pedidos
-                      </title>
-                    </path>
-                  );
-                })}
-              </svg>
-              <p className="sales-definition">
-                Selecione um estado para filtrar as cidades. Azul mais intenso
-                indica mais pedidos. Limites geográficos simplificados, sem
-                localizar endereços individuais.
-              </p>
+              <DeliveryMap cities={data.cities} />
             </section>
             <section className="admin-panel">
               <header>

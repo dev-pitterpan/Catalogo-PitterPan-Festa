@@ -7,7 +7,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ShieldCheck,
   LoaderCircle,
-  CalendarDays,
+  MapPinned,
+  ChartNoAxesCombined,
   BarChart3,
   LayoutDashboard,
   Package,
@@ -35,7 +36,12 @@ const links = [
     icon: ShoppingCart,
     financial: true,
   },
-  { href: "/gestor/produtos/", label: "Produtos", icon: Package },
+  {
+    href: "/gestor/mapa/",
+    label: "Mapa de entregas",
+    icon: MapPinned,
+    financial: true,
+  },
   { href: "/gestor/estoque/", label: "Estoque", icon: Boxes },
   { href: "/gestor/ofertas/", label: "Ofertas", icon: BadgePercent },
   { href: "/gestor/catalogos/", label: "Catálogos", icon: BookOpen },
@@ -46,9 +52,10 @@ const links = [
   },
   { href: "/gestor/sincronizacoes/", label: "Sincronizações", icon: RefreshCw },
   {
-    href: "/gestor/calendario/",
-    label: "Calendário comercial",
-    icon: CalendarDays,
+    href: "/gestor/analises/",
+    label: "Análises Shopify",
+    icon: ChartNoAxesCombined,
+    financial: true,
   },
   { href: "/gestor/relatorios/", label: "Relatórios", icon: BarChart3 },
   { href: "/gestor/usuarios/", label: "Equipe", icon: Users, admin: true },
@@ -65,7 +72,7 @@ const navigationGroups = [
     paths: [
       "/gestor/",
       "/gestor/vendas/",
-      "/gestor/produtos/",
+      "/gestor/mapa/",
       "/gestor/estoque/",
       "/gestor/ofertas/",
       "/gestor/alteracoes/",
@@ -73,7 +80,7 @@ const navigationGroups = [
   },
   {
     label: "Planejar e compartilhar",
-    paths: ["/gestor/catalogos/", "/gestor/calendario/", "/gestor/relatorios/"],
+    paths: ["/gestor/catalogos/", "/gestor/analises/", "/gestor/relatorios/"],
   },
   {
     label: "Gestão da equipe",

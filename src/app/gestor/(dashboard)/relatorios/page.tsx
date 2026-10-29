@@ -1,3 +1,4 @@
+import { requireSession } from "../../../../server/auth/session";
 import Link from "next/link";
 import { BarChart3, Boxes, ArrowLeftRight, ArrowUpRight } from "lucide-react";
 import { adminContext } from "../../../../server/admin/repository";
@@ -8,6 +9,7 @@ import {
 import ReportExport from "../../../../components/admin/ReportExport";
 export default async function Reports() {
   const context = await adminContext();
+  const user = await requireSession();
   return (
     <>
       <PageHeading
@@ -19,6 +21,22 @@ export default async function Reports() {
       <DataNotice context={context} />
       <div className="admin-process-grid">
         {[
+          ...(user.role !== "atendimento"
+            ? [
+                {
+                  title: "Análises Shopify",
+                  text: "Vendas por dia, canais, produtos e comportamento, com exportação de dados reais.",
+                  href: "/gestor/analises/",
+                  icon: BarChart3,
+                },
+                {
+                  title: "Mapa de entregas",
+                  text: "Cidades e quantidades dos pedidos por modalidade e período.",
+                  href: "/gestor/mapa/",
+                  icon: Boxes,
+                },
+              ]
+            : []),
           {
             title: "Produtos e ofertas",
             text: "Filtre o mix da loja e exporte os produtos da página consultada.",

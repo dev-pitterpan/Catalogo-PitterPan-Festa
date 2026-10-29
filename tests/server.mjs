@@ -74,6 +74,8 @@ try {
     "/gestor/",
     "/gestor/produtos/",
     "/gestor/vendas/",
+    "/gestor/mapa/",
+    "/gestor/analises/",
     "/gestor/halloween/",
   ]) {
     const denied = await rawFetch(base + route, { redirect: "manual" });
@@ -87,6 +89,8 @@ try {
   }
   for (const route of [
     "/api/admin/sales/",
+    "/api/admin/destinations/",
+    "/api/admin/analytics/",
     "/api/admin/overview/",
     "/api/admin/products/",
     "/api/admin/users/",

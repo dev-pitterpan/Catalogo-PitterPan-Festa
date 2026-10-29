@@ -37,3 +37,5 @@ CREATE TABLE IF NOT EXISTS pitterpan_sales_sync (
 ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS delivery_kind text NOT NULL DEFAULT 'UNKNOWN';
 ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS delivery_label text NOT NULL DEFAULT '';
 ALTER TABLE pitterpan_sales_items ADD COLUMN IF NOT EXISTS image_url text;
+
+ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS destination jsonb;

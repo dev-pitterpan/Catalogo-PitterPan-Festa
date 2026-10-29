@@ -30,13 +30,13 @@ export async function saveOrder(
   const delivery = classifyDelivery(order.shippingLines?.nodes || []);
   const result = await db.query<{ id: string }>(
     `INSERT INTO pitterpan_sales_orders
-    (store,id,name,processed_at,updated_at,financial_status,fulfillment_status,cancelled_at,test,currency,total,received,refunded,net,delivery_kind,delivery_label)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+    (store,id,name,processed_at,updated_at,financial_status,fulfillment_status,cancelled_at,test,currency,total,received,refunded,net,delivery_kind,delivery_label,destination)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb)
     ON CONFLICT(store,id) DO UPDATE SET name=EXCLUDED.name,processed_at=EXCLUDED.processed_at,
     updated_at=EXCLUDED.updated_at,financial_status=EXCLUDED.financial_status,
     fulfillment_status=EXCLUDED.fulfillment_status,cancelled_at=EXCLUDED.cancelled_at,
     test=EXCLUDED.test,currency=EXCLUDED.currency,total=EXCLUDED.total,received=EXCLUDED.received,
-    refunded=EXCLUDED.refunded,net=EXCLUDED.net,delivery_kind=EXCLUDED.delivery_kind,delivery_label=EXCLUDED.delivery_label,imported_at=now()
+    refunded=EXCLUDED.refunded,net=EXCLUDED.net,delivery_kind=EXCLUDED.delivery_kind,delivery_label=EXCLUDED.delivery_label,destination=COALESCE(EXCLUDED.destination,pitterpan_sales_orders.destination),imported_at=now()
     WHERE pitterpan_sales_orders.updated_at<=EXCLUDED.updated_at RETURNING id`,
     [
       store,
@@ -55,6 +55,7 @@ export async function saveOrder(
       order.netPaymentSet.shopMoney.amount,
       delivery.kind,
       delivery.label,
+      order.destination ? JSON.stringify(order.destination) : null,
     ],
   );
   if (!result.rows.length) return false;

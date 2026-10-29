@@ -2846,3 +2846,95 @@
 .admin-app[data-party-motion="off"] .party-chart-cord {
   display: none;
 }
+.insights-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.insights-filters > input {
+  min-height: 42px;
+  min-width: 190px;
+  padding: 10px 14px;
+  border: 1px solid #dbe3f2;
+  background: white;
+  border-radius: 12px;
+  color: #304577;
+  font: inherit;
+  font-size: 13px;
+}
+.insights-filters > input:focus-visible {
+  outline: 3px solid #5168c6;
+  outline-offset: 3px;
+}
+.insights-map-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 22px;
+  margin: 24px 0;
+  align-items: start;
+}
+.brazil-delivery-map {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  margin: auto;
+}
+.brazil-delivery-map path {
+  cursor: pointer;
+  transition: fill 0.15s;
+  outline: none;
+}
+.brazil-delivery-map path:hover,
+.brazil-delivery-map path:focus-visible {
+  fill: #efbd37;
+  stroke: #354ba7;
+  stroke-width: 2px;
+}
+.analytics-trend {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+}
+.analytics-trend text {
+  fill: #71809c;
+  font-size: 12px;
+}
+.analytics-breakdown {
+  margin: 0;
+}
+.analytics-breakdown > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 10px;
+  border-bottom: 1px solid #edf0f7;
+  font-size: 13px;
+}
+.analytics-breakdown dd {
+  margin: 0;
+  color: #304577;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.analytics-breakdown > div:last-child {
+  background: #eef2ff;
+  border-radius: 10px;
+}
+.insights-map-grid details summary {
+  cursor: pointer;
+  color: #405bc1;
+  font-size: 12px;
+  padding: 12px 0;
+}
+@media (max-width: 900px) {
+  .insights-map-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .insights-filters > .admin-select,
+  .insights-filters > input {
+    flex: 1;
+    min-width: 170px;
+  }
+}

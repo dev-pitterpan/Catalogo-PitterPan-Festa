@@ -11,7 +11,7 @@ import {
   BadgePercent,
   BookOpen,
   Boxes,
-  CalendarDays,
+  MapPinned,
   ChartNoAxesCombined,
   Package,
   Pause,
@@ -68,11 +68,17 @@ const scenes = {
     icon: RefreshCw,
     kind: "gears",
   },
-  calendario: {
-    title: "A próxima celebração começa aqui",
-    detail: "Datas especiais merecem planejamento.",
-    icon: CalendarDays,
-    kind: "calendar",
+  mapa: {
+    title: "Sua loja chega mais longe",
+    detail: "Destinos reais e quantidades por cidade.",
+    icon: MapPinned,
+    kind: "boxes",
+  },
+  analises: {
+    title: "Números para os próximos passos",
+    detail: "Indicadores consultados no Shopify Analytics.",
+    icon: ChartNoAxesCombined,
+    kind: "chart",
   },
   relatorios: {
     title: "Os detalhes contam uma história",

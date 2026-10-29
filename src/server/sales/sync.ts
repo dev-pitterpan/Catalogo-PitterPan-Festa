@@ -1,3 +1,4 @@
+import { readOrderDestination } from "./destinations.ts";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { database } from "../database/client.ts";
@@ -78,6 +79,12 @@ async function completeOrder(order: SalesOrder, deadline: number) {
     shipping.nodes.push(...next.shippingLines.nodes);
     shipping.pageInfo = next.shippingLines.pageInfo;
   }
+  checkTime(deadline);
+  order.destination = await readOrderDestination(
+    client,
+    order.id,
+    order.updatedAt,
+  );
   order.lineItems.pageInfo = info;
   return order;
 }

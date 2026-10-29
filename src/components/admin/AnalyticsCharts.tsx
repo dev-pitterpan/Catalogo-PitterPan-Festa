@@ -16,20 +16,28 @@ export function RevenueChart({
   table,
   money,
   currency,
+  metricKey = "total_sales",
+  metricLabel = "Vendas diárias",
+  axisLabel,
+  showTable = true,
 }: {
   table: AnalyticsTable;
   money: Format;
   currency: string;
+  metricKey?: string;
+  metricLabel?: string;
+  axisLabel?: string;
+  showTable?: boolean;
 }) {
   const id = useId().replace(/:/g, "");
   const [active, setActive] = useState<number | null>(null);
   const rows = table.rows;
-  const values = rows.map((r) => numberValue(r.total_sales));
+  const values = rows.map((r) => numberValue(r[metricKey]));
   const valid = values.filter((v): v is number => v !== null);
   if (!valid.length)
     return (
       <p className="analytics-empty">
-        Não há valores de vendas disponíveis neste período.
+        Não há valores disponíveis para este indicador no período.
       </p>
     );
   const min = Math.min(0, ...valid),
@@ -56,14 +64,13 @@ export function RevenueChart({
     <div className="analytics-chart-wrap">
       <div className="analytics-chart-readout" aria-live="polite">
         <span className="analytics-legend">
-          <i /> Vendas diárias
+          <i /> {metricLabel}
         </span>
         <span>
           {chosen ? (
             <>
               <b>{shortDate(chosen.day)}</b> ·{" "}
-              {money(numberValue(chosen.total_sales))} ·{" "}
-              {numberValue(chosen.orders) ?? "—"} pedidos
+              {money(numberValue(chosen[metricKey]))}
             </>
           ) : (
             "Passe pelo gráfico para explorar"
@@ -75,7 +82,7 @@ export function RevenueChart({
         className="analytics-revenue-chart"
         role="group"
         tabIndex={0}
-        aria-label="Vendas por dia. Use as setas esquerda e direita para consultar os valores."
+        aria-label={`${metricLabel} por dia. Use as setas esquerda e direita para consultar os valores.`}
         onKeyDown={(e) => {
           if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
             e.preventDefault();
@@ -138,7 +145,7 @@ export function RevenueChart({
           );
         })}
         <text x="78" y="22">
-          Valores em {currency}
+          {axisLabel || `Valores em ${currency}`}
         </text>
         {min < 0 && (
           <line x1="78" x2="726" y1={y(0)} y2={y(0)} stroke="#9eafc5" />
@@ -202,29 +209,31 @@ export function RevenueChart({
           </g>
         )}
       </svg>
-      <details className="analytics-daily-values">
-        <summary>Consultar tabela de vendas diárias</summary>
-        <div className="analytics-table-scroll">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Vendas</th>
-                <th>Pedidos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => (
-                <tr key={i}>
-                  <td>{shortDate(r.day)}</td>
-                  <td>{money(numberValue(r.total_sales))}</td>
-                  <td>{numberValue(r.orders) ?? "—"}</td>
+      {showTable && (
+        <details className="analytics-daily-values">
+          <summary>Consultar tabela de vendas diárias</summary>
+          <div className="analytics-table-scroll">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Vendas</th>
+                  <th>Pedidos</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={i}>
+                    <td>{shortDate(r.day)}</td>
+                    <td>{money(numberValue(r[metricKey]))}</td>
+                    <td>{numberValue(r.orders) ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

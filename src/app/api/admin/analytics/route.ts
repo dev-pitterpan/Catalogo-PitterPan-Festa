@@ -1,3 +1,8 @@
+import {
+  readShopifyReport,
+  readShopifyOverview,
+} from "../../../../server/sales/reports";
+import { reportById } from "../../../../lib/admin/shopify-reports";
 import { dateRangeSchema } from "../../../../lib/admin/date-range";
 import { apiSession } from "../../../../server/auth/session";
 import { salesClient } from "../../../../server/sales/config";
@@ -19,7 +24,20 @@ export async function GET(request: Request) {
   const days = Number(params.get("days") || 30);
   if (![1, 7, 30, 60].includes(days))
     return Response.json({ error: "Período inválido." }, { status: 400 });
+  const report = params.get("report");
+  if (report && !reportById(report))
+    return Response.json({ error: "Relatório inválido." }, { status: 400 });
   try {
+    if (params.get("overview") === "1" && !report)
+      return Response.json(
+        await readShopifyOverview(salesClient(), days, range.data),
+        { headers: { "Cache-Control": "no-store" } },
+      );
+    if (report)
+      return Response.json(
+        await readShopifyReport(salesClient(), report, days, range.data),
+        { headers: { "Cache-Control": "no-store" } },
+      );
     return Response.json(
       await readShopifyAnalytics(salesClient(), days, new Date(), range.data),
       {

@@ -1,188 +1,119 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Download,
-  RefreshCw,
+  ArrowLeft,
   ArrowUpRight,
   ArrowDownRight,
-  ShoppingBag,
-  Wallet,
-  ReceiptText,
   ChartNoAxesCombined,
-  Store,
-  Package,
+  ShoppingBag,
   Globe,
-  CalendarDays,
+  MousePointerClick,
+  Users,
+  Megaphone,
+  Boxes,
+  Store,
+  ChevronRight,
+  RefreshCw,
+  Search,
+  ExternalLink,
 } from "lucide-react";
-import {
-  RevenueChart,
-  RankedBars,
-  SessionJourney,
-  ChartEmpty,
-  shortDate,
-} from "./AnalyticsCharts";
 import AdminSelect from "./AdminSelect";
 import DateRangePicker from "./DateRangePicker";
-import type { DateRange } from "../../lib/admin/date-range";
 import PitterSpinner from "./PitterSpinner";
-import { csvCell } from "../../lib/admin/csv";
-import type {
-  readShopifyAnalytics,
-  AnalyticsTable,
-} from "../../server/sales/analytics";
-type Data = Awaited<ReturnType<typeof readShopifyAnalytics>>;
-const numeric = (value: unknown) =>
-  value !== null &&
-  value !== undefined &&
-  value !== "" &&
-  Number.isFinite(Number(value))
-    ? Number(value)
-    : null;
-const num = (value: number | null) =>
-  value === null
-    ? "—"
-    : new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(
-        value,
-      );
-function value(table: AnalyticsTable | null | undefined, key: string) {
-  return numeric(table?.rows[0]?.[key]);
-}
-const names: Record<string, string> = {
-  gross_sales: "Vendas brutas",
-  discounts: "Descontos",
-  returns: "Estornos de vendas",
-  net_sales: "Vendas líquidas",
-  shipping_charges: "Frete",
-  taxes: "Tributos",
-  total_sales: "Total de vendas",
-  orders: "Pedidos",
-  average_order_value: "Valor médio do pedido",
+import { shortDate, numberValue } from "./AnalyticsCharts";
+import {
+  reportCategories,
+  shopifyReports,
+} from "../../lib/admin/shopify-reports";
+import type { DateRange } from "../../lib/admin/date-range";
+import type { readShopifyOverview } from "../../server/sales/reports";
+import ShopifyReportDetail from "./ShopifyReportDetail";
+type Overview = Awaited<ReturnType<typeof readShopifyOverview>>;
+const icons = {
+  sales: ChartNoAxesCombined,
+  orders: ShoppingBag,
+  acquisition: Globe,
+  behavior: MousePointerClick,
+  customers: Users,
+  marketing: Megaphone,
+  inventory: Boxes,
+  pos: Store,
 };
+const normalize = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 export default function AnalyticsDashboard() {
-  const [range, setRange] = useState<DateRange>({ start: "", end: "" });
   const [days, setDays] = useState("30"),
+    [range, setRange] = useState<DateRange>({ start: "", end: "" }),
     [revision, setRevision] = useState(0),
-    [data, setData] = useState<Data | null>(null),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(true);
+    [category, setCategory] = useState(""),
+    [reportId, setReportId] = useState(""),
+    [search, setSearch] = useState(""),
+    [data, setData] = useState<Overview | null>(null),
+    [busy, setBusy] = useState(true),
+    [error, setError] = useState("");
+  const heading = useRef<HTMLHeadingElement>(null);
+  const params = new URLSearchParams({
+    days,
+    start: range.start,
+    end: range.end,
+    refresh: String(revision),
+  }).toString();
   useEffect(() => {
     const controller = new AbortController();
-    setBusy(true);
-    setError("");
     setData(null);
-    void fetch(
-      `/api/admin/analytics/?${new URLSearchParams({ days, start: range.start, end: range.end })}`,
-      {
-        signal: AbortSignal.any([
-          controller.signal,
-          AbortSignal.timeout(55000),
-        ]),
-        cache: "no-store",
-      },
-    )
+    setError("");
+    setBusy(true);
+    void fetch(`/api/admin/analytics/?${params}&overview=1`, {
+      cache: "no-store",
+      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(55000)]),
+    })
       .then(async (r) => {
         const body = await r.json();
-        if (!r.ok) throw new Error(body.error);
+        if (!r.ok) throw new Error(body.error || "Falha na consulta.");
         if (!controller.signal.aborted) setData(body);
       })
-      .catch((err) => {
+      .catch((e) => {
         if (!controller.signal.aborted)
-          setError(err instanceof Error ? err.message : "Falha na consulta.");
+          setError(e instanceof Error ? e.message : "Falha na consulta.");
       })
       .finally(() => {
         if (!controller.signal.aborted) setBusy(false);
       });
     return () => controller.abort();
-  }, [days, revision, range.start, range.end]);
-  const money = (n: number | null) =>
-    n === null
-      ? "—"
-      : new Intl.NumberFormat("pt-BR", {
-          style: "currency",
-          currency: data?.currency || "BRL",
-        }).format(n);
-  function download() {
-    if (!data) return;
-    const rows: unknown[][] = [
-      ["Fonte", "Shopify Analytics"],
-      ["Período", data.window.start, data.window.end],
-      ["Fuso", data.timezone],
-      [],
-      ["Indicador", "Valor"],
-      ...Object.entries(names).map(([key, label]) => [
-        label,
-        data.totals.rows[0]?.[key] ?? "Não disponível",
-      ]),
-    ];
-    for (const [title, table] of [
-      ["Vendas por dia", data.trend.table],
-      ["Itens pedidos", data.orderMetrics.table],
-      ["Processamento e entregas", data.fulfillment.table],
-      ["Canais", data.channels.table],
-      ["Produtos", data.products.table],
-    ] as const) {
-      if (!table) continue;
-      rows.push(
-        [],
-        [title],
-        table.columns.map((c) => c.displayName),
-        ...table.rows.map((r) => table.columns.map((c) => r[c.name])),
-      );
-    }
-    const url = URL.createObjectURL(
-      new Blob(
-        ["\ufeff" + rows.map((row) => row.map(csvCell).join(";")).join("\r\n")],
-        { type: "text/csv;charset=utf-8" },
-      ),
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `analises-shopify-${data.window.start}-${data.window.end}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  }, [params]);
+  useEffect(() => {
+    if (category || reportId) heading.current?.focus();
+  }, [category, reportId]);
+  const selected = reportCategories.find((c) => c.id === category),
+    report = shopifyReports.find((r) => r.id === reportId);
+  const list = shopifyReports.filter(
+    (r) =>
+      (!category || r.category === category) &&
+      (!search ||
+        normalize(`${r.title} ${r.description}`).includes(normalize(search))),
+  );
+  function openCategory(id: string) {
+    setCategory(id);
+    setReportId("");
+    setSearch("");
   }
-  const period = data
-    ? `${shortDate(data.window.start)} a ${shortDate(data.window.end)}`
-    : "";
-  const kpis = [
-    {
-      key: "total_sales",
-      icon: Wallet,
-      tone: "blue",
-      note: "Inclui frete e tributos",
-    },
-    {
-      key: "gross_sales",
-      icon: ChartNoAxesCombined,
-      tone: "gold",
-      note: "Antes de descontos e estornos",
-    },
-    {
-      key: "orders",
-      icon: ShoppingBag,
-      tone: "rose",
-      note: "Pedidos no período selecionado",
-    },
-    {
-      key: "average_order_value",
-      icon: ReceiptText,
-      tone: "teal",
-      note: "Ticket médio da Shopify",
-    },
-  ];
+  const money = (n: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: data?.currency || "BRL",
+    }).format(n);
   return (
-    <div className="analytics-dashboard">
+    <div className="analytics-dashboard shopify-reports">
       <div className="analytics-toolbar">
         <div className="analytics-period">
-          <span className="analytics-eyebrow">
-            <CalendarDays size={14} /> VISÃO DO NEGÓCIO
-          </span>
+          <span className="analytics-eyebrow">SHOPIFY ANALYTICS</span>
           <strong>
-            {busy
-              ? "Consultando resultados…"
-              : data
-                ? period
-                : "Análises da loja"}
+            {data
+              ? `${shortDate(data.window.start)} a ${shortDate(data.window.end)}`
+              : "Selecione o período"}
           </strong>
         </div>
         <div className="insights-filters">
@@ -202,315 +133,266 @@ export default function AnalyticsDashboard() {
           />
           <DateRangePicker value={range} onChange={setRange} />
           <button
-            className="admin-button analytics-refresh"
+            className="admin-button"
             onClick={() => setRevision((n) => n + 1)}
-            disabled={busy}
-            aria-label="Atualizar análises"
+            aria-label="Atualizar relatórios"
           >
-            <RefreshCw size={16} />
-            <span>Atualizar</span>
-          </button>
-          <button
-            className="admin-button analytics-export"
-            onClick={download}
-            disabled={!data || busy}
-          >
-            <Download size={16} /> Exportar
+            <RefreshCw size={16} /> Atualizar
           </button>
         </div>
       </div>
-      {busy && (
-        <div className="admin-panel analytics-loading" role="status">
-          <PitterSpinner label="Buscando os resultados da sua loja…" />
-          <p>Preparando vendas, canais e comportamento de compra.</p>
-        </div>
+      <nav
+        className="shopify-report-navigation"
+        aria-label="Categorias de análises"
+      >
+        <button
+          className={!category ? "is-current" : ""}
+          aria-current={!category ? "page" : undefined}
+          onClick={() => openCategory("")}
+        >
+          Visão geral
+        </button>
+        {reportCategories.map((c) => (
+          <button
+            key={c.id}
+            className={category === c.id ? "is-current" : ""}
+            aria-current={category === c.id ? "page" : undefined}
+            onClick={() => openCategory(c.id)}
+          >
+            {c.title}
+          </button>
+        ))}
+      </nav>
+      {!category && !search && !reportId && (
+        <>
+          {busy && (
+            <div className="admin-panel analytics-loading" role="status">
+              <PitterSpinner label="Consultando o resumo da Shopify…" />
+            </div>
+          )}
+          {error && (
+            <p className="admin-data-notice" role="alert">
+              {error} Você pode consultar os relatórios abaixo individualmente.
+            </p>
+          )}
+          {data && (
+            <section className="analytics-kpis" aria-label="Resumo do período">
+              {[
+                { key: "gross_sales", label: "Vendas brutas", tone: "gold" },
+                { key: "total_sales", label: "Total de vendas", tone: "blue" },
+                { key: "orders", label: "Pedidos", tone: "rose" },
+                {
+                  key: "average_order_value",
+                  label: "Valor médio do pedido",
+                  tone: "teal",
+                },
+              ].map((k) => {
+                const current = numberValue(data.totals.rows[0]?.[k.key]),
+                  previous = numberValue(data.previous?.rows[0]?.[k.key]);
+                const change =
+                  current !== null && previous !== null && previous !== 0
+                    ? ((current - previous) / Math.abs(previous)) * 100
+                    : null;
+                return (
+                  <article
+                    className={`analytics-kpi analytics-kpi--${k.tone}`}
+                    key={k.key}
+                  >
+                    <div className="analytics-kpi-top">{k.label}</div>
+                    <strong>
+                      {current === null
+                        ? "—"
+                        : k.key === "orders"
+                          ? current.toLocaleString("pt-BR")
+                          : money(current)}
+                    </strong>
+                    <div className="analytics-kpi-comparison">
+                      {change === null ? (
+                        <small>Sem base para comparação</small>
+                      ) : (
+                        <>
+                          <span
+                            className={`analytics-change ${change < 0 ? "is-down" : "is-up"}`}
+                          >
+                            {change < 0 ? (
+                              <ArrowDownRight size={14} />
+                            ) : (
+                              <ArrowUpRight size={14} />
+                            )}{" "}
+                            {change.toLocaleString("pt-BR", {
+                              maximumFractionDigits: 1,
+                            })}
+                            %
+                          </span>
+                          <small>vs. período anterior</small>
+                        </>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+          )}
+          <div className="shopify-library-heading">
+            <span className="analytics-eyebrow">
+              ESCOLHA O QUE QUER ANALISAR
+            </span>
+            <h2>Seus resultados, por assunto.</h2>
+            <p>
+              Abra uma categoria e selecione um relatório para ver os detalhes.
+            </p>
+          </div>
+          <div className="shopify-category-grid">
+            {reportCategories.map((c, i) => {
+              const Icon = icons[c.icon];
+              return (
+                <button
+                  className={`shopify-category-card shopify-category-card--${i % 4}`}
+                  key={c.id}
+                  onClick={() => openCategory(c.id)}
+                >
+                  <span className="shopify-category-icon">
+                    <Icon size={23} />
+                  </span>
+                  <span className="shopify-category-copy">
+                    <strong>{c.title}</strong>
+                    <span>{c.description}</span>
+                    <small>
+                      {shopifyReports.filter((r) => r.category === c.id).length}{" "}
+                      relatórios
+                    </small>
+                  </span>
+                  <ChevronRight size={18} />
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
-      {error && (
-        <div className="admin-data-notice" role="alert">
+      <div className="shopify-library-heading shopify-library-heading--list">
+        <div>
+          {(category || reportId) && (
+            <button
+              className="shopify-back"
+              onClick={() => {
+                if (reportId) setReportId("");
+                else openCategory("");
+              }}
+            >
+              <ArrowLeft size={15} />
+              {reportId ? "Voltar aos relatórios" : "Todas as categorias"}
+            </button>
+          )}
+          <h2 ref={heading} tabIndex={-1}>
+            {report
+              ? report.title
+              : selected?.title || "Biblioteca de relatórios"}
+          </h2>
+          {!report && (
+            <p>
+              {selected?.description ||
+                "Pesquise um indicador para abrir o relatório correspondente."}
+            </p>
+          )}
+        </div>
+        {!report && (
+          <label className="shopify-report-search">
+            <Search size={16} />
+            <input
+              type="search"
+              aria-label="Pesquisar relatórios"
+              placeholder="Pesquisar relatórios…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+        )}
+      </div>
+      {report ? (
+        <ShopifyReportDetail key={report.id} id={report.id} params={params} />
+      ) : category || search.trim() ? (
+        <>
+          <div className="shopify-report-list" role="list">
+            {list.map((r) => (
+              <button
+                role="listitem"
+                key={r.id}
+                onClick={() => {
+                  setCategory(r.category);
+                  setReportId(r.id);
+                }}
+              >
+                <span>
+                  <strong>{r.title}</strong>
+                  <small>{r.description}</small>
+                </span>
+                <span className="shopify-report-category-label">
+                  {reportCategories.find((c) => c.id === r.category)?.title}
+                </span>
+                <ChevronRight size={17} />
+              </button>
+            ))}
+          </div>
+          {!list.length && (
+            <div className="analytics-empty">
+              Nenhum relatório encontrado. Tente outro termo.
+            </div>
+          )}
+          {category === "customers" && (
+            <div className="shopify-native-notice">
+              <Users size={20} />
+              <div>
+                <strong>Coortes e análise RFM</strong>
+                <p>
+                  Esses relatórios especializados continuam disponíveis no
+                  painel da Shopify. Não estimamos os resultados a partir dos
+                  pedidos do catálogo.
+                </p>
+                <a
+                  href="https://admin.shopify.com/store/pitter-pan/analytics/reports"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Abrir relatórios na Shopify <ExternalLink size={13} />
+                </a>
+              </div>
+            </div>
+          )}
+        </>
+      ) : null}
+      {!category && !report && (
+        <div className="shopify-native-notice">
+          <Globe size={23} />
           <div>
-            <strong>Não foi possível consultar as análises</strong>
-            <p>{error}</p>
-            <a className="admin-text-link" href="/gestor/vendas/">
-              Ver pedidos já importados
+            <strong>Live View da Shopify</strong>
+            <p>
+              Visitantes agora, carrinhos ativos e o globo ao vivo são
+              consultados na Shopify. Os relatórios acima seguem o processamento
+              do Analytics e não representam atividade em tempo real.
+            </p>
+            <a
+              href="https://admin.shopify.com/store/pitter-pan/analytics/live"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Abrir Live View <ExternalLink size={13} />
             </a>
           </div>
         </div>
       )}
-      {data && (
-        <>
-          <section
-            className="analytics-kpis"
-            aria-label="Indicadores reais de vendas"
-          >
-            {kpis.map(({ key, icon: Icon, tone, note }) => {
-              const current = value(data.totals, key),
-                previous = value(data.previous.table, key);
-              const change =
-                current !== null && previous !== null && previous !== 0
-                  ? ((current - previous) / Math.abs(previous)) * 100
-                  : null;
-              return (
-                <article
-                  className={`analytics-kpi analytics-kpi--${tone}`}
-                  key={key}
-                >
-                  <div className="analytics-kpi-top">
-                    <span>{names[key]}</span>
-                    <span className="analytics-kpi-icon">
-                      <Icon size={19} />
-                    </span>
-                  </div>
-                  <strong>
-                    {key === "orders" ? num(current) : money(current)}
-                  </strong>
-                  <div className="analytics-kpi-comparison">
-                    {change !== null ? (
-                      <>
-                        <span
-                          className={`analytics-change ${change < 0 ? "is-down" : "is-up"}`}
-                        >
-                          {change < 0 ? (
-                            <ArrowDownRight size={14} />
-                          ) : (
-                            <ArrowUpRight size={14} />
-                          )}{" "}
-                          {change > 0 ? "+" : ""}
-                          {num(change)}%
-                        </span>
-                        <small>vs. período anterior</small>
-                      </>
-                    ) : (
-                      <small>Sem base para comparação</small>
-                    )}
-                  </div>
-                  <p>{note}</p>
-                </article>
-              );
-            })}
-          </section>
-          <section className="admin-panel analytics-panel analytics-order-operations">
-            <header className="analytics-panel-heading">
-              <div>
-                <span className="analytics-eyebrow">OPERAÇÃO DOS PEDIDOS</span>
-                <h2>Do pedido à entrega</h2>
-                <p>
-                  Indicadores oficiais da Shopify para o período selecionado.
-                </p>
-              </div>
-              <span className="analytics-panel-icon">
-                <Package size={20} />
-              </span>
-            </header>
-            <div className="analytics-operations-grid">
-              {[
-                [
-                  "Pedidos",
-                  num(value(data.totals, "orders")),
-                  "Pedidos registrados no relatório de vendas",
-                ],
-                [
-                  "Itens pedidos",
-                  num(value(data.orderMetrics.table, "quantity_ordered")),
-                  "Quantidade pedida antes de estornos",
-                ],
-                [
-                  "Estornos de vendas",
-                  money(value(data.totals, "returns")),
-                  "Estornos de vendas informados pela Shopify",
-                ],
-                [
-                  "Pedidos processados",
-                  num(value(data.fulfillment.table, "orders_fulfilled")),
-                  "Pedidos com processamento registrado no período",
-                ],
-                [
-                  "Pedidos entregues",
-                  num(value(data.fulfillment.table, "orders_delivered")),
-                  "Entregas confirmadas na Shopify",
-                ],
-                [
-                  "Tempo até processamento",
-                  value(
-                    data.fulfillment.table,
-                    "median_hours_order_to_fulfillment",
-                  ) === null
-                    ? "—"
-                    : `${num(value(data.fulfillment.table, "median_hours_order_to_fulfillment"))} h`,
-                  "Mediana entre o pedido e o processamento",
-                ],
-              ].map(([label, note, hint]) => (
-                <div key={label} title={hint}>
-                  <span>{label}</span>
-                  <strong>{note}</strong>
-                  <small>{hint}</small>
-                </div>
-              ))}
-            </div>
-            {(data.fulfillment.error || data.orderMetrics.error) && (
-              <p className="analytics-session-note" role="status">
-                Alguns indicadores operacionais não estão disponíveis nesta
-                consulta. “—” indica ausência de dados, não zero.
-              </p>
-            )}
-            <p className="analytics-session-note">
-              Vendas e eventos de processamento/entrega usam suas respectivas
-              datas na Shopify. Processado não significa entregue; o tempo é a
-              mediana, não a média.
-            </p>
-          </section>
-          <div className="analytics-main-grid">
-            <section className="admin-panel analytics-panel analytics-revenue">
-              <header className="analytics-panel-heading">
-                <div>
-                  <span className="analytics-eyebrow">EVOLUÇÃO</span>
-                  <h2>O ritmo das suas vendas</h2>
-                  <p>Acompanhe os resultados de cada dia.</p>
-                </div>
-                <span className="analytics-panel-icon">
-                  <ChartNoAxesCombined size={20} />
-                </span>
-              </header>
-              {data.trend.table?.rows.length ? (
-                <RevenueChart
-                  key={`${data.generatedAt}`}
-                  table={data.trend.table}
-                  money={money}
-                  currency={data.currency}
-                />
-              ) : (
-                <ChartEmpty
-                  text={
-                    data.trend.error || "Sem vendas diárias para este período."
-                  }
-                />
-              )}
-            </section>
-            <section className="admin-panel analytics-panel analytics-composition">
-              <header className="analytics-panel-heading">
-                <div>
-                  <span className="analytics-eyebrow">COMPOSIÇÃO</span>
-                  <h2>Por dentro das vendas</h2>
-                  <p>Do valor bruto ao total do período.</p>
-                </div>
-              </header>
-              <dl className="analytics-financials">
-                {Object.entries(names)
-                  .filter(
-                    ([key]) =>
-                      ![
-                        "orders",
-                        "average_order_value",
-                        "total_sales",
-                      ].includes(key),
-                  )
-                  .map(([key, name]) => (
-                    <div key={key}>
-                      <dt>
-                        <i
-                          className={`analytics-financial-dot analytics-financial-dot--${key}`}
-                        />
-                        {name}
-                      </dt>
-                      <dd>{money(value(data.totals, key))}</dd>
-                    </div>
-                  ))}
-              </dl>
-              <div className="analytics-financial-total">
-                <span>Total de vendas</span>
-                <strong>{money(value(data.totals, "total_sales"))}</strong>
-                <small>Conforme o relatório da Shopify</small>
-              </div>
-            </section>
-          </div>
-          <div className="analytics-rank-grid">
-            {[
-              {
-                key: "channels" as const,
-                title: "Onde os clientes compram",
-                caption: "CANAIS DE VENDA",
-                dimension: "sales_channel",
-                icon: Store,
-              },
-              {
-                key: "products" as const,
-                title: "Produtos em destaque",
-                caption: "RANKING POR VENDAS",
-                dimension: "product_title",
-                icon: Package,
-              },
-            ].map(({ key, title, caption, dimension, icon: Icon }) => {
-              const section = data[key];
-              return (
-                <section className="admin-panel analytics-panel" key={key}>
-                  <header className="analytics-panel-heading">
-                    <div>
-                      <span className="analytics-eyebrow">{caption}</span>
-                      <h2>{title}</h2>
-                      <p>Ordenados pelo valor de vendas no período.</p>
-                    </div>
-                    <span className="analytics-panel-icon">
-                      <Icon size={20} />
-                    </span>
-                  </header>
-                  {section.table?.rows.length ? (
-                    <RankedBars
-                      key={data.generatedAt}
-                      table={section.table}
-                      dimension={dimension}
-                      money={money}
-                    />
-                  ) : (
-                    <ChartEmpty
-                      text={section.error || "Nenhum resultado no período."}
-                    />
-                  )}
-                </section>
-              );
-            })}
-          </div>
-          <section className="admin-panel analytics-panel">
-            <header className="analytics-panel-heading">
-              <div>
-                <span className="analytics-eyebrow">JORNADA DE COMPRA</span>
-                <h2>Da visita à compra</h2>
-                <p>Sessões e etapas de compra da loja online.</p>
-              </div>
-              <span className="analytics-panel-icon">
-                <Globe size={20} />
-              </span>
-            </header>
-            {data.sessions.table ? (
-              <>
-                <SessionJourney table={data.sessions.table} />
-                <p className="analytics-session-note">
-                  {num(value(data.sessions.table, "online_store_visitors"))}{" "}
-                  visitantes no período · Cada etapa mostra sessões, não pessoas
-                  únicas.
-                </p>
-              </>
-            ) : (
-              <ChartEmpty
-                text={
-                  data.sessions.error ||
-                  "Comportamento indisponível para este período."
-                }
-              />
-            )}
-          </section>
-          <footer className="analytics-source">
-            <span>
-              <i /> Shopify Analytics · Dados reais da loja
-            </span>
-            <p>
-              Consultado em{" "}
-              {new Date(data.generatedAt).toLocaleString("pt-BR", {
-                timeZone: data.timezone,
-              })}{" "}
-              · {data.timezone}. A Shopify pode levar algum tempo para processar
-              os relatórios. Comparação com o período anterior de mesma duração.
-            </p>
-          </footer>
-        </>
+      {!report && (
+        <footer className="analytics-source">
+          <span>
+            <i /> Fonte: Shopify Analytics
+          </span>
+          <p>
+            {data
+              ? `Atualizado em ${new Date(data.generatedAt).toLocaleString("pt-BR", { timeZone: data.timezone })} · ${data.timezone}. `
+              : ""}
+            Os detalhes são consultados ao abrir cada relatório. A
+            disponibilidade depende dos dados e acessos da loja.
+          </p>
+        </footer>
       )}
     </div>
   );

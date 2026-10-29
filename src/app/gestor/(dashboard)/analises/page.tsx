@@ -8,7 +8,7 @@ export default async function AnalyticsPage() {
       <PageHeading
         eyebrow="DADOS REAIS DA SHOPIFY"
         title="Análises da loja."
-        description="Vendas, canais, produtos e comportamento, consultados diretamente no Shopify Analytics."
+        description="Escolha uma categoria e abra seus relatórios, com métricas consultadas diretamente no Shopify Analytics."
       />
       <AnalyticsDashboard />
     </>

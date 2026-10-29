@@ -124,6 +124,21 @@ try {
     "/api/admin/users/",
   ])
     assert.equal((await rawFetch(base + route)).status, 401);
+  for (const suffix of [
+    "?report=unknown",
+    "?report=sales-time&start=2026-02-30&end=2026-03-01",
+  ]) {
+    assert.equal(
+      (await fetch(base + "/api/admin/analytics/" + suffix)).status,
+      400,
+    );
+  }
+  const analyticsPage = await fetch(base + "/gestor/analises/");
+  const analyticsHtml = await analyticsPage.text();
+  assert.equal(analyticsPage.status, 200);
+  assert.ok(analyticsHtml.includes("Seus resultados, por assunto."));
+  assert.ok(analyticsHtml.includes("Comportamento"));
+  assert.ok(!analyticsHtml.includes('class="shopify-report-list"'));
   assert.equal(
     (await rawFetch(base + "/api/admin/settings/", { method: "POST" })).status,
     401,

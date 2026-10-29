@@ -102,6 +102,7 @@ function NavigationPending() {
 }
 const roleLabels = {
   admin: "Administrador",
+  gerente_compras: "Gerente de Compras",
   gestor: "Gestor",
   atendimento: "Atendimento",
 };
@@ -227,7 +228,9 @@ export default function DashboardShell({
             const items = links.filter(
               (link) =>
                 group.paths.includes(link.href) &&
-                (!link.admin || user.role === "admin") &&
+                (!link.admin ||
+                  user.role === "admin" ||
+                  user.role === "gerente_compras") &&
                 (!link.financial || user.role !== "atendimento"),
             );
             if (!items.length) return null;

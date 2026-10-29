@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS catalog_collections (
 -- Contas do painel ficam isoladas dos produtos e de outros projetos.
 CREATE TABLE IF NOT EXISTS pitterpan_admin_users (
  id uuid PRIMARY KEY, email text NOT NULL UNIQUE, name text NOT NULL,
- role text NOT NULL CHECK(role IN ('admin','gestor','atendimento')),
+ role text NOT NULL CHECK(role IN ('admin','gerente_compras','gestor','atendimento')),
  password_hash text NOT NULL, disabled boolean NOT NULL DEFAULT false,
  created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -71,3 +71,8 @@ CREATE TABLE IF NOT EXISTS pitterpan_admin_campaigns (
  created_by text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS pitterpan_admin_campaigns_date ON pitterpan_admin_campaigns(event_date);
+
+-- Perfil de compras tem os mesmos acessos administrativos; preserva contas existentes.
+ALTER TABLE pitterpan_admin_users
+ DROP CONSTRAINT IF EXISTS pitterpan_admin_users_role_check,
+ ADD CONSTRAINT pitterpan_admin_users_role_check CHECK(role IN ('admin','gerente_compras','gestor','atendimento'));

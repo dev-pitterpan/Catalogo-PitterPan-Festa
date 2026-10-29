@@ -74,7 +74,9 @@ export async function POST(request: Request) {
         error:
           (error as { code?: string }).code === "23505"
             ? "Este e-mail já está cadastrado."
-            : "Não foi possível cadastrar. Confira a preparação do banco e o limite de 50 contas.",
+            : (error as { code?: string }).code === "23514"
+              ? "Atualize a estrutura do banco com npm run db:migrate para habilitar o novo perfil."
+              : "Não foi possível cadastrar. Confira a preparação do banco e o limite de 50 contas.",
       },
       { status: 409 },
     );

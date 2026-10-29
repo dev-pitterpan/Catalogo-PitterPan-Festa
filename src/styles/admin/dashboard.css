@@ -2938,3 +2938,34 @@
     min-width: 170px;
   }
 }
+.admin-team-password {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.admin-app .admin-team-password input {
+  padding-right: 48px;
+  width: 100%;
+}
+.admin-team-password > button {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #6987a5;
+}
+.admin-team-password > button:hover:not(:disabled) {
+  background: #eaf1fa;
+  color: #355e91;
+}
+.admin-team-password > button:focus-visible {
+  outline: 2px solid #537eae;
+  outline-offset: 1px;
+}

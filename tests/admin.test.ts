@@ -84,6 +84,9 @@ test("destino do login e permissões recusam desvios", () => {
   assert.equal(allowed("atendimento", ["admin"]), false);
   assert.equal(allowed("gestor", ["admin"]), false);
   assert.equal(allowed("admin", ["admin"]), true);
+  assert.equal(allowed("gerente_compras", ["admin"]), true);
+  assert.equal(allowed("gerente_compras", ["admin", "gestor"]), true);
+  assert.equal(allowed("gerente_compras", []), false);
 });
 test("dashboard distingue variantes, ofertas, estoque desconhecido e histórico real de snapshots", async () => {
   const db = new PGlite();
@@ -197,6 +200,48 @@ test("limite de login é compartilhado no banco e renova a janela", async () => 
       assert.equal(await consumeLoginBucket(db, "opaque-bucket", 123), true);
     assert.equal(await consumeLoginBucket(db, "opaque-bucket", 123), false);
     assert.equal(await consumeLoginBucket(db, "opaque-bucket", 124), true);
+  } finally {
+    await db.close();
+  }
+});
+
+test("migração admite Gerente de Compras sem alterar contas existentes e sessão reconhece o perfil", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      "CREATE TABLE pitterpan_admin_users(id uuid PRIMARY KEY,email text NOT NULL UNIQUE,name text NOT NULL,role text NOT NULL CHECK(role IN ('admin','gestor','atendimento')),password_hash text NOT NULL,disabled boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now()); INSERT INTO pitterpan_admin_users(id,email,name,role,password_hash) VALUES('11111111-1111-4111-8111-111111111111','existing@example.test','Equipe','gestor','fixture');",
+    );
+    const schema = await readFile(
+      new URL("../src/server/database/schema.sql", import.meta.url),
+      "utf8",
+    );
+    await db.exec(schema);
+    await db.exec(schema);
+    await db.query(
+      "INSERT INTO pitterpan_admin_users(id,email,name,role,password_hash) VALUES('22222222-2222-4222-8222-222222222222','compras@example.test','Compras','gerente_compras','fixture')",
+    );
+    assert.equal(
+      (
+        await db.query<{ role: string }>(
+          "SELECT role FROM pitterpan_admin_users WHERE email='existing@example.test'",
+        )
+      ).rows[0].role,
+      "gestor",
+    );
+    await assert.rejects(() =>
+      db.exec("UPDATE pitterpan_admin_users SET role='invalid'"),
+    );
+    const token = signSession(
+      {
+        sub: "22222222-2222-4222-8222-222222222222",
+        email: "compras@example.test",
+        name: "Compras",
+        role: "gerente_compras",
+        version: "fixture",
+      },
+      secret,
+    );
+    assert.equal(verifySession(token, secret)?.role, "gerente_compras");
   } finally {
     await db.close();
   }

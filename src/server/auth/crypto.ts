@@ -15,7 +15,12 @@ const scrypt = (password: string, salt: string) =>
       (error, key) => (error ? reject(error) : resolve(key)),
     );
   });
-export const roles = ["admin", "gestor", "atendimento"] as const;
+export const roles = [
+  "admin",
+  "gerente_compras",
+  "gestor",
+  "atendimento",
+] as const;
 export type Role = (typeof roles)[number];
 export const SESSION_SECONDS = 8 * 60 * 60;
 export const COOKIE_NAME =
@@ -149,5 +154,8 @@ export function safeDestination(value: unknown) {
   }
 }
 export function allowed(role: Role, permitted: readonly Role[]) {
-  return permitted.includes(role);
+  return (
+    permitted.includes(role) ||
+    (role === "gerente_compras" && permitted.includes("admin"))
+  );
 }

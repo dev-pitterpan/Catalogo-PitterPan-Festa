@@ -1,10 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { UserPlus, ShieldCheck } from "lucide-react";
+import { UserPlus, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { dateTime } from "./Primitives";
 const roleLabels: Record<string, string> = {
   admin: "Administrador",
+  gerente_compras: "Gerente de Compras",
   gestor: "Gestor",
   atendimento: "Atendimento",
 };
@@ -25,6 +26,7 @@ export default function Team({
   self: string;
 }) {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
   async function create(event: FormEvent<HTMLFormElement>) {
@@ -42,6 +44,7 @@ export default function Team({
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       form.reset();
+      setShowPassword(false);
       setMessage(
         "Acesso criado. Compartilhe as credenciais com a pessoa por um canal seguro.",
       );
@@ -182,22 +185,42 @@ export default function Team({
               <option value="gestor">
                 Gestor · acompanhamento da operação
               </option>
+              <option value="gerente_compras">
+                Gerente de Compras · acesso completo
+              </option>
               <option value="admin">
                 Administrador · acessos e configurações
               </option>
             </select>
           </label>
-          <label>
+          <label htmlFor="team-initial-password">
             Senha inicial
-            <input
-              type="password"
-              name="password"
-              autoComplete="new-password"
-              required
-              minLength={12}
-              maxLength={128}
-              disabled={!ready || busy}
-            />
+            <span className="admin-team-password">
+              <input
+                id="team-initial-password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete="new-password"
+                required
+                minLength={12}
+                maxLength={128}
+                disabled={!ready || busy}
+              />
+              <button
+                type="button"
+                aria-label={
+                  showPassword
+                    ? "Ocultar senha inicial"
+                    : "Mostrar senha inicial"
+                }
+                aria-controls="team-initial-password"
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((v) => !v)}
+                disabled={!ready || busy}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </span>
             <small>Pelo menos 12 caracteres. Não envie senhas em grupos.</small>
           </label>
           <button

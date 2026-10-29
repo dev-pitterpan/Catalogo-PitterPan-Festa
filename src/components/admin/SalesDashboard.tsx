@@ -10,6 +10,7 @@ import {
   RefreshCw,
   ShoppingCart,
 } from "lucide-react";
+import AdminSelect from "./AdminSelect";
 import { usePartyMotion } from "./PartyExperience";
 import type { readSales } from "../../server/sales/repository";
 type Data = Awaited<ReturnType<typeof readSales>>;
@@ -133,15 +134,23 @@ export default function SalesDashboard() {
       <div className="sales-toolbar">
         <div>
           <label htmlFor="sales-period">Período dos pedidos</label>
-          <select
+          <AdminSelect
             id="sales-period"
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-          >
-            <option value={7}>Últimos 7 dias</option>
-            <option value={30}>Últimos 30 dias</option>
-            <option value={60}>Últimos 60 dias</option>
-          </select>
+            value={String(days)}
+            label="Período dos pedidos"
+            onValueChange={(value) => {
+              cursor.current = undefined;
+              setCelebration(null);
+              setData(null);
+              setLoading(true);
+              setDays(Number(value));
+            }}
+            options={[
+              { value: "7", label: "Últimos 7 dias" },
+              { value: "30", label: "Últimos 30 dias" },
+              { value: "60", label: "Últimos 60 dias" },
+            ]}
+          />
         </div>
         <button
           type="button"

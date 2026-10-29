@@ -1,4 +1,7 @@
 "use client";
+import { useEffect, useState } from "react";
+import AutoFilterForm from "./AutoFilterForm";
+import AdminSelect from "./AdminSelect";
 import { csvCell } from "../../lib/admin/csv";
 import { Download, Search, ArrowUpRight, Package } from "lucide-react";
 import type { AdminProduct, AdminQuery } from "../../server/admin/repository";
@@ -27,6 +30,8 @@ export default function ProductList({
   base: string;
   settings: { low: number; high: number };
 }) {
+  const [stock, setStock] = useState(query.stock);
+  useEffect(() => setStock(query.stock), [query.stock]);
   function download() {
     const rows = [
       ["SKU", "Produto", "Categoria", "Marca", "Preço", "Estoque"],
@@ -53,7 +58,7 @@ export default function ProductList({
   }
   return (
     <section className="admin-panel admin-product-panel">
-      <form method="GET" action={base} className="admin-filter-bar">
+      <AutoFilterForm action={base} className="admin-filter-bar">
         <label className="admin-filter-search">
           <Search size={17} />
           <input
@@ -67,14 +72,14 @@ export default function ProductList({
           className="admin-filter-input"
           name="category"
           defaultValue={query.category}
-          placeholder="Categoria exata"
+          placeholder="Buscar categoria"
           aria-label="Filtrar categoria"
         />
         <input
           className="admin-filter-input"
           name="vendor"
           defaultValue={query.vendor}
-          placeholder="Marca exata"
+          placeholder="Buscar marca"
           aria-label="Filtrar marca"
         />
         {query.offers === "1" && (
@@ -83,15 +88,22 @@ export default function ProductList({
         <label className="admin-sr-only" htmlFor="stock-filter">
           Situação de estoque
         </label>
-        <select id="stock-filter" name="stock" defaultValue={query.stock}>
-          <option value="all">Todo o estoque</option>
-          <option value="low">Estoque baixo</option>
-          <option value="high">Estoque alto</option>
-          <option value="out">Sem estoque</option>
-          <option value="unknown">Não informado</option>
-        </select>
+        <AdminSelect
+          id="stock-filter"
+          name="stock"
+          value={stock}
+          label="Situação de estoque"
+          onValueChange={(value) => setStock(value as AdminQuery["stock"])}
+          options={[
+            { value: "all", label: "Todo o estoque" },
+            { value: "low", label: "Estoque baixo" },
+            { value: "high", label: "Estoque alto" },
+            { value: "out", label: "Sem estoque" },
+            { value: "unknown", label: "Não informado" },
+          ]}
+        />
         <button type="submit" className="admin-button admin-button-primary">
-          Filtrar
+          Aplicar agora
         </button>
         <button
           type="button"
@@ -102,7 +114,7 @@ export default function ProductList({
           <Download size={16} />
           Exportar página
         </button>
-      </form>
+      </AutoFilterForm>
       {products.length ? (
         <div className="admin-table-scroll">
           <table className="admin-table">

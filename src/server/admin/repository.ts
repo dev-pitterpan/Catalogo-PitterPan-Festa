@@ -1,3 +1,4 @@
+import { containsPattern, matchesFilter } from "../../lib/admin/filters.ts";
 import { readAnalytics } from "./analytics";
 import { requireSession } from "../auth/session";
 import { cache } from "react";
@@ -201,8 +202,8 @@ export async function adminProducts(input: AdminQuery) {
           .join(" ")
           .toLowerCase()
           .includes(input.q.toLowerCase()) &&
-        (!input.category || p.category === input.category) &&
-        (!input.vendor || p.vendor === input.vendor) &&
+        matchesFilter(p.category, input.category) &&
+        matchesFilter(p.vendor, input.vendor) &&
         (input.offers !== "1" ||
           (p.price !== undefined &&
             p.compareAtPrice &&
@@ -231,14 +232,14 @@ export async function adminProducts(input: AdminQuery) {
   const values = [
     context.active,
     `%${input.q.replace(/[\\%_]/g, "\\$&")}%`,
-    input.category,
-    input.vendor,
+    containsPattern(input.category),
+    containsPattern(input.vendor),
     input.offers,
     input.stock,
     context.settings.low,
     context.settings.high,
   ];
-  const where = `import_id=$1 AND (name ILIKE $2 OR COALESCE(sku,id) ILIKE $2 OR vendor ILIKE $2) AND ($3='' OR category=$3) AND ($4='' OR vendor=$4) AND ($5='0' OR compare_at_price>price)
+  const where = `import_id=$1 AND (name ILIKE $2 OR COALESCE(sku,id) ILIKE $2 OR vendor ILIKE $2) AND ($3='%%' OR category ILIKE $3) AND ($4='%%' OR vendor ILIKE $4) AND ($5='0' OR compare_at_price>price)
  AND ($6='all' OR ($6='unknown' AND inventory_quantity IS NULL) OR ($6='out' AND inventory_quantity<=0) OR ($6='low' AND inventory_quantity>0 AND inventory_quantity<=$7) OR ($6='high' AND inventory_quantity>=$8))`;
   const count = await database().query<{ total: string }>(
     `SELECT count(*)::text AS total FROM catalog_items WHERE ${where}`,

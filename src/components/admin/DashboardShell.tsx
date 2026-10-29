@@ -1,4 +1,5 @@
 "use client";
+import AutoFilterForm from "./AutoFilterForm";
 import PartyExperience, { PartySectionScene } from "./PartyExperience";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
@@ -294,14 +295,17 @@ export default function DashboardShell({
               <strong>{title}</strong>
             </span>
           </div>
-          <form action="/gestor/produtos/" className="admin-global-search">
+          <AutoFilterForm
+            action="/gestor/produtos/"
+            className="admin-global-search"
+          >
             <Search size={17} />
             <input
               aria-label="Buscar produtos no painel"
               name="q"
               placeholder="Buscar produto ou SKU…"
             />
-          </form>
+          </AutoFilterForm>
           <span className="admin-secure-label">
             <ShieldCheck size={15} aria-hidden="true" />
             Área da equipe

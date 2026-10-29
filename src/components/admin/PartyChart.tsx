@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import AdminSelect from "./AdminSelect";
 import { Pause, Play, RotateCcw, Sparkles } from "lucide-react";
 
 type Category = { name: string; count: number };
@@ -14,54 +15,33 @@ const colors = [
 ];
 const number = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
 
-/** Decorative vector puppet: no canvas, external assets or animation runtime. */
+/** A small vector balloon, shared by the chart and section illustrations. */
 export function PartyHelper() {
   return (
     <svg
-      className="party-helper"
-      viewBox="0 0 100 112"
+      className="party-helper party-balloon"
+      viewBox="0 0 80 112"
       fill="none"
       aria-hidden="true"
     >
-      <ellipse cx="49" cy="105" rx="26" ry="5" fill="#253a78" opacity=".12" />
-      <g className="party-helper-body">
-        <path d="M37 74L32 99H44L49 79L55 99H68L59 73" fill="#293d8c" />
+      <g className="party-balloon-body">
         <path
-          d="M31 97H44V104H27Q25 99 31 97M56 97H68L74 103H56Z"
-          fill="#172653"
+          d="M40 76C26 69 13 48 15 30C17 2 62 1 65 30C68 48 54 69 40 76Z"
+          fill="currentColor"
         />
-        <path d="M33 49Q48 42 62 50L65 78Q49 84 31 76Z" fill="#405bc1" />
-        <path d="M42 48L49 62L57 48" fill="#FFD51A" />
         <path
-          d="M34 53L24 67L9 61"
-          stroke="#eab58c"
-          strokeWidth="9"
+          d="M25 30C25 21 30 16 36 15"
+          stroke="white"
+          strokeOpacity=".65"
+          strokeWidth="5"
           strokeLinecap="round"
         />
+        <path d="M40 75L35 82H45Z" fill="currentColor" />
         <path
-          d="M59 54L48 68L22 65"
-          stroke="#f4c5a0"
-          strokeWidth="9"
-          strokeLinecap="round"
-        />
-        <circle cx="48" cy="30" r="18" fill="#f4c5a0" />
-        <path
-          d="M31 27Q28 8 48 9Q69 10 66 28Q61 18 57 19Q46 28 31 27"
-          fill="#24356c"
-        />
-        <path d="M28 20L47 0L66 20Z" fill="#FFD51A" />
-        <path
-          d="M37 13L44 16M49 5L54 9"
-          stroke="#F21F26"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        <circle cx="42" cy="31" r="1.7" fill="#27376c" />
-        <circle cx="55" cy="31" r="1.7" fill="#27376c" />
-        <path
-          d="M44 39Q49 43 54 38"
-          stroke="#b46e59"
-          strokeWidth="2"
+          d="M40 82C27 95 53 98 39 111"
+          stroke="currentColor"
+          strokeOpacity=".65"
+          strokeWidth="1.6"
           strokeLinecap="round"
         />
       </g>
@@ -104,16 +84,18 @@ export default function PartyChart({ categories }: { categories: Category[] }) {
       <div className="party-chart-toolbar">
         <label>
           Organizar por{" "}
-          <select
+          <AdminSelect
             value={sort}
-            onChange={(e) => {
-              setSort(e.target.value);
+            label="Organizar categorias"
+            onValueChange={(value) => {
+              setSort(value);
               replay();
             }}
-          >
-            <option value="largest">Maior quantidade</option>
-            <option value="name">Nome da categoria</option>
-          </select>
+            options={[
+              { value: "largest", label: "Maior quantidade" },
+              { value: "name", label: "Nome da categoria" },
+            ]}
+          />
         </label>
         <div>
           <button
@@ -165,9 +147,8 @@ export default function PartyChart({ categories }: { categories: Category[] }) {
               </div>
               <div className="party-chart-track">
                 <div className="party-chart-bar" />
-                {i === 0 && c.count > 0 && (
+                {c.count > 0 && (
                   <div className="party-chart-runner">
-                    <span className="party-chart-rope" />
                     <PartyHelper />
                   </div>
                 )}

@@ -1,4 +1,5 @@
 "use client";
+import PitterSpinner from "./PitterSpinner";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   createContext,
@@ -88,7 +89,11 @@ export default function AutoFilterForm({
       >
         {children}
         <span className="admin-filter-status" role="status" aria-live="polite">
-          {pending ? "Atualizando resultados…" : "Filtros automáticos"}
+          {pending ? (
+            <PitterSpinner label="Atualizando resultados…" />
+          ) : (
+            "Filtros automáticos"
+          )}
         </span>
       </form>
     </FilterContext.Provider>

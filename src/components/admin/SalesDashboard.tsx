@@ -10,6 +10,15 @@ import {
   RefreshCw,
   ShoppingCart,
 } from "lucide-react";
+import DeliveryMark from "./DeliveryMark";
+import {
+  deliveryKinds,
+  deliveryLabels,
+  type DeliveryKind,
+} from "../../lib/admin/delivery";
+import { cardImage } from "../../lib/catalog/image";
+import PitterSpinner from "./PitterSpinner";
+import type { SalesFilters } from "../../server/sales/filters";
 import AdminSelect from "./AdminSelect";
 import { usePartyMotion } from "./PartyExperience";
 import type { readSales } from "../../server/sales/repository";
@@ -32,6 +41,17 @@ const status: Record<string, string> = {
   UNKNOWN: "Não informado",
 };
 export default function SalesDashboard() {
+  const [filters, setFilters] = useState<SalesFilters>({
+    status: "all",
+    category: "",
+    delivery: "all",
+  });
+  const [categoryDraft, setCategoryDraft] = useState("");
+  const [moreLoading, setMoreLoading] = useState(false);
+  const [moreError, setMoreError] = useState("");
+  const generation = useRef(0);
+  const expanded = useRef(false);
+  const moreBusy = useRef(false);
   const [days, setDays] = useState(30),
     [data, setData] = useState<Data | null>(null),
     [error, setError] = useState(""),
@@ -41,16 +61,46 @@ export default function SalesDashboard() {
   const [celebration, setCelebration] = useState<{
     id: string;
     title: string;
+    delivery: string;
   } | null>(null);
   const [revision, setRevision] = useState(0);
   const cursor = useRef<string | undefined>(undefined),
     fetching = useRef(0),
     motion = usePartyMotion();
+  const resetList = () => {
+    generation.current++;
+    expanded.current = false;
+    cursor.current = undefined;
+    setData(null);
+    setLoading(true);
+    setMoreLoading(false);
+    moreBusy.current = false;
+    setMoreError("");
+    setError("");
+  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const category = categoryDraft.trim();
+      if (category !== filters.category) {
+        resetList();
+        setFilters((old) => ({ ...old, category }));
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [categoryDraft, filters.category]);
   const load = useCallback(
     async (signal?: AbortSignal) => {
       const requestId = ++fetching.current;
+      const epoch = generation.current;
       try {
-        const url = `/api/admin/sales/?days=${days}${cursor.current ? `&after=${cursor.current}` : ""}`;
+        const params = new URLSearchParams({
+          days: String(days),
+          status: filters.status,
+          category: filters.category,
+          delivery: filters.delivery || "all",
+        });
+        if (cursor.current) params.set("after", cursor.current);
+        const url = `/api/admin/sales/?${params}`;
         const response = await fetch(url, {
           signal: signal
             ? AbortSignal.any([signal, AbortSignal.timeout(20000)])
@@ -58,7 +108,12 @@ export default function SalesDashboard() {
           cache: "no-store",
         });
         const body = await response.json();
-        if (signal?.aborted || requestId !== fetching.current) return;
+        if (
+          signal?.aborted ||
+          requestId !== fetching.current ||
+          epoch !== generation.current
+        )
+          return;
         if (!response.ok)
           throw new Error(
             body.error || "Não foi possível consultar as vendas.",
@@ -67,6 +122,7 @@ export default function SalesDashboard() {
         if (cursor.current && next.events.length)
           setCelebration({
             id: next.events[0].id,
+            delivery: next.events[0].delivery_kind || "UNKNOWN",
             title:
               next.events.length > 1
                 ? `${next.events.length} vendas confirmadas`
@@ -78,24 +134,32 @@ export default function SalesDashboard() {
       } catch (err) {
         if (
           requestId === fetching.current &&
+          epoch === generation.current &&
           !signal?.aborted &&
           !(err instanceof Error && err.name === "AbortError")
         )
           setError(err instanceof Error ? err.message : "Falha na consulta.");
       } finally {
-        if (requestId === fetching.current) setLoading(false);
+        if (requestId === fetching.current && epoch === generation.current)
+          setLoading(false);
       }
     },
-    [days],
+    [days, filters],
   );
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     void load(controller.signal);
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void load(controller.signal);
+      if (
+        document.visibilityState === "visible" &&
+        !expanded.current &&
+        !moreBusy.current
+      )
+        void load(controller.signal);
     }, 30000);
     return () => {
+      generation.current++;
       controller.abort();
       clearInterval(timer);
     };
@@ -105,6 +169,66 @@ export default function SalesDashboard() {
     const timer = setTimeout(() => setCelebration(null), 4500);
     return () => clearTimeout(timer);
   }, [celebration]);
+  async function loadMore() {
+    if (!data?.nextCursor || moreBusy.current) return;
+    const epoch = generation.current;
+    moreBusy.current = true;
+    setMoreLoading(true);
+    setMoreError("");
+    // Freeze polling before fetching the next page so it cannot collapse the list.
+    expanded.current = true;
+    fetching.current++;
+    try {
+      const params = new URLSearchParams({
+        view: "orders",
+        days: String(days),
+        status: filters.status,
+        category: filters.category,
+        delivery: filters.delivery || "all",
+        orderCursor: data.nextCursor,
+      });
+      const response = await fetch(`/api/admin/sales/?${params}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(20000),
+      });
+      const body = await response.json();
+      if (epoch !== generation.current) return;
+      if (!response.ok)
+        throw new Error(
+          body.error || "Não foi possível carregar mais pedidos.",
+        );
+      const page = body as Pick<Data, "orders" | "hasMore" | "nextCursor">;
+      setData((current) =>
+        current
+          ? {
+              ...current,
+              orders: [
+                ...new Map(
+                  [...current.orders, ...page.orders].map((order) => [
+                    order.id,
+                    order,
+                  ]),
+                ).values(),
+              ],
+              hasMore: page.hasMore,
+              nextCursor: page.nextCursor,
+            }
+          : current,
+      );
+    } catch (error) {
+      if (epoch === generation.current)
+        setMoreError(
+          error instanceof Error
+            ? error.message
+            : "Falha ao carregar mais pedidos.",
+        );
+    } finally {
+      if (epoch === generation.current) {
+        moreBusy.current = false;
+        setMoreLoading(false);
+      }
+    }
+  }
   async function sync() {
     setSyncing(true);
     setMessage("");
@@ -120,6 +244,7 @@ export default function SalesDashboard() {
           ? "Etapa concluída. Há mais pedidos ou eventos; clique novamente para continuar, ou deixe o agendamento processar."
           : "Atualização concluída.",
       );
+      resetList();
       setRevision((n) => n + 1);
     } catch (err) {
       setMessage(
@@ -139,10 +264,9 @@ export default function SalesDashboard() {
             value={String(days)}
             label="Período dos pedidos"
             onValueChange={(value) => {
-              cursor.current = undefined;
+              if (Number(value) === days) return;
+              resetList();
               setCelebration(null);
-              setData(null);
-              setLoading(true);
               setDays(Number(value));
             }}
             options={[
@@ -150,6 +274,67 @@ export default function SalesDashboard() {
               { value: "30", label: "Últimos 30 dias" },
               { value: "60", label: "Últimos 60 dias" },
             ]}
+          />
+        </div>
+        <div>
+          <label htmlFor="sales-status">Situação do pagamento</label>
+          <AdminSelect
+            id="sales-status"
+            label="Situação do pagamento"
+            value={filters.status}
+            onValueChange={(status) => {
+              resetList();
+              setFilters((old) => ({
+                ...old,
+                status: status as SalesFilters["status"],
+              }));
+            }}
+            options={[
+              { value: "all", label: "Todas as situações" },
+              { value: "PAID", label: "Pago" },
+              { value: "PENDING", label: "Pendente" },
+              { value: "EXPIRED", label: "Expirado" },
+              { value: "CANCELLED", label: "Cancelado" },
+              { value: "AUTHORIZED", label: "Autorizado" },
+              { value: "PARTIALLY_PAID", label: "Parcialmente pago" },
+              { value: "PARTIALLY_REFUNDED", label: "Reembolso parcial" },
+              { value: "REFUNDED", label: "Reembolsado" },
+              { value: "VOIDED", label: "Anulado" },
+              { value: "UNKNOWN", label: "Não informado" },
+            ]}
+          />
+        </div>
+        <div>
+          <label htmlFor="sales-delivery-filter">Modalidade de entrega</label>
+          <AdminSelect
+            id="sales-delivery-filter"
+            label="Modalidade de entrega"
+            value={filters.delivery || "all"}
+            onValueChange={(delivery) => {
+              resetList();
+              setFilters((old) => ({
+                ...old,
+                delivery: delivery as DeliveryKind | "all",
+              }));
+            }}
+            options={[
+              { value: "all", label: "Todas as modalidades" },
+              ...deliveryKinds.map((kind) => ({
+                value: kind,
+                label: deliveryLabels[kind],
+              })),
+            ]}
+          />
+        </div>
+        <div className="sales-category-filter">
+          <label htmlFor="sales-category">Categoria do produto</label>
+          <input
+            id="sales-category"
+            type="search"
+            maxLength={200}
+            value={categoryDraft}
+            onChange={(event) => setCategoryDraft(event.target.value)}
+            placeholder="Buscar qualquer categoria…"
           />
         </div>
         <button
@@ -166,6 +351,8 @@ export default function SalesDashboard() {
         Pedidos processados no período, com o estado financeiro atual.
         Recebimentos incluem frete e impostos; não são uma apuração contábil por
         data de pagamento. Pedidos de teste são excluídos.
+        {filters.category &&
+          " Os valores são dos pedidos completos que contêm produtos dessa categoria na última importação; o ranking inclui somente os produtos correspondentes."}
       </p>
       {error && (
         <p className="admin-data-notice" role="status">
@@ -181,7 +368,7 @@ export default function SalesDashboard() {
       )}
       {loading && !data && (
         <div className="admin-panel" role="status">
-          Consultando vendas…
+          <PitterSpinner label="Consultando vendas…" />
         </div>
       )}
       {data && (
@@ -192,6 +379,32 @@ export default function SalesDashboard() {
               importação dos demais pedidos continua funcionando.
             </p>
           )}
+          <div
+            className="sales-delivery-summary"
+            aria-label="Pedidos por modalidade de entrega"
+          >
+            {data.deliveries.map((item) => (
+              <button
+                key={item.kind}
+                type="button"
+                onClick={() => {
+                  resetList();
+                  setFilters((old) => ({
+                    ...old,
+                    delivery: item.kind as DeliveryKind,
+                  }));
+                }}
+              >
+                <DeliveryMark kind={item.kind} />
+                <strong>{count(item.orders)} pedidos</strong>
+              </button>
+            ))}
+          </div>
+          <p className="sales-definition">
+            Modalidade escolhida no pedido, conforme a Shopify. O ícone não
+            confirma postagem ou entrega. Pedidos com modalidades diferentes
+            aparecem como múltiplos; sem identificação ficam separados.
+          </p>
           <div className="sales-health">
             <span>
               <BadgeCheck size={16} />{" "}
@@ -265,8 +478,8 @@ export default function SalesDashboard() {
               <Package size={36} />
               <h2>Seu próximo capítulo de vendas</h2>
               <p>
-                Nenhum pedido real foi importado neste período. Execute a
-                importação inicial ou escolha outro período.
+                Nenhum pedido corresponde ao período e aos filtros escolhidos.
+                Experimente outra situação, categoria ou período.
               </p>
             </div>
           )}
@@ -277,7 +490,7 @@ export default function SalesDashboard() {
               <p role="status">
                 {celebration
                   ? `Venda confirmada: ${celebration.title}`
-                  : "O carrinho aparece quando um novo pagamento confirmado é recebido e processado."}
+                  : "A modalidade de entrega aparece quando um novo pagamento confirmado é recebido e processado."}
               </p>
             </div>
             <div className="sales-delivery-stage" aria-hidden="true">
@@ -286,8 +499,7 @@ export default function SalesDashboard() {
                   key={celebration.id}
                   className={`sales-cart${motion ? " is-moving" : ""}`}
                 >
-                  <Package size={21} />
-                  <ShoppingCart size={49} />
+                  <DeliveryMark kind={celebration.delivery} />
                 </div>
               )}
               <span className="sales-delivery-destination">
@@ -317,14 +529,44 @@ export default function SalesDashboard() {
                 <ol className="sales-ranking">
                   {data.top.map((p, i) => (
                     <li key={p.id}>
-                      <span>{i + 1}</span>
+                      <span className="sales-product-photo">
+                        <img
+                          src={cardImage(
+                            p.image ||
+                              "/assets/images/brand/product-placeholder.svg",
+                            120,
+                          )}
+                          alt={p.title}
+                          width={48}
+                          height={48}
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src =
+                              "/assets/images/brand/product-placeholder.svg";
+                          }}
+                        />
+                        <small>{i + 1}</small>
+                      </span>
                       <div>
                         <strong>{p.title}</strong>
                         <small>SKU {p.sku || "não informado"}</small>
                       </div>
-                      <b>
-                        {count(p.units)} <small>un.</small>
-                      </b>
+                      <div className="sales-product-deliveries">
+                        <b>
+                          {count(p.units)} <small>un.</small>
+                        </b>
+                        {deliveryKinds.map((kind) => {
+                          const value = p[`${kind.toLowerCase()}_units`];
+                          return Number(value) > 0 ? (
+                            <DeliveryMark
+                              key={kind}
+                              kind={kind}
+                              units={count(value)}
+                            />
+                          ) : null;
+                        })}
+                      </div>
                     </li>
                   ))}
                 </ol>
@@ -338,7 +580,10 @@ export default function SalesDashboard() {
                 <ShoppingCart size={22} />
               </header>
               <p className="sales-definition">
-                Últimos 30 pedidos importados no período.
+                Mostrando {data.orders.length} pedidos nesta seleção, em lotes
+                de 10.
+                {expanded.current &&
+                  " A atualização automática da lista fica pausada durante esta consulta."}
               </p>
               <div className="admin-table-scroll">
                 <table className="admin-table">
@@ -346,10 +591,18 @@ export default function SalesDashboard() {
                     <tr>
                       <th>Pedido</th>
                       <th>Situação</th>
+                      <th>Entrega escolhida</th>
                       <th>Total do pedido</th>
                     </tr>
                   </thead>
                   <tbody>
+                    {!data.orders.length && (
+                      <tr>
+                        <td colSpan={4}>
+                          Nenhum pedido corresponde aos filtros escolhidos.
+                        </td>
+                      </tr>
+                    )}
                     {data.orders.map((o) => (
                       <tr key={o.id}>
                         <td>
@@ -371,6 +624,21 @@ export default function SalesDashboard() {
                           </span>
                         </td>
                         <td>
+                          <DeliveryMark kind={o.delivery_kind} />
+                          {o.delivery_label && (
+                            <small>{o.delivery_label}</small>
+                          )}
+                          <small>
+                            {o.fulfillment_status === "FULFILLED"
+                              ? "Atendimento concluído"
+                              : o.fulfillment_status === "PARTIALLY_FULFILLED"
+                                ? "Atendimento parcial"
+                                : o.fulfillment_status === "UNFULFILLED"
+                                  ? "Atendimento pendente"
+                                  : o.fulfillment_status}
+                          </small>
+                        </td>
+                        <td>
                           {money(o.total, o.currency)}
                           <small>
                             Líquido recebido: {money(o.net, o.currency)}
@@ -380,6 +648,38 @@ export default function SalesDashboard() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="sales-pagination">
+                {moreError && <p role="alert">{moreError}</p>}
+                {data.hasMore && (
+                  <button
+                    type="button"
+                    className="admin-button admin-button-primary"
+                    disabled={moreLoading || loading}
+                    onClick={loadMore}
+                  >
+                    {moreLoading ? (
+                      <PitterSpinner label="Carregando pedidos…" />
+                    ) : (
+                      "Carregar mais 10"
+                    )}
+                  </button>
+                )}
+                {expanded.current && (
+                  <button
+                    type="button"
+                    className="admin-button"
+                    onClick={() => {
+                      resetList();
+                      setRevision((n) => n + 1);
+                    }}
+                  >
+                    Atualizar lista
+                  </button>
+                )}
+                {!data.hasMore && data.orders.length > 0 && (
+                  <span>Todos os pedidos desta seleção foram exibidos.</span>
+                )}
               </div>
             </section>
           </div>

@@ -145,10 +145,13 @@ export default function PartyChart({ categories }: { categories: Category[] }) {
                 <span>{c.name}</span>
                 <strong>{number(c.count)}</strong>
               </div>
-              <div className="party-chart-track">
-                <div className="party-chart-bar" />
+              <div className="party-chart-mechanism">
+                <div className="party-chart-track">
+                  <div className="party-chart-bar" />
+                  <span className="party-chart-cord" aria-hidden="true" />
+                </div>
                 {c.count > 0 && (
-                  <div className="party-chart-runner">
+                  <div className="party-chart-reel">
                     <PartyHelper />
                   </div>
                 )}

@@ -32,3 +32,8 @@ CREATE TABLE IF NOT EXISTS pitterpan_sales_sync (
  completed_at timestamptz, lease_until timestamptz, lease_id uuid,
  last_webhook_at timestamptz
 );
+
+-- Additive metadata: older orders remain explicitly unclassified until refreshed.
+ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS delivery_kind text NOT NULL DEFAULT 'UNKNOWN';
+ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS delivery_label text NOT NULL DEFAULT '';
+ALTER TABLE pitterpan_sales_items ADD COLUMN IF NOT EXISTS image_url text;

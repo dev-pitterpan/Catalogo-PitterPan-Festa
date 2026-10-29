@@ -237,6 +237,17 @@ test("worker retoma cursor, completa itens, deduplica pagamento e preserva check
         pageCalls++;
         if (!variables.after) {
           const partial = order("10");
+          partial.shippingLines = {
+            nodes: [
+              {
+                title: "Sedex",
+                code: null,
+                source: null,
+                deliveryCategory: null,
+              },
+            ],
+            pageInfo: { hasNextPage: true, endCursor: "shipping-next" },
+          };
           partial.lineItems.pageInfo = {
             hasNextPage: true,
             endCursor: "line-next",
@@ -256,6 +267,24 @@ test("worker retoma cursor, completa itens, deduplica pagamento e preserva check
             },
           };
         }
+      } else if (query.includes("shippingLines(first:100")) {
+        assert.equal(variables.after, "shipping-next");
+        data = {
+          order: {
+            updatedAt: partialUpdatedAt,
+            shippingLines: {
+              nodes: [
+                {
+                  title: "Retirada na loja",
+                  code: null,
+                  source: null,
+                  deliveryCategory: null,
+                },
+              ],
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+          },
+        };
       } else if (query.includes("lineItems(first:100")) {
         const extra = {
           ...order("12").lineItems.nodes[0],
@@ -400,5 +429,198 @@ test("setup reaproveita arquivo validado com BOM e preserva as credenciais e ban
     assert.equal(await readFile(join(root, ".env"), "utf8"), text);
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("vendas pagina de dez em dez, combina situação/categoria e mantém totais completos", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      await readFile(
+        new URL("../src/server/sales/schema.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    await db.exec(`CREATE TABLE catalog_items(import_id text,product_id text,category text,variant_id text,image_url text);
+      CREATE TABLE catalog_state(singleton boolean,active_import text);
+      INSERT INTO catalog_state VALUES(true,'active');
+      INSERT INTO catalog_items(import_id,product_id,category) VALUES('active','gid://shopify/Product/1','Festas'),('active','gid://shopify/Product/2','Natal'),('old','gid://shopify/Product/1','Categoria antiga');`);
+    const timestamp = new Date().toISOString();
+    for (let i = 1; i <= 26; i++) {
+      const item = order(String(i));
+      item.processedAt = timestamp;
+      if (i >= 24 && i <= 25) {
+        item.displayFinancialStatus = "EXPIRED";
+        item.lineItems.nodes[0].product = { id: "gid://shopify/Product/2" };
+      }
+      if (i === 26) item.cancelledAt = timestamp;
+      await saveOrder(db, store, item);
+    }
+    // A test order and another store never leak into the filtered pages.
+    await saveOrder(db, "other.myshopify.com", order("900"));
+    const fake = order("901");
+    fake.test = true;
+    await saveOrder(db, store, fake);
+    const { readSalesOrders } =
+      await import("../src/server/sales/repository.ts");
+    const filter = { status: "PAID" as const, category: "fest" };
+    const first = await readSales(db, store, 30, undefined, filter);
+    assert.equal(first.totals[0].orders, "23");
+    assert.equal(
+      (
+        await readSales(db, store, 30, undefined, {
+          ...filter,
+          delivery: "UNKNOWN",
+        })
+      ).totals[0].orders,
+      "23",
+    );
+    assert.equal(first.top[0].units, "69");
+    assert.equal(first.orders.length, 10);
+    assert.equal(first.hasMore, true);
+    const second = await readSalesOrders(
+      db,
+      store,
+      30,
+      filter,
+      first.nextCursor!,
+    );
+    assert.equal(second.orders.length, 10);
+    assert.equal(second.hasMore, true);
+    const third = await readSalesOrders(
+      db,
+      store,
+      30,
+      filter,
+      second.nextCursor!,
+    );
+    assert.equal(third.orders.length, 3);
+    assert.equal(third.hasMore, false);
+    assert.equal(third.nextCursor, null);
+    assert.equal(
+      new Set(
+        [...first.orders, ...second.orders, ...third.orders].map((o) => o.id),
+      ).size,
+      23,
+    );
+    const expired = await readSales(db, store, 30, undefined, {
+      status: "EXPIRED",
+      category: "nat",
+    });
+    assert.equal(expired.orders.length, 2);
+    assert.equal(expired.totals[0].orders, "2");
+    assert.equal(expired.top.length, 0);
+    assert.equal(
+      (
+        await readSales(db, store, 30, undefined, {
+          status: "CANCELLED",
+          category: "",
+        })
+      ).orders.length,
+      1,
+    );
+    assert.equal(
+      (
+        await readSales(db, store, 30, undefined, {
+          status: "PAID",
+          category: "antiga",
+        })
+      ).orders.length,
+      0,
+    );
+    assert.equal(
+      (
+        await readSales(db, store, 30, undefined, {
+          status: "all",
+          category: "%",
+        })
+      ).orders.length,
+      0,
+    );
+    await assert.rejects(() =>
+      readSalesOrders(db, store, 30, filter, "malformed"),
+    );
+  } finally {
+    await db.close();
+  }
+});
+
+test("vendas preservam fotos, agrupam modalidades por produto e filtram entregas sem confundir pedidos", async () => {
+  const db = new PGlite();
+  try {
+    const schema = await readFile(
+      new URL("../src/server/sales/schema.sql", import.meta.url),
+      "utf8",
+    );
+    await db.exec(schema);
+    await db.exec(schema);
+    for (const [id, title] of [
+      ["1", "Retirada na loja"],
+      ["2", "Sedex"],
+      ["3", "Motoboy"],
+      ["4", "Correios PAC"],
+      ["5", ""],
+    ]) {
+      const sale = order(id);
+      sale.lineItems.nodes[0].image = {
+        url: "https://cdn.shopify.com/s/files/test/product.png",
+      };
+      sale.shippingLines = {
+        nodes: title
+          ? [{ title, code: null, source: null, deliveryCategory: null }]
+          : [],
+        pageInfo: { hasNextPage: false, endCursor: null },
+      };
+      await saveOrder(db, store, sale);
+    }
+    const all = await readSales(db, store, 30);
+    assert.equal(all.top[0].units, "15");
+    assert.equal(all.top[0].pickup_units, "3");
+    assert.equal(all.top[0].sedex_units, "3");
+    assert.equal(all.top[0].motoboy_units, "3");
+    assert.equal(all.top[0].other_units, "3");
+    assert.equal(all.top[0].unknown_units, "3");
+    assert.match(all.top[0].image, /cdn.shopify.com/);
+    assert.equal(all.deliveries.length, 5);
+    const sedex = await readSales(db, store, 30, undefined, {
+      status: "PAID",
+      category: "",
+      delivery: "SEDEX",
+    });
+    assert.equal(sedex.orders.length, 1);
+    assert.equal(sedex.orders[0].delivery_kind, "SEDEX");
+    assert.equal(sedex.top[0].units, "3");
+    assert.equal(sedex.totals[0].orders, "1");
+    const invalidPhoto = order("6");
+    invalidPhoto.lineItems.nodes[0].image = {
+      url: "https://untrusted.example/photo.png",
+    };
+    await saveOrder(db, store, invalidPhoto);
+    assert.equal(
+      (
+        await db.query<{ image_url: string | null }>(
+          "SELECT image_url FROM pitterpan_sales_items WHERE order_id='gid://shopify/Order/6'",
+        )
+      ).rows[0].image_url,
+      null,
+    );
+    const partial = order("7");
+    partial.shippingLines = {
+      nodes: [],
+      pageInfo: { hasNextPage: true, endCursor: "next" },
+    };
+    await assert.rejects(() => saveOrder(db, store, partial));
+    // A deploy before the additive migration still renders legacy sales as unknown.
+    await db.exec(
+      "ALTER TABLE pitterpan_sales_orders DROP COLUMN delivery_kind; ALTER TABLE pitterpan_sales_orders DROP COLUMN delivery_label; ALTER TABLE pitterpan_sales_items DROP COLUMN image_url;",
+    );
+    assert.equal(
+      (await readSales(db, store, 30)).orders[0].delivery_kind,
+      "UNKNOWN",
+    );
+    await db.exec(schema);
+    assert.equal((await readSales(db, store, 30)).top[0].unknown_units, "18");
+  } finally {
+    await db.close();
   }
 });

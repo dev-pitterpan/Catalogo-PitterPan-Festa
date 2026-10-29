@@ -13,6 +13,10 @@ export const lineSchema = z.object({
   sku: z.string().nullable(),
   quantity: z.number().int().nonnegative(),
   currentQuantity: z.number().int().nonnegative(),
+  image: z
+    .object({ url: z.string().max(3000) })
+    .nullable()
+    .optional(),
   variant: z.object({ id: gid("ProductVariant") }).nullable(),
   product: z.object({ id: gid("Product") }).nullable(),
 });
@@ -26,6 +30,23 @@ export const orderSchema = z
     test: z.boolean(),
     displayFinancialStatus: z.string().nullable(),
     displayFulfillmentStatus: z.string(),
+    shippingLines: z
+      .object({
+        nodes: z.array(
+          z.object({
+            title: z.string().max(500),
+            code: z.string().nullable(),
+            source: z.string().nullable(),
+            deliveryCategory: z.string().nullable(),
+            isRemoved: z.boolean().optional(),
+          }),
+        ),
+        pageInfo: z.object({
+          hasNextPage: z.boolean(),
+          endCursor: z.string().nullable(),
+        }),
+      })
+      .optional(),
     totalPriceSet: money,
     totalReceivedSet: money,
     totalRefundedSet: money,
@@ -54,8 +75,10 @@ export const orderSchema = z
 export type SalesOrder = z.infer<typeof orderSchema>;
 export type SalesLine = z.infer<typeof lineSchema>;
 export const paidStatuses = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"];
-export const lineFields = `id title sku quantity currentQuantity variant { id } product { id }`;
+export const lineFields = `id title sku quantity currentQuantity image { url } variant { id } product { id }`;
+export const shippingFields = `title code source deliveryCategory isRemoved`;
 export const orderFields = `id name processedAt updatedAt cancelledAt test displayFinancialStatus displayFulfillmentStatus
+ shippingLines(first:20) { nodes { ${shippingFields} } pageInfo { hasNextPage endCursor } }
  totalPriceSet { shopMoney { amount currencyCode } }
  totalReceivedSet { shopMoney { amount currencyCode } }
  totalRefundedSet { shopMoney { amount currencyCode } }

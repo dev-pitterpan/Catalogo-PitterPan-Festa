@@ -254,3 +254,205 @@
     left: 25%;
   }
 }
+.sales-category-filter {
+  flex: 1;
+  min-width: 180px;
+  max-width: 300px;
+}
+.sales-category-filter input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #dbe3f2;
+  border-radius: 12px;
+  background: #fff;
+  color: #304577;
+  padding: 10px 13px;
+  font: inherit;
+  font-size: 13px;
+}
+.sales-category-filter input:focus-visible {
+  outline: 3px solid #5168c6;
+  outline-offset: 3px;
+}
+.sales-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding-top: 20px;
+  margin-top: 14px;
+  border-top: 1px solid #edf0f7;
+  font-size: 12px;
+  color: #73809b;
+}
+.sales-pagination p {
+  flex-basis: 100%;
+  color: #b74754;
+  text-align: center;
+}
+.sales-pagination .admin-button-primary .pitter-loading {
+  color: inherit;
+}
+@media (max-width: 600px) {
+  .sales-toolbar > div {
+    width: 100%;
+    max-width: none;
+  }
+  .sales-toolbar > button {
+    width: 100%;
+  }
+}
+.delivery-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #435b98;
+  line-height: 1.3;
+}
+.delivery-mark > svg {
+  width: 31px;
+  height: 25px;
+  flex-shrink: 0;
+}
+.delivery-mark--sedex > svg {
+  width: 42px;
+}
+.delivery-mark--motoboy {
+  color: #354ba7;
+}
+.delivery-mark--pickup {
+  color: #31846c;
+}
+.delivery-mark--unknown {
+  color: #8791a6;
+}
+.delivery-mark > b {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.delivery-mark > b small {
+  display: inline;
+  font-size: 10px;
+}
+.sales-delivery-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 20px 0 10px;
+}
+.sales-delivery-summary > button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid #e0e7f4;
+  border-radius: 15px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff, #f6f8ff);
+  text-align: left;
+  cursor: pointer;
+  color: #344b8b;
+  font: inherit;
+}
+.sales-delivery-summary > button:hover {
+  border-color: #6a7ecb;
+  background: #f0f4ff;
+}
+.sales-delivery-summary > button:focus-visible {
+  outline: 3px solid #5168c6;
+  outline-offset: 3px;
+}
+.sales-delivery-summary strong {
+  font-size: 19px;
+}
+.sales-ranking li > .sales-product-photo {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  overflow: visible;
+  background: white;
+  border: 1px solid #edf0f7;
+  border-radius: 12px;
+  box-shadow: none;
+}
+.sales-product-photo img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  border-radius: 9px;
+}
+.sales-product-photo > small {
+  position: absolute;
+  bottom: -5px;
+  left: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 3px;
+  margin: 0;
+  border: 2px solid white;
+  border-radius: 6px;
+  background: #eaf0ff;
+  color: #40569a;
+  font-size: 9px;
+}
+.sales-ranking li > .sales-product-deliveries {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex: 0 1 150px;
+}
+.sales-product-deliveries > b {
+  text-align: right;
+  font-size: 15px;
+  color: #2f3f91;
+}
+.sales-product-deliveries > b small {
+  display: inline;
+}
+.sales-product-deliveries .delivery-mark {
+  gap: 5px;
+  font-size: 10px;
+}
+.sales-product-deliveries .delivery-mark > span:not(.admin-sr-only) {
+  max-width: 85px;
+}
+.sales-product-deliveries .delivery-mark > svg {
+  width: 25px;
+  height: 22px;
+}
+.sales-product-deliveries .delivery-mark--sedex > svg {
+  width: 35px;
+}
+.sales-cart {
+  width: 100px;
+  height: auto;
+}
+.sales-cart > .delivery-mark {
+  flex-direction: column;
+  font-size: 10px;
+}
+.sales-cart .delivery-mark > svg {
+  width: 66px;
+  height: 49px;
+}
+.sales-cart .delivery-mark--sedex > svg {
+  width: 76px;
+}
+@media (max-width: 600px) {
+  .sales-ranking li {
+    flex-wrap: wrap;
+  }
+  .sales-ranking li > .sales-product-deliveries {
+    flex-basis: 100%;
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    padding-left: 64px;
+  }
+}

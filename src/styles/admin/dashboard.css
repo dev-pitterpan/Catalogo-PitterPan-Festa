@@ -2710,3 +2710,139 @@
 .admin-app[data-party-motion="off"] .party-balloon-body {
   animation: none !important;
 }
+.pitter-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #40529b;
+  font-size: 12px;
+}
+.pitter-spinner {
+  width: 23px;
+  height: 23px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    #354ba7 0deg 120deg,
+    #ffd51a 120deg 240deg,
+    #f21f26 240deg 350deg,
+    transparent 350deg
+  );
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+  animation: pitter-loading-spin 0.85s linear infinite;
+}
+@keyframes pitter-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pitter-spinner {
+    animation: none;
+  }
+}
+.admin-global-search[aria-busy="true"] .admin-filter-status {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  flex-shrink: 0;
+}
+.admin-global-search[aria-busy="true"] .pitter-loading > span:last-child {
+  display: none;
+}
+/* A separate reel lane keeps both the category value and the bar unobstructed. */
+.party-chart-rows {
+  padding-right: 0;
+}
+.party-chart-label {
+  padding-right: 54px;
+}
+.party-chart-mechanism {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  gap: 16px;
+  align-items: center;
+  min-height: 38px;
+}
+.party-chart-reel {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  color: var(--bar-color);
+  pointer-events: none;
+}
+.party-chart-reel .party-balloon {
+  color: inherit;
+  filter: drop-shadow(0 3px 2px #253a7818);
+}
+.party-chart-cord {
+  position: absolute;
+  top: 6px;
+  left: var(--bar-size);
+  right: -24px;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #b59452 0px 4px,
+    #e8c978 4px 7px
+  );
+  transform-origin: right center;
+  opacity: 0;
+  pointer-events: none;
+}
+.party-chart.is-running .party-chart-reel {
+  animation: party-reel-turn var(--bar-time) cubic-bezier(0.22, 0.65, 0.3, 1)
+    both;
+  animation-delay: var(--bar-delay);
+}
+.party-chart.is-running .party-chart-cord {
+  animation:
+    party-cord-pull var(--bar-time) cubic-bezier(0.22, 0.65, 0.3, 1) both,
+    party-cord-release 0.45s ease-in forwards;
+  animation-delay: var(--bar-delay), calc(var(--bar-time) + var(--bar-delay));
+}
+.party-chart.is-running .party-chart-reel .party-balloon-body {
+  animation: none;
+}
+@keyframes party-reel-turn {
+  from {
+    transform: rotate(-720deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+}
+@keyframes party-cord-pull {
+  from {
+    left: 0;
+    opacity: 1;
+  }
+  to {
+    left: var(--bar-size);
+    opacity: 1;
+  }
+}
+@keyframes party-cord-release {
+  to {
+    opacity: 0;
+    transform: rotate(18deg) scaleX(0.45);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .party-chart-reel,
+  .party-chart-cord {
+    animation: none !important;
+  }
+  .party-chart-cord {
+    display: none;
+  }
+}
+.admin-app[data-party-motion="off"] :is(.party-chart-reel, .party-chart-cord) {
+  animation: none !important;
+}
+.admin-app[data-party-motion="off"] .party-chart-cord {
+  display: none;
+}

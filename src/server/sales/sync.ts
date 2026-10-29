@@ -5,6 +5,7 @@ import { salesClient } from "./config.ts";
 import {
   orderFields,
   lineFields,
+  shippingFields,
   orderSchema,
   lineSchema,
   type SalesOrder,
@@ -49,6 +50,33 @@ async function completeOrder(order: SalesOrder, deadline: number) {
       throw new Error("Pedido mudou durante a leitura; repita a atualização.");
     order.lineItems.nodes.push(...next.lineItems.nodes);
     info = next.lineItems.pageInfo;
+  }
+  let shipping = order.shippingLines;
+  const shippingSeen = new Set<string>();
+  while (shipping?.pageInfo.hasNextPage) {
+    checkTime(deadline);
+    const after = shipping.pageInfo.endCursor;
+    if (!after || shippingSeen.has(after) || shippingSeen.size >= 100)
+      throw new Error("Paginação de entregas sem progresso.");
+    shippingSeen.add(after);
+    const data = await client.query<unknown>(
+      `query($id:ID!,$after:String){order(id:$id){updatedAt shippingLines(first:100,after:$after){nodes{${shippingFields}} pageInfo{hasNextPage endCursor}}}}`,
+      { id: order.id, after },
+    );
+    const next = z
+      .object({
+        order: z
+          .object({
+            updatedAt: z.string(),
+            shippingLines: orderSchema.shape.shippingLines,
+          })
+          .nullable(),
+      })
+      .parse(data).order;
+    if (!next?.shippingLines || next.updatedAt !== order.updatedAt)
+      throw new Error("Pedido mudou durante a leitura das entregas.");
+    shipping.nodes.push(...next.shippingLines.nodes);
+    shipping.pageInfo = next.shippingLines.pageInfo;
   }
   order.lineItems.pageInfo = info;
   return order;

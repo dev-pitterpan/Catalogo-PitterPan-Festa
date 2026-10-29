@@ -33,6 +33,12 @@ export default function AdminSelect({
     document.addEventListener("pointerdown", dismiss);
     return () => document.removeEventListener("pointerdown", dismiss);
   }, [open]);
+  useEffect(() => {
+    if (open)
+      document
+        .getElementById(`${listId}-${active}`)
+        ?.scrollIntoView({ block: "nearest" });
+  }, [open, active, listId]);
   function choose(index: number) {
     const option = options[index];
     if (!option) return;

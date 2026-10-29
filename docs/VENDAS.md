@@ -94,3 +94,18 @@ Um evento com falha recebe retentativa com espera crescente (até uma hora), sem
 - Rotas existentes do catálogo, carrinho/orçamento/checkout e login permanecem independentes. Se as vendas não estiverem configuradas, apenas a nova seção fica indisponível.
 
 Referências: [Order](https://shopify.dev/docs/api/admin-graphql/latest/objects/Order), [LineItem](https://shopify.dev/docs/api/admin-graphql/latest/objects/LineItem), [verificação de webhooks](https://shopify.dev/docs/apps/build/webhooks/verify-deliveries), [WebhookSubscriptionInput](https://shopify.dev/docs/api/admin-graphql/latest/input-objects/WebhookSubscriptionInput).
+
+## Fotos, modalidade de entrega e paginação
+
+O painel filtra período, situação financeira, categoria e modalidade; consulta todos os pedidos importados antes de paginar dez por vez. O ranking continua sendo o top 10 de variantes, com foto e divisão das unidades por modalidade do pedido. Os indicadores usam a seleção completa, não apenas a página. Ao carregar mais, a atualização automática fica pausada para preservar a lista; **Atualizar lista** reinicia a consulta.
+
+A foto vem de `LineItem.image.url`, com fallback para a variante na importação publicada. As linhas de frete são lidas integralmente e classificadas pelos nomes/códigos explícitos: retirada, motoboy, Sedex, outra entrega, modalidades múltiplas e não identificado. Linhas removidas não participam. Frete grátis não implica retirada, entrega local não implica motoboy, Correios/PAC não implica Sedex. A modalidade representa a escolha do pedido; não comprova postagem ou entrega. Pedidos com modalidades distintas não atribuem arbitrariamente cada item a uma delas: permanecem como múltiplos. Não são importados endereços, telefones ou códigos de rastreio.
+
+Após atualizar o código local, execute uma vez:
+
+```powershell
+npm run sales:migrate
+npm run sales:sync -- --refresh-details
+```
+
+A migração é aditiva e pode ser repetida. A opção `--refresh-details` reinicia somente o checkpoint de leitura do módulo para reler os últimos 60 dias e completar fotos/modalidades dos pedidos antigos, sem apagar pedidos, duplicar vendas ou modificar a Shopify. Não reinicie essa opção para retomar uma leitura interrompida: use apenas `npm run sales:sync`. Uma atualização concorrente bloqueia o reinício. Sem essa releitura, pedidos antigos continuam explicitamente não identificados. Os GETs toleram as colunas novas ausentes, mas a gravação dos novos metadados exige a migração.

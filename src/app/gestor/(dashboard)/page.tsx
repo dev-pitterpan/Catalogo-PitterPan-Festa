@@ -1,3 +1,4 @@
+import StockOverview from "../../../components/admin/StockOverview";
 import Image from "next/image";
 import PartyChart from "../../../components/admin/PartyChart";
 import Link from "next/link";
@@ -150,7 +151,7 @@ export default async function Overview() {
           </Link>
         ))}
       </section>
-      <div className="admin-overview-grid">
+      <div className="admin-overview-grid overview-insights-grid">
         <section className="admin-panel">
           <header>
             <div>
@@ -164,45 +165,57 @@ export default async function Overview() {
             Explorar todos os produtos <ArrowRight size={16} />
           </Link>
         </section>
-        <section className="admin-panel admin-changes-panel">
-          <header>
-            <div>
-              <span className="admin-eyebrow">CATÁLOGO EM MOVIMENTO</span>
-              <h2>O que mudou?</h2>
+        <div className="overview-insights-stack">
+          <section className="admin-panel admin-changes-panel">
+            <header>
+              <div>
+                <span className="admin-eyebrow">CATÁLOGO EM MOVIMENTO</span>
+                <h2>O que mudou?</h2>
+              </div>
+              <RefreshCw size={19} />
+            </header>
+            <p>Comparação entre as duas últimas versões publicadas.</p>
+            <div className="admin-change-metrics">
+              <div>
+                <span className="green">
+                  <ArrowUpRight size={18} /> Entraram
+                </span>
+                <strong>{number(context.changes?.added)}</strong>
+              </div>
+              <div>
+                <span className="rose">
+                  <ArrowDownRight size={18} /> Saíram
+                </span>
+                <strong>{number(context.changes?.removed)}</strong>
+              </div>
+              <div>
+                <span className="blue">
+                  <RefreshCw size={17} /> Mudaram
+                </span>
+                <strong>{number(context.changes?.changed)}</strong>
+              </div>
             </div>
-            <RefreshCw size={19} />
-          </header>
-          <p>Comparação entre as duas últimas versões publicadas.</p>
-          <div className="admin-change-metrics">
-            <div>
-              <span className="green">
-                <ArrowUpRight size={18} /> Entraram
-              </span>
-              <strong>{number(context.changes?.added)}</strong>
-            </div>
-            <div>
-              <span className="rose">
-                <ArrowDownRight size={18} /> Saíram
-              </span>
-              <strong>{number(context.changes?.removed)}</strong>
-            </div>
-            <div>
-              <span className="blue">
-                <RefreshCw size={17} /> Mudaram
-              </span>
-              <strong>{number(context.changes?.changed)}</strong>
-            </div>
-          </div>
-          {!context.previous && (
-            <p className="admin-inline-note">
-              O histórico começa a comparar mudanças a partir da segunda
-              publicação.
-            </p>
-          )}
-          <Link className="admin-text-link" href="/gestor/alteracoes/">
-            Conferir alterações <ArrowRight size={16} />
-          </Link>
-        </section>
+            {!context.previous && (
+              <p className="admin-inline-note">
+                O histórico começa a comparar mudanças a partir da segunda
+                publicação.
+              </p>
+            )}
+            <Link className="admin-text-link" href="/gestor/alteracoes/">
+              Conferir alterações <ArrowRight size={16} />
+            </Link>
+          </section>
+          <section className="admin-panel overview-stock-panel">
+            <header>
+              <div>
+                <span className="admin-eyebrow">RESUMO DO CATÁLOGO</span>
+                <h2>Como está o estoque?</h2>
+              </div>
+              <Boxes size={19} />
+            </header>
+            <StockOverview summary={s} low={context.settings.low} />
+          </section>
+        </div>
       </div>
       <div className="admin-overview-bottom">
         <section className="admin-panel">

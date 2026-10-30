@@ -56,17 +56,17 @@ export default function StockOverview({
       <div className="overview-stock-chart">
         <div className="overview-stock-ring">
           <svg
-            viewBox="0 0 160 160"
+            viewBox="0 0 240 240"
             role="group"
             aria-label="Distribuição das variantes por situação do estoque"
           >
             <circle
-              cx="80"
-              cy="80"
-              r="60"
+              cx="120"
+              cy="120"
+              r="86"
               fill="none"
               stroke="#edf2f8"
-              strokeWidth="19"
+              strokeWidth="28"
             />
             {segments.map((segment, index) => {
               const share = total ? (segment.value / total) * 100 : 0;
@@ -76,24 +76,22 @@ export default function StockOverview({
                 share > 0 && (
                   <circle
                     key={segment.label}
-                    cx="80"
-                    cy="80"
-                    r="60"
+                    cx="120"
+                    cy="120"
+                    r="86"
                     fill="none"
                     stroke={segment.color}
-                    strokeWidth={selected === index ? 23 : 19}
+                    strokeWidth={selected === index ? 34 : 28}
                     pathLength="100"
                     strokeDasharray={`${Math.max(0, share - 0.7)} ${100 - Math.max(0, share - 0.7)}`}
                     strokeDashoffset={-start}
-                    transform="rotate(-90 80 80)"
+                    transform="rotate(-90 120 120)"
                     tabIndex={0}
                     role="button"
                     aria-label={`${segment.label}: ${number(segment.value)} variantes`}
                     aria-pressed={selected === index}
-                    onMouseEnter={() => setSelected(index)}
-                    onMouseLeave={() => setSelected(null)}
+                    onPointerEnter={() => setSelected(index)}
                     onFocus={() => setSelected(index)}
-                    onBlur={() => setSelected(null)}
                     onClick={() => setSelected(index)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -107,6 +105,7 @@ export default function StockOverview({
             })}
           </svg>
           <div aria-live="polite">
+            {current && <small>{current.label}</small>}
             <strong>{number(current?.value ?? total)}</strong>
             <span>
               {current
@@ -121,7 +120,9 @@ export default function StockOverview({
               type="button"
               key={segment.label}
               aria-pressed={selected === index}
-              onClick={() => setSelected(selected === index ? null : index)}
+              onPointerEnter={() => setSelected(index)}
+              onFocus={() => setSelected(index)}
+              onClick={() => setSelected(index)}
             >
               <i style={{ background: segment.color }} />
               <span>{segment.label}</span>
@@ -130,6 +131,15 @@ export default function StockOverview({
           ))}
         </div>
       </div>
+      {selected !== null && (
+        <button
+          type="button"
+          className="admin-text-link overview-stock-reset"
+          onClick={() => setSelected(null)}
+        >
+          Ver total de variantes
+        </button>
+      )}
       <p className="admin-inline-note">
         Baixo: de 1 a {low} unidades por variante. Quantidades da última
         publicação do catálogo.

@@ -2363,3 +2363,26 @@
     justify-self: center;
   }
 }
+.admin-app .overview-stock-ring > div > small {
+  max-width: 100px;
+  text-align: center;
+  color: #7189a3;
+  font-size: 10px;
+  line-height: 1.25;
+}
+.admin-app .overview-stock-ring circle[role="button"] {
+  transition:
+    stroke-width 150ms,
+    filter 150ms;
+}
+.admin-app .overview-stock-ring circle:focus-visible {
+  stroke-width: 34;
+  filter: drop-shadow(0 0 3px #3d6baf);
+}
+.admin-app .overview-stock-reset {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 8px;
+  cursor: pointer;
+}

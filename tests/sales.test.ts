@@ -11,6 +11,7 @@ import {
   saveOrder,
   readSales,
   readSalesOrders,
+  readSalesFinance,
 } from "../src/server/sales/repository.ts";
 import { orderSchema, type SalesOrder } from "../src/server/sales/model.ts";
 import { ShopifyClient } from "../src/server/shopify/client.ts";
@@ -469,7 +470,7 @@ test("vendas pagina de dez em dez, combina situação/categoria e mantém totais
       await import("../src/server/sales/repository.ts");
     const filter = { status: "PAID" as const, category: "fest" };
     const first = await readSales(db, store, 30, undefined, filter);
-    assert.equal(first.totals[0].orders, "23");
+    assert.equal(first.totals[0].orders, "24");
     assert.equal(
       (
         await readSales(db, store, 30, undefined, {
@@ -477,7 +478,7 @@ test("vendas pagina de dez em dez, combina situação/categoria e mantém totais
           delivery: "UNKNOWN",
         })
       ).totals[0].orders,
-      "23",
+      "24",
     );
     assert.equal(first.top[0].units, "69");
     assert.equal(first.orders.length, 10);
@@ -498,14 +499,14 @@ test("vendas pagina de dez em dez, combina situação/categoria e mantém totais
       filter,
       second.nextCursor!,
     );
-    assert.equal(third.orders.length, 3);
+    assert.equal(third.orders.length, 4);
     assert.equal(third.hasMore, false);
     assert.equal(third.nextCursor, null);
     assert.equal(
       new Set(
         [...first.orders, ...second.orders, ...third.orders].map((o) => o.id),
       ).size,
-      23,
+      24,
     );
     const expired = await readSales(db, store, 30, undefined, {
       status: "EXPIRED",
@@ -651,6 +652,180 @@ test("vendas preservam fotos, agrupam modalidades por produto e filtram entregas
     );
     await db.exec(schema);
     assert.equal((await readSales(db, store, 30)).top[0].unknown_units, "18");
+  } finally {
+    await db.close();
+  }
+});
+
+test("financeiro separa recebido, estorno e expirado, preservando reembolsos de cancelados", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      await readFile(
+        new URL("../src/server/sales/schema.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    const fixtures = [
+      {
+        id: "101",
+        status: "PAID",
+        received: "100.00",
+        refunded: "0.00",
+        net: "100.00",
+        cancel: false,
+      },
+      {
+        id: "102",
+        status: "EXPIRED",
+        received: "0.00",
+        refunded: "0.00",
+        net: "0.00",
+        cancel: false,
+      },
+      {
+        id: "103",
+        status: "VOIDED",
+        received: "0.00",
+        refunded: "0.00",
+        net: "0.00",
+        cancel: false,
+      },
+      {
+        id: "104",
+        status: "PENDING",
+        received: "0.00",
+        refunded: "0.00",
+        net: "0.00",
+        cancel: false,
+      },
+      {
+        id: "105",
+        status: "PARTIALLY_PAID",
+        received: "30.00",
+        refunded: "0.00",
+        net: "30.00",
+        cancel: false,
+      },
+      {
+        id: "106",
+        status: "PARTIALLY_REFUNDED",
+        received: "100.00",
+        refunded: "25.50",
+        net: "74.50",
+        cancel: false,
+      },
+      {
+        id: "107",
+        status: "REFUNDED",
+        received: "100.00",
+        refunded: "100.00",
+        net: "0.00",
+        cancel: true,
+      },
+      {
+        id: "108",
+        status: "PAID",
+        received: "100.00",
+        refunded: "0.00",
+        net: "100.00",
+        cancel: true,
+      },
+    ];
+    for (const f of fixtures) {
+      const o = order(f.id);
+      o.displayFinancialStatus = f.status;
+      o.totalReceivedSet.shopMoney.amount = f.received;
+      o.totalRefundedSet.shopMoney.amount = f.refunded;
+      o.netPaymentSet.shopMoney.amount = f.net;
+      if (f.cancel) o.cancelledAt = o.processedAt;
+      await saveOrder(db, store, o);
+    }
+    const fake = order("999");
+    fake.test = true;
+    await saveOrder(db, store, fake);
+    await saveOrder(db, "other.myshopify.com", order("998"));
+    const data = await readSalesFinance(db, store, 30);
+    const total = data.totals[0];
+    assert.equal(total.orders, "8");
+    assert.equal(Number(total.received), 430);
+    assert.equal(Number(total.refunded), 125.5);
+    assert.equal(Number(total.net), 304.5);
+    assert.equal(total.expired, "1");
+    assert.equal(Number(total.expired_value), 100);
+    assert.equal(Number(total.voided_value), 100);
+    assert.equal(Number(total.outstanding), 170);
+    assert.equal(total.cancelled, "2");
+    assert.equal(total.refunded_orders, "2");
+    assert.equal(total.paid, "1");
+    assert.equal(
+      data.statuses.reduce((sum, s) => sum + Number(s.orders), 0),
+      8,
+    );
+    assert.equal(
+      data.daily.reduce((sum, s) => sum + Number(s.net), 0),
+      304.5,
+    );
+    const refunded = await readSalesFinance(db, store, 30, {
+      status: "REFUNDED",
+      category: "",
+    });
+    assert.equal(refunded.totals[0].orders, "1");
+    assert.equal(Number(refunded.totals[0].refunded), 100);
+    const page = await readSalesOrders(db, store, 30, {
+      status: "REFUNDED",
+      category: "",
+    });
+    assert.ok(page.orders[0].cancelled_at);
+    assert.equal(Number(page.orders[0].received), 100);
+    assert.equal(Number(page.orders[0].refunded), 100);
+    await db.query(
+      "UPDATE pitterpan_sales_orders SET net=999 WHERE store=$1 AND id=$2",
+      [store, "gid://shopify/Order/101"],
+    );
+    const mismatch = await readSalesFinance(db, store, 30);
+    assert.equal(mismatch.totals[0].inconsistent, "1");
+    assert.equal(Number(mismatch.totals[0].net), 304.5);
+    const empty = await readSalesFinance(db, store, 30, {
+      status: "all",
+      category: "",
+      start: "2020-01-01",
+      end: "2020-01-31",
+    });
+    assert.equal(empty.totals.length, 0);
+    const dollar = order("120");
+    for (const field of [
+      "totalPriceSet",
+      "totalReceivedSet",
+      "totalRefundedSet",
+      "netPaymentSet",
+    ] as const)
+      dollar[field].shopMoney.currencyCode = "USD";
+    await saveOrder(db, store, dollar);
+    const currencies = await readSalesFinance(db, store, 30);
+    assert.equal(currencies.totals.length, 2);
+    assert.equal(
+      Number(currencies.totals.find((t) => t.currency === "BRL")!.net),
+      304.5,
+    );
+    assert.equal(
+      Number(currencies.totals.find((t) => t.currency === "USD")!.net),
+      100,
+    );
+    const beforeMidnight = order("121");
+    beforeMidnight.processedAt = "2025-01-02T02:59:59Z";
+    await saveOrder(db, store, beforeMidnight);
+    const afterMidnight = order("122");
+    afterMidnight.processedAt = "2025-01-02T03:00:00Z";
+    await saveOrder(db, store, afterMidnight);
+    const day = await readSalesFinance(db, store, 30, {
+      status: "all",
+      category: "",
+      start: "2025-01-01",
+      end: "2025-01-01",
+    });
+    assert.equal(day.totals[0].orders, "1");
+    assert.equal(day.daily[0].day, "2025-01-01");
   } finally {
     await db.close();
   }

@@ -1,3 +1,4 @@
+import { todayDate, shiftDate } from "../../lib/admin/date-range.ts";
 import { classifyDelivery } from "../../lib/admin/delivery.ts";
 import { shopifyImageUrl } from "../shopify/media.ts";
 import { containsPattern } from "../../lib/admin/filters.ts";
@@ -106,8 +107,8 @@ function selection(filters: SalesFilters) {
     4 + (filters.category ? 1 : 0) + (filters.delivery !== "all" ? 1 : 0);
   const period = filters.start
     ? `o.processed_at>=($2::date::timestamp AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((($${endIndex}::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')`
-    : "o.processed_at>=now()-($2*interval '1 day')";
-  const status = `($3='all' OR ($3='CANCELLED' AND o.cancelled_at IS NOT NULL) OR (o.financial_status=$3 AND o.cancelled_at IS NULL))`;
+    : "o.processed_at>=((((now() AT TIME ZONE 'America/Sao_Paulo')::date-($2::int-1))::timestamp) AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((((now() AT TIME ZONE 'America/Sao_Paulo')::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')";
+  const status = `($3='all' OR ($3='CANCELLED' AND o.cancelled_at IS NOT NULL) OR o.financial_status=$3)`;
   const delivery =
     filters.delivery === "all"
       ? ""
@@ -147,7 +148,7 @@ export async function readSalesOrders(
     boundary = ` AND (o.processed_at,o.id)<($${values.length - 1}::timestamptz,$${values.length}::text)`;
   }
   const { rows } = await db.query<Record<string, string>>(
-    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.fulfillment_status,o.cancelled_at::text,o.currency,o.total::text,o.net::text,COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN') AS delivery_kind,COALESCE(to_jsonb(o)->>'delivery_label','') AS delivery_label
+    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.fulfillment_status,o.cancelled_at::text,o.currency,o.total::text,o.received::text,o.refunded::text,(o.received-o.refunded)::text AS net,COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN') AS delivery_kind,COALESCE(to_jsonb(o)->>'delivery_label','') AS delivery_label
      FROM pitterpan_sales_orders o WHERE ${selection(filters)}${boundary}
      ORDER BY o.processed_at DESC,o.id DESC LIMIT ${SALES_PAGE_SIZE + 1}`,
     values,
@@ -178,16 +179,7 @@ export async function readSales(
   const filters = salesFilterSchema.parse(input);
   const values = filterValues(store, period, filters);
   const where = selection(filters);
-  const totals = await db.query<Record<string, string>>(
-    `SELECT currency,count(*)::text AS orders,
-    count(*) FILTER(WHERE financial_status='PAID' AND cancelled_at IS NULL)::text AS paid,
-    count(*) FILTER(WHERE financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND cancelled_at IS NULL)::text AS pending,
-    count(*) FILTER(WHERE cancelled_at IS NOT NULL)::text AS cancelled,
-    COALESCE(sum(received),0)::text AS received,COALESCE(sum(refunded),0)::text AS refunded,COALESCE(sum(net),0)::text AS net,
-    COALESCE(avg(total) FILTER(WHERE financial_status='PAID' AND cancelled_at IS NULL),0)::text AS ticket
-    FROM pitterpan_sales_orders o WHERE ${where} GROUP BY currency ORDER BY currency`,
-    values,
-  );
+  const totals = await financialTotals(db, values, where);
   const items = await db.query<Record<string, string>>(
     `SELECT COALESCE(i.variant_id,i.product_id,i.id) AS id,min(i.title) AS title,min(i.sku) AS sku,
     sum(i.current_quantity)::text AS units,
@@ -199,9 +191,9 @@ export async function readSales(
     sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='MIXED')::text AS mixed_units,
     sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='UNKNOWN')::text AS unknown_units
     FROM pitterpan_sales_items i JOIN pitterpan_sales_orders o ON o.store=i.store AND o.id=i.order_id
-    WHERE ${where} AND o.cancelled_at IS NULL AND o.financial_status=ANY($${values.length + 1}::text[])${filters.category ? ` AND EXISTS (SELECT 1 FROM catalog_items ci JOIN catalog_state cs ON cs.singleton=true AND cs.active_import=ci.import_id WHERE ci.product_id=i.product_id AND ci.category ILIKE $4)` : ""}
+    WHERE ${where} AND o.received>0 AND o.cancelled_at IS NULL AND o.financial_status=ANY($${values.length + 1}::text[])${filters.category ? ` AND EXISTS (SELECT 1 FROM catalog_items ci JOIN catalog_state cs ON cs.singleton=true AND cs.active_import=ci.import_id WHERE ci.product_id=i.product_id AND ci.category ILIKE $4)` : ""}
     GROUP BY COALESCE(i.variant_id,i.product_id,i.id) HAVING sum(i.current_quantity)>0 ORDER BY sum(i.current_quantity) DESC,id LIMIT 10`,
-    [...values, paidStatuses],
+    [...values, paidStatuses.filter((status) => status !== "REFUNDED")],
   );
   // Existing sales can reuse current catalog photos before the metadata backfill.
   const catalog = await db.query<{ exists: boolean }>(
@@ -257,5 +249,77 @@ export async function readSales(
     failed: Number(queue.rows[0].failed),
     cursor: cursor.rows[0].id,
     events: events.rows,
+  };
+}
+
+async function financialTotals(
+  db: SqlClient,
+  values: unknown[],
+  where: string,
+) {
+  return db.query<Record<string, string>>(
+    `SELECT currency,count(*)::text AS orders,
+ count(*) FILTER(WHERE financial_status='PAID' AND cancelled_at IS NULL)::text AS paid,
+ count(*) FILTER(WHERE financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND cancelled_at IS NULL)::text AS pending,
+ count(*) FILTER(WHERE cancelled_at IS NOT NULL)::text AS cancelled,
+ count(*) FILTER(WHERE financial_status='EXPIRED')::text AS expired,
+ count(*) FILTER(WHERE financial_status='VOIDED')::text AS voided,
+ count(*) FILTER(WHERE refunded>0)::text AS refunded_orders,
+ COALESCE(sum(received),0)::text AS received,COALESCE(sum(refunded),0)::text AS refunded,
+ COALESCE(sum(received-refunded),0)::text AS net,
+ COALESCE(sum(total) FILTER(WHERE financial_status='PAID' AND cancelled_at IS NULL),0)::text AS paid_value,
+ COALESCE(sum(GREATEST(total-received,0)) FILTER(WHERE financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND cancelled_at IS NULL),0)::text AS outstanding,
+ COALESCE(sum(total) FILTER(WHERE financial_status='EXPIRED'),0)::text AS expired_value,
+ COALESCE(sum(total) FILTER(WHERE financial_status='VOIDED'),0)::text AS voided_value,
+ COALESCE(sum(total) FILTER(WHERE cancelled_at IS NOT NULL),0)::text AS cancelled_value,
+ count(*) FILTER(WHERE net<>received-refunded)::text AS inconsistent,
+ COALESCE(avg(total) FILTER(WHERE financial_status='PAID' AND cancelled_at IS NULL),0)::text AS ticket
+ FROM pitterpan_sales_orders o WHERE ${where} GROUP BY currency ORDER BY currency`,
+    values,
+  );
+}
+export async function readSalesFinance(
+  db: SqlClient,
+  store: string,
+  days: number,
+  input: SalesFilters = { status: "all", category: "", delivery: "all" },
+) {
+  const period = Math.max(1, Math.min(60, Math.floor(days) || 30));
+  const end = input.end || todayDate(),
+    start = input.start || shiftDate(end, 1 - period);
+  const filters = salesFilterSchema.parse({ ...input, start, end });
+  const values = filterValues(store, period, filters),
+    where = selection(filters);
+  const totals = await financialTotals(db, values, where);
+  const daily = await db.query<Record<string, string>>(
+    `SELECT currency,(o.processed_at AT TIME ZONE 'America/Sao_Paulo')::date::text AS day,
+ count(*)::text AS orders,COALESCE(sum(received),0)::text AS received,COALESCE(sum(refunded),0)::text AS refunded,COALESCE(sum(received-refunded),0)::text AS net
+ FROM pitterpan_sales_orders o WHERE ${where} GROUP BY currency,day ORDER BY day`,
+    values,
+  );
+  const statuses = await db.query<{
+    currency: string;
+    status: string;
+    orders: string;
+    order_value: string;
+    received: string;
+    refunded: string;
+    net: string;
+  }>(
+    `SELECT currency,financial_status AS status,count(*)::text AS orders,sum(total)::text AS order_value,sum(received)::text AS received,sum(refunded)::text AS refunded,sum(received-refunded)::text AS net FROM pitterpan_sales_orders o WHERE ${where} GROUP BY currency,financial_status ORDER BY count(*) DESC,financial_status`,
+    values,
+  );
+  const state = await db.query<Record<string, string | null>>(
+    "SELECT completed_at::text,until_at::text FROM pitterpan_sales_sync WHERE store=$1",
+    [store],
+  );
+  return {
+    totals: totals.rows,
+    daily: daily.rows,
+    statuses: statuses.rows,
+    state: state.rows[0] || null,
+    window: { start, end },
+    timezone: "America/Sao_Paulo",
+    source: "shopify_orders" as const,
   };
 }

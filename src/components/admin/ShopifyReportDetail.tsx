@@ -42,7 +42,7 @@ export default function ShopifyReportDetail({
   params: string;
 }) {
   const report = reportById(id)!;
-  const [chartMode, setChartMode] = useState(report.series ? "line" : "depth");
+  const [chartMode, setChartMode] = useState("line");
   const [data, setData] = useState<Data | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(true),
@@ -135,6 +135,15 @@ export default function ShopifyReportDetail({
           <Download size={15} /> Exportar
         </button>
       </header>
+      {["sales", "campaign_sales"].includes(report.dataset) && (
+        <p className="finance-definition">
+          Critério comercial da Shopify: este relatório pode incluir pedidos não
+          pagos e cancelados. Valores de vendas e ajustes não equivalem a
+          dinheiro recebido ou estornado. Para conferir pagamentos, volte ao
+          resumo financeiro ou acesse{" "}
+          <a href="/gestor/vendas/">Vendas e vendidos</a>.
+        </p>
+      )}
       {busy && (
         <div className="analytics-loading" role="status">
           <PitterSpinner label="Consultando este relatório na Shopify…" />
@@ -286,7 +295,12 @@ export default function ShopifyReportDetail({
               )}
               <details className="analytics-daily-values">
                 <summary>Conferir os dados do relatório</summary>
-                <div className="analytics-table-scroll">
+                <div
+                  className="analytics-table-scroll finance-table-viewport"
+                  role="region"
+                  tabIndex={0}
+                  aria-label="Dados do relatório com rolagem"
+                >
                   <table className="admin-table">
                     <thead>
                       <tr>

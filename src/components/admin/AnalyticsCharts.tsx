@@ -52,14 +52,13 @@ export function RevenueChart({
     segments.at(-1)!.push({ i, v });
   });
   const chosen = active === null ? null : rows[active];
-  const ticks = Array.from(
-    new Set([
-      0,
-      Math.floor((rows.length - 1) / 3),
-      Math.floor((2 * (rows.length - 1)) / 3),
-      rows.length - 1,
-    ]),
-  );
+  const ticks = [
+    ...new Set(
+      Array.from({ length: 7 }, (_, i) =>
+        Math.round((i * Math.max(0, rows.length - 1)) / 6),
+      ),
+    ),
+  ];
   return (
     <div className="analytics-chart-wrap">
       <div className="analytics-chart-readout" aria-live="polite">

@@ -156,6 +156,16 @@ try {
     ).status,
     503,
   );
+  assert.equal(
+    (await rawFetch(base + "/api/admin/sales/?view=finance&days=1")).status,
+    401,
+  );
+  const filteredSales = await fetch(
+    base +
+      "/gestor/vendas/?days=7&status=REFUNDED&start=2026-10-01&end=2026-10-02",
+  );
+  assert.equal(filteredSales.status, 200);
+  assert.ok((await filteredSales.text()).includes("Reembolsado"));
   const analyticsPage = await fetch(base + "/gestor/analises/");
   const analyticsHtml = await analyticsPage.text();
   assert.equal(analyticsPage.status, 200);

@@ -41,19 +41,29 @@ const status: Record<string, string> = {
   EXPIRED: "Expirado",
   UNKNOWN: "Não informado",
 };
-export default function SalesDashboard() {
-  const [filters, setFilters] = useState<SalesFilters>({
-    status: "all",
-    category: "",
-    delivery: "all",
-  });
-  const [categoryDraft, setCategoryDraft] = useState("");
+export default function SalesDashboard({
+  initialFilters,
+  initialDays = 30,
+}: {
+  initialFilters?: SalesFilters;
+  initialDays?: number;
+}) {
+  const [filters, setFilters] = useState<SalesFilters>(
+    initialFilters || {
+      status: "all",
+      category: "",
+      delivery: "all",
+    },
+  );
+  const [categoryDraft, setCategoryDraft] = useState(
+    initialFilters?.category || "",
+  );
   const [moreLoading, setMoreLoading] = useState(false);
   const [moreError, setMoreError] = useState("");
   const generation = useRef(0);
   const expanded = useRef(false);
   const moreBusy = useRef(false);
-  const [days, setDays] = useState(30),
+  const [days, setDays] = useState(initialDays),
     [data, setData] = useState<Data | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
@@ -276,6 +286,7 @@ export default function SalesDashboard() {
               setFilters((old) => ({ ...old, start: "", end: "" }));
             }}
             options={[
+              { value: "1", label: "Hoje" },
               { value: "7", label: "Últimos 7 dias" },
               { value: "30", label: "Últimos 30 dias" },
               { value: "60", label: "Últimos 60 dias" },
@@ -361,9 +372,10 @@ export default function SalesDashboard() {
         </button>
       </div>
       <p className="sales-definition">
-        Pedidos processados no período, com o estado financeiro atual.
-        Recebimentos incluem frete e impostos; não são uma apuração contábil por
-        data de pagamento. Pedidos de teste são excluídos.
+        Pedidos processados no período, com o estado financeiro atual. Estornos
+        são os valores acumulados desses pedidos e podem ter ocorrido depois do
+        período selecionado. Recebimentos incluem frete e impostos; não são uma
+        apuração contábil por data de pagamento. Pedidos de teste são excluídos.
         {filters.category &&
           " Os valores são dos pedidos completos que contêm produtos dessa categoria na última importação; o ranking inclui somente os produtos correspondentes."}
       </p>
@@ -443,15 +455,21 @@ export default function SalesDashboard() {
               <div className="admin-stats sales-stats">
                 {[
                   {
-                    label: "Recebimentos líquidos",
+                    label: "Líquido após estornos",
                     value: money(t.net, t.currency),
                     detail: "Recebido menos reembolsado",
                     icon: CircleDollarSign,
                   },
                   {
-                    label: "Pedidos pagos",
+                    label: "Recebido confirmado",
+                    value: money(t.received, t.currency),
+                    detail: "Valores recebidos informados pela Shopify",
+                    icon: CircleDollarSign,
+                  },
+                  {
+                    label: "Pagos não cancelados",
                     value: count(t.paid),
-                    detail: `${count(t.orders)} pedidos no período`,
+                    detail: `${money(t.paid_value, t.currency)} em pedidos pagos e não cancelados`,
                     icon: ShoppingCart,
                   },
                   {
@@ -461,7 +479,7 @@ export default function SalesDashboard() {
                     icon: ArrowUpRight,
                   },
                   {
-                    label: "Reembolsos",
+                    label: "Estornos / reembolsos",
                     value: money(t.refunded, t.currency),
                     detail: `Recebido: ${money(t.received, t.currency)}`,
                     icon: ArrowDownLeft,
@@ -479,10 +497,53 @@ export default function SalesDashboard() {
                   </div>
                 ))}
               </div>
+              <div className="sales-status-values">
+                {[
+                  {
+                    label: "A receber",
+                    count: t.pending,
+                    value: t.outstanding,
+                    status: "PENDING",
+                  },
+                  {
+                    label: "Expirados",
+                    count: t.expired,
+                    value: t.expired_value,
+                    status: "EXPIRED",
+                  },
+                  {
+                    label: "Anulados",
+                    count: t.voided,
+                    value: t.voided_value,
+                    status: "VOIDED",
+                  },
+                  {
+                    label: "Cancelados",
+                    count: t.cancelled,
+                    value: t.cancelled_value,
+                    status: "CANCELLED",
+                  },
+                ].map((s) => (
+                  <div key={s.label}>
+                    <span>
+                      {s.label} · {count(s.count)}
+                    </span>
+                    <strong>{money(s.value, t.currency)}</strong>
+                  </div>
+                ))}
+              </div>
+              {Number(t.inconsistent) > 0 && (
+                <p className="admin-data-notice">
+                  Há {t.inconsistent} pedidos com divergência entre os campos
+                  financeiros da Shopify. O líquido exibido usa recebido menos
+                  estornado; sincronize para conferir.
+                </p>
+              )}
               <p className="sales-definition">
                 {count(t.pending)} pedidos aguardando pagamento/conclusão ·{" "}
-                {count(t.cancelled)} cancelados. Cancelamentos podem ter valores
-                recebidos ainda não reembolsados.
+                {count(t.cancelled)} cancelados. Expirados e anulados mostram o
+                valor dos pedidos, não dinheiro recebido. Cancelamentos são uma
+                situação independente do pagamento: não some esses quadros.
               </p>
             </section>
           ))}
@@ -534,9 +595,9 @@ export default function SalesDashboard() {
                 <Boxes size={22} />
               </header>
               <p className="sales-definition">
-                Top 10 por unidades atuais em pedidos pagos ou reembolsados
-                parcialmente. Unidades removidas e reembolsadas são descontadas;
-                cancelados não entram.
+                Top 10 por unidades atuais em pedidos com recebimento, pagos ou
+                reembolsados parcialmente. Unidades removidas e reembolsadas são
+                descontadas; cancelados não entram.
               </p>
               {data.top.length ? (
                 <ol className="sales-ranking">
@@ -598,7 +659,12 @@ export default function SalesDashboard() {
                 {expanded.current &&
                   " A atualização automática da lista fica pausada durante esta consulta."}
               </p>
-              <div className="admin-table-scroll">
+              <div
+                className="admin-table-scroll finance-table-viewport"
+                role="region"
+                tabIndex={0}
+                aria-label="Pedidos com rolagem"
+              >
                 <table className="admin-table">
                   <thead>
                     <tr>
@@ -606,12 +672,15 @@ export default function SalesDashboard() {
                       <th>Situação</th>
                       <th>Entrega escolhida</th>
                       <th>Total do pedido</th>
+                      <th>Recebido</th>
+                      <th>Estornado</th>
+                      <th>Líquido</th>
                     </tr>
                   </thead>
                   <tbody>
                     {!data.orders.length && (
                       <tr>
-                        <td colSpan={4}>
+                        <td colSpan={7}>
                           Nenhum pedido corresponde aos filtros escolhidos.
                         </td>
                       </tr>
@@ -630,11 +699,13 @@ export default function SalesDashboard() {
                           <span
                             className={`admin-badge ${o.cancelled_at ? "rose" : o.financial_status === "PAID" ? "green" : "blue"}`}
                           >
-                            {o.cancelled_at
-                              ? "Cancelado"
-                              : status[o.financial_status] ||
-                                o.financial_status}
+                            {status[o.financial_status] || o.financial_status}
                           </span>
+                          {o.cancelled_at && (
+                            <small className="admin-badge rose">
+                              Pedido cancelado
+                            </small>
+                          )}
                         </td>
                         <td>
                           <DeliveryMark kind={o.delivery_kind} />
@@ -651,12 +722,10 @@ export default function SalesDashboard() {
                                   : o.fulfillment_status}
                           </small>
                         </td>
-                        <td>
-                          {money(o.total, o.currency)}
-                          <small>
-                            Líquido recebido: {money(o.net, o.currency)}
-                          </small>
-                        </td>
+                        <td>{money(o.total, o.currency)}</td>
+                        <td>{money(o.received, o.currency)}</td>
+                        <td>{money(o.refunded, o.currency)}</td>
+                        <td>{money(o.net, o.currency)}</td>
                       </tr>
                     ))}
                   </tbody>

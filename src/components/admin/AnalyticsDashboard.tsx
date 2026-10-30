@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -18,6 +19,7 @@ import {
 import AdminSelect from "./AdminSelect";
 import DateRangePicker from "./DateRangePicker";
 import PitterSpinner from "./PitterSpinner";
+import FinanceOverview from "./FinanceOverview";
 import InteractiveColumns from "./InteractiveColumns";
 import { RevenueChart, shortDate, numberValue } from "./AnalyticsCharts";
 import {
@@ -31,14 +33,15 @@ type Overview = Awaited<ReturnType<typeof readShopifyOverview>>;
 const questions = [
   {
     id: "sales-time",
-    title: "Quanto vendemos?",
-    description: "Veja a evolução das vendas ao longo dos dias.",
+    title: "Como evoluíram as vendas?",
+    description: "Visão comercial da Shopify, separada dos pagamentos.",
     icon: ChartNoAxesCombined,
   },
   {
     id: "sales-product",
     title: "Quais produtos mais venderam?",
-    description: "Encontre os produtos que puxam o resultado.",
+    description:
+      "Unidades atuais em pedidos pagos, sem cancelados ou estorno total.",
     icon: ShoppingBag,
   },
   {
@@ -72,6 +75,7 @@ const normalize = (s: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 export default function AnalyticsDashboard() {
+  const router = useRouter();
   const [days, setDays] = useState("30"),
     [range, setRange] = useState<DateRange>({ start: "", end: "" }),
     [revision, setRevision] = useState(0),
@@ -192,141 +196,157 @@ export default function AnalyticsDashboard() {
               {error} Você ainda pode abrir os relatórios abaixo.
             </p>
           )}
-          {data && (
-            <section className="analytics-kpis" aria-label="Resumo do período">
-              {[
-                {
-                  key: "total_sales",
-                  label: "Total de vendas",
-                  tone: "blue",
-                  hint: "Valor total de vendas conforme o relatório Shopify.",
-                },
-                {
-                  key: "orders",
-                  label: "Pedidos",
-                  tone: "gold",
-                  hint: "Quantidade de pedidos registrados no período.",
-                },
-                {
-                  key: "average_order_value",
-                  label: "Valor médio por pedido",
-                  tone: "rose",
-                  hint: "Ticket médio calculado pela Shopify.",
-                },
-                {
-                  key: "gross_sales",
-                  label: "Vendas antes dos descontos",
-                  tone: "teal",
-                  hint: "Vendas brutas antes de descontos e devoluções.",
-                },
-              ].map((k) => {
-                const current = numberValue(data.totals.rows[0]?.[k.key]),
-                  before = numberValue(data.previous?.rows[0]?.[k.key]);
-                const change =
-                  current !== null && before !== null && before !== 0
-                    ? (100 * (current - before)) / Math.abs(before)
-                    : null;
-                return (
-                  <article
-                    className={`analytics-kpi analytics-kpi--${k.tone}`}
-                    key={k.key}
-                    title={k.hint}
-                  >
-                    <div className="analytics-kpi-top">{k.label}</div>
-                    <strong>
-                      {current === null
-                        ? "—"
-                        : k.key === "orders"
-                          ? current.toLocaleString("pt-BR")
-                          : money(current)}
-                    </strong>
-                    <div className="analytics-kpi-comparison">
-                      {change === null ? (
-                        <small>Sem base para comparação</small>
-                      ) : (
-                        <>
-                          <span
-                            className={`analytics-change ${change < 0 ? "is-down" : "is-up"}`}
-                          >
-                            {change < 0 ? (
-                              <ArrowDownRight size={14} />
-                            ) : (
-                              <ArrowUpRight size={14} />
-                            )}{" "}
-                            {change > 0 ? "+" : ""}
-                            {change.toLocaleString("pt-BR", {
-                              maximumFractionDigits: 1,
-                            })}
-                            %
-                          </span>
-                          <small>vs. período anterior</small>
-                        </>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </section>
-          )}
-          {data?.trend && (
-            <section className="admin-panel analytics-featured-chart">
-              <header>
-                <div>
-                  <span className="analytics-eyebrow">
-                    O RITMO DAS SUAS VENDAS
-                  </span>
-                  <h2>Seu resultado, dia após dia.</h2>
-                  <p>Passe pelo gráfico para descobrir o valor de cada dia.</p>
-                </div>
-                <div
-                  className="pitter-chart-switch"
-                  role="group"
-                  aria-label="Visualização das vendas"
-                >
-                  <button
-                    aria-pressed={homeChart === "line"}
-                    onClick={() => setHomeChart("line")}
-                  >
-                    Evolução
-                  </button>
-                  <button
-                    aria-pressed={homeChart === "depth"}
-                    onClick={() => setHomeChart("depth")}
-                  >
-                    Colunas 3D
-                  </button>
-                </div>
-              </header>
-              {homeChart === "depth" ? (
-                <InteractiveColumns
-                  table={data.trend}
-                  metric={{
-                    key: "total_sales",
-                    label: "Total de vendas",
-                    format: "money",
-                  }}
-                  series
-                  format={(v) => {
-                    const n = numberValue(v);
-                    return n === null ? "—" : money(n);
-                  }}
-                />
-              ) : (
-                <RevenueChart
-                  table={data.trend}
-                  currency={data.currency}
-                  money={(v) => (v === null ? "—" : money(v))}
-                  showTable={false}
-                />
-              )}
-              <button
-                className="analytics-expand"
-                onClick={() => setReportId("sales-time")}
+          <FinanceOverview params={params} />
+          <details className="analytics-shopify-comparison">
+            <summary>Comparar com o Shopify Analytics</summary>
+            <p className="finance-definition">
+              Os relatórios de vendas da Shopify incluem pedidos pendentes, não
+              pagos e cancelados. Vendas registradas e ajustes comerciais não
+              equivalem a pagamentos recebidos. Use os quadros financeiros acima
+              para conferir recebido e estornado.
+            </p>
+            {data && (
+              <section
+                className="analytics-kpis"
+                aria-label="Resumo do período"
               >
-                Explorar todos os detalhes das vendas <ChevronRight size={14} />
-              </button>
-            </section>
-          )}
+                {[
+                  {
+                    key: "total_sales",
+                    label: "Vendas registradas (Shopify)",
+                    tone: "blue",
+                    hint: "Valor total de vendas conforme o relatório Shopify.",
+                  },
+                  {
+                    key: "orders",
+                    label: "Pedidos no Analytics",
+                    tone: "gold",
+                    hint: "Quantidade de pedidos registrados no período.",
+                  },
+                  {
+                    key: "average_order_value",
+                    label: "Valor médio por pedido",
+                    tone: "rose",
+                    hint: "Ticket médio calculado pela Shopify.",
+                  },
+                  {
+                    key: "gross_sales",
+                    label: "Vendas antes dos descontos",
+                    tone: "teal",
+                    hint: "Vendas brutas antes de descontos e devoluções.",
+                  },
+                ].map((k) => {
+                  const current = numberValue(data.totals.rows[0]?.[k.key]),
+                    before = numberValue(data.previous?.rows[0]?.[k.key]);
+                  const change =
+                    current !== null && before !== null && before !== 0
+                      ? (100 * (current - before)) / Math.abs(before)
+                      : null;
+                  return (
+                    <article
+                      className={`analytics-kpi analytics-kpi--${k.tone}`}
+                      key={k.key}
+                      title={k.hint}
+                    >
+                      <div className="analytics-kpi-top">{k.label}</div>
+                      <strong>
+                        {current === null
+                          ? "—"
+                          : k.key === "orders"
+                            ? current.toLocaleString("pt-BR")
+                            : money(current)}
+                      </strong>
+                      <div className="analytics-kpi-comparison">
+                        {change === null ? (
+                          <small>Sem base para comparação</small>
+                        ) : (
+                          <>
+                            <span
+                              className={`analytics-change ${change < 0 ? "is-down" : "is-up"}`}
+                            >
+                              {change < 0 ? (
+                                <ArrowDownRight size={14} />
+                              ) : (
+                                <ArrowUpRight size={14} />
+                              )}{" "}
+                              {change > 0 ? "+" : ""}
+                              {change.toLocaleString("pt-BR", {
+                                maximumFractionDigits: 1,
+                              })}
+                              %
+                            </span>
+                            <small>vs. período anterior</small>
+                          </>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </section>
+            )}
+            {data?.trend && (
+              <section className="admin-panel analytics-featured-chart">
+                <header>
+                  <div>
+                    <span className="analytics-eyebrow">
+                      CRITÉRIO DO SHOPIFY ANALYTICS
+                    </span>
+                    <h2>Vendas registradas por dia.</h2>
+                    <p>
+                      Passe pelo gráfico para descobrir o valor de cada dia.
+                    </p>
+                  </div>
+                  <div
+                    className="pitter-chart-switch"
+                    role="group"
+                    aria-label="Visualização das vendas"
+                  >
+                    <button
+                      aria-pressed={homeChart === "line"}
+                      onClick={() => setHomeChart("line")}
+                    >
+                      Evolução
+                    </button>
+                    <button
+                      aria-pressed={homeChart === "depth"}
+                      onClick={() => setHomeChart("depth")}
+                    >
+                      Colunas 3D
+                    </button>
+                  </div>
+                </header>
+                {homeChart === "depth" ? (
+                  <InteractiveColumns
+                    table={data.trend}
+                    metric={{
+                      key: "total_sales",
+                      label: "Vendas registradas (Shopify)",
+                      format: "money",
+                    }}
+                    series
+                    format={(v) => {
+                      const n = numberValue(v);
+                      return n === null ? "—" : money(n);
+                    }}
+                  />
+                ) : (
+                  <RevenueChart
+                    table={data.trend}
+                    currency={data.currency}
+                    money={(v) => (v === null ? "—" : money(v))}
+                    showTable={false}
+                  />
+                )}
+                <button
+                  className="analytics-expand"
+                  onClick={() => setReportId("sales-time")}
+                >
+                  Explorar todos os detalhes das vendas{" "}
+                  <ChevronRight size={14} />
+                </button>
+              </section>
+            )}
+          </details>
           <div className="analytics-guide-intro">
             <h2>O que você quer descobrir?</h2>
             <p>Clique em uma pergunta para explorar o gráfico e os dados.</p>
@@ -336,7 +356,11 @@ export default function AnalyticsDashboard() {
               <button
                 className="analytics-question-card"
                 key={id}
-                onClick={() => setReportId(id)}
+                onClick={() =>
+                  id === "sales-product"
+                    ? router.push(`/gestor/vendas/?${params}#sold-products`)
+                    : setReportId(id)
+                }
               >
                 <Icon size={22} />
                 <span>
@@ -395,8 +419,8 @@ export default function AnalyticsDashboard() {
       )}
       <footer className="analytics-simple-footer">
         <span>
-          Fonte: Shopify Analytics{data ? ` · ${data.timezone}` : ""}. Alguns
-          dados dependem do processamento da Shopify.
+          Pagamentos: pedidos sincronizados da Shopify. Relatórios comerciais:
+          Shopify Analytics{data ? ` · ${data.timezone}` : ""}.
         </span>
         <a
           href="https://admin.shopify.com/store/pitter-pan/analytics/reports"

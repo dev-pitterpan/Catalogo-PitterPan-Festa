@@ -1,3 +1,5 @@
+import ChangeHistoryFilters from "../../../../components/admin/ChangeHistoryFilters";
+import { dateRangeSchema } from "../../../../lib/admin/date-range";
 import ProductThumbnail from "../../../../components/admin/ProductThumbnail";
 import {
   adminContext,
@@ -14,12 +16,18 @@ import { formatMoney } from "../../../../lib/money";
 export default async function Changes({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; start?: string; end?: string }>;
 }) {
-  const raw = (await searchParams).page;
+  const params = await searchParams;
+  const raw = params.page;
+  const parsed = dateRangeSchema.safeParse({
+    start: params.start || "",
+    end: params.end || "",
+  });
+  const range = parsed.success ? parsed.data : { start: "", end: "" };
   const page = Math.max(1, Math.min(10000, Number(raw) || 1));
   const context = await adminContext();
-  const data = await adminChanges(Math.floor(page));
+  const data = await adminChanges(Math.floor(page), range);
   const labels: Record<string, string> = {
     added: "Entrou no catálogo",
     removed: "Saiu desta versão",
@@ -30,14 +38,18 @@ export default async function Changes({
       <PageHeading
         eyebrow="SHOPIFY → CATÁLOGO"
         title="Histórico de alterações"
-        description="Confira produtos incluídos, removidos e mudanças de preço ou estoque entre a última sincronização publicada e a versão anterior. As alterações da Shopify aparecem aqui depois de sincronizadas e publicadas no catálogo."
+        description="Veja o que mudou em cada publicação do catálogo. A data indica quando a sincronização foi publicada, não o horário exato da edição na Shopify. Cada versão é comparada com a publicação anterior."
       />
       <DataNotice context={context} />
+      <ChangeHistoryFilters range={range} />
+      {!parsed.success && (
+        <p role="alert">Escolha um período válido de até 366 dias.</p>
+      )}
       <div className="admin-mini-stats">
         {[
-          ["Entraram", context.changes?.added],
-          ["Saíram", context.changes?.removed],
-          ["Alterados", context.changes?.changed],
+          ["Entraram", data.counts.added],
+          ["Saíram", data.counts.removed],
+          ["Alterados", data.counts.changed],
         ].map(([label, value]) => (
           <div key={String(label)}>
             <span>{label}</span>
@@ -54,22 +66,33 @@ export default async function Changes({
         ) : !data.items.length ? (
           <EmptyState
             title="Nenhuma alteração encontrada"
-            description="As versões comparadas têm os mesmos dados acompanhados pelo painel."
+            description="Não há diferenças registradas nas publicações deste período. Tente outro intervalo ou escolha a última publicação."
           />
         ) : (
           <div className="admin-table-scroll">
             <table className="admin-table">
               <thead>
                 <tr>
+                  <th>Publicado em</th>
                   <th>Produto / SKU</th>
                   <th>Alteração</th>
-                  <th>Preço anterior → atual</th>
-                  <th>Estoque anterior → atual</th>
+                  <th>Preço anterior</th>
+                  <th>Preço atual</th>
+                  <th>Estoque anterior</th>
+                  <th>Estoque atual</th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={`${item.version}-${item.id}`}>
+                    <td>
+                      {new Intl.DateTimeFormat("pt-BR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                        timeZone: "America/Sao_Paulo",
+                      }).format(new Date(item.recorded_at))}
+                      <small>Horário de Brasília</small>
+                    </td>
                     <td>
                       <div className="admin-product-name admin-change-product">
                         <ProductThumbnail src={item.image} />
@@ -85,15 +108,44 @@ export default async function Changes({
                       >
                         {labels[item.kind]}
                       </span>
+                      <small>
+                        {item.kind === "added"
+                          ? "Produto novo nesta versão"
+                          : item.kind === "removed"
+                            ? "Produto ausente nesta versão; não indica venda"
+                            : item.fields.join(", ")}
+                      </small>
                     </td>
                     <td>
-                      {item.old_price
-                        ? formatMoney(item.old_price, "BRL")
-                        : "—"}{" "}
-                      → {item.price ? formatMoney(item.price, "BRL") : "—"}
+                      {item.kind === "added"
+                        ? "Não existia no catálogo"
+                        : item.old_price !== null
+                          ? formatMoney(
+                              item.old_price,
+                              item.old_currency || "BRL",
+                            )
+                          : "Não informado"}
                     </td>
                     <td>
-                      {number(item.old_stock)} → {number(item.stock)}
+                      {item.kind === "removed"
+                        ? "Fora do catálogo"
+                        : item.price !== null
+                          ? formatMoney(item.price, item.currency || "BRL")
+                          : "Não informado"}
+                    </td>
+                    <td>
+                      {item.kind === "added"
+                        ? "Não existia no catálogo"
+                        : item.old_stock === null
+                          ? "Não informado"
+                          : `${number(item.old_stock)} un.`}
+                    </td>
+                    <td>
+                      {item.kind === "removed"
+                        ? "Fora do catálogo"
+                        : item.stock === null
+                          ? "Não informado"
+                          : `${number(item.stock)} un.`}
                     </td>
                   </tr>
                 ))}
@@ -102,7 +154,9 @@ export default async function Changes({
           </div>
         )}
       </section>
-      {context.previous && <Pagination {...data} base="/gestor/alteracoes/" />}
+      {context.previous && (
+        <Pagination {...data} base="/gestor/alteracoes/" params={range} />
+      )}
     </>
   );
 }

@@ -262,35 +262,83 @@ export async function adminProducts(input: AdminQuery) {
     page,
   };
 }
-export async function adminChanges(page: number) {
+export async function adminChanges(
+  page: number,
+  range = { start: "", end: "" },
+) {
   const context = await adminContext();
-  if (!context.active || !context.previous)
-    return { items: [], total: 0, pages: 1, page: 1 };
-  const sql = `WITH a AS(SELECT * FROM catalog_items WHERE import_id=$1),b AS(SELECT * FROM catalog_items WHERE import_id=$2)
- SELECT COALESCE(a.variant_id,b.variant_id) AS id,COALESCE(a.name,b.name) AS name,COALESCE(a.sku,b.sku,a.id,b.id) AS sku,COALESCE(a.image_url,b.image_url) AS image,
- CASE WHEN b.variant_id IS NULL THEN 'added' WHEN a.variant_id IS NULL THEN 'removed' ELSE 'changed' END AS kind,
- a.price::text AS price,b.price::text AS old_price,a.inventory_quantity AS stock,b.inventory_quantity AS old_stock
- FROM a FULL JOIN b USING(variant_id) WHERE a.variant_id IS NULL OR b.variant_id IS NULL OR ROW(a.name,a.price,a.inventory_quantity,a.image_url,a.category) IS DISTINCT FROM ROW(b.name,b.price,b.inventory_quantity,b.image_url,b.category)`;
-  const total = Object.values(context.changes!).reduce((a, b) => a + b, 0),
-    pages = Math.max(1, Math.ceil(total / 20));
+  const empty = {
+    items: [] as ChangeRow[],
+    total: 0,
+    pages: 1,
+    page: 1,
+    counts: { added: 0, removed: 0, changed: 0 },
+  };
+  if (!context.active || !context.previous) return empty;
+  const sql = `WITH versions AS (
+    SELECT id,completed_at,lag(id) OVER(PARTITION BY store_domain ORDER BY completed_at,id) AS previous
+    FROM catalog_imports WHERE status IN ('active','retired') AND completed_at IS NOT NULL
+    AND store_domain=(SELECT store_domain FROM catalog_imports WHERE id=$1)
+  ), pairs AS (
+    SELECT * FROM versions WHERE previous IS NOT NULL AND
+    (($2='' AND id=$1) OR ($2<>'' AND completed_at >= (NULLIF($2,'')::date::timestamp AT TIME ZONE 'America/Sao_Paulo') AND completed_at < ((NULLIF($3,'')::date+1)::timestamp AT TIME ZONE 'America/Sao_Paulo')))
+  ), changes AS (
+    SELECT p.id AS version,p.completed_at::text AS recorded_at,c.* FROM pairs p
+    CROSS JOIN LATERAL (
+      SELECT COALESCE(a.variant_id,b.variant_id) AS id,COALESCE(a.name,b.name) AS name,COALESCE(a.sku,b.sku,a.id,b.id) AS sku,COALESCE(a.image_url,b.image_url) AS image,
+      CASE WHEN b.variant_id IS NULL THEN 'added' WHEN a.variant_id IS NULL THEN 'removed' ELSE 'changed' END AS kind,
+      a.price::text AS price,b.price::text AS old_price,a.currency,b.currency AS old_currency,a.inventory_quantity AS stock,b.inventory_quantity AS old_stock,
+      array_remove(ARRAY[
+        CASE WHEN a.name IS DISTINCT FROM b.name THEN 'Nome' END,
+        CASE WHEN ROW(a.price,a.currency) IS DISTINCT FROM ROW(b.price,b.currency) THEN 'Preço' END,
+        CASE WHEN a.inventory_quantity IS DISTINCT FROM b.inventory_quantity THEN 'Estoque' END,
+        CASE WHEN a.image_url IS DISTINCT FROM b.image_url THEN 'Foto' END,
+        CASE WHEN a.category IS DISTINCT FROM b.category THEN 'Categoria' END
+      ],NULL) AS fields
+      FROM (SELECT * FROM catalog_items WHERE import_id=p.id) a
+      FULL JOIN (SELECT * FROM catalog_items WHERE import_id=p.previous) b USING(variant_id)
+      WHERE a.variant_id IS NULL OR b.variant_id IS NULL OR ROW(a.name,a.price,a.currency,a.inventory_quantity,a.image_url,a.category) IS DISTINCT FROM ROW(b.name,b.price,b.currency,b.inventory_quantity,b.image_url,b.category)
+    ) c
+  )`;
+  const values = [context.active, range.start, range.end];
+  const totals = await database().query<{
+    added: string;
+    removed: string;
+    changed: string;
+  }>(
+    `${sql} SELECT count(*) FILTER(WHERE kind='added')::text AS added,count(*) FILTER(WHERE kind='removed')::text AS removed,count(*) FILTER(WHERE kind='changed')::text AS changed FROM changes`,
+    values,
+  );
+  const counts = {
+    added: Number(totals.rows[0].added),
+    removed: Number(totals.rows[0].removed),
+    changed: Number(totals.rows[0].changed),
+  };
+  const total = counts.added + counts.removed + counts.changed;
+  const pages = Math.max(1, Math.ceil(total / 20));
   page = Math.min(page, pages);
-  const { rows } = await database().query<{
-    id: string;
-    name: string;
-    sku: string;
-    image: string | null;
-    kind: string;
-    price: string | null;
-    old_price: string | null;
-    stock: number | null;
-    old_stock: number | null;
-  }>(`${sql} ORDER BY kind,name,id LIMIT 20 OFFSET $3`, [
-    context.active,
-    context.previous,
-    (page - 1) * 20,
-  ]);
-  return { items: rows, total, pages, page };
+  const { rows } = await database().query<ChangeRow>(
+    `${sql} SELECT * FROM changes ORDER BY recorded_at DESC,version,kind,name,id LIMIT 20 OFFSET $4`,
+    [...values, (page - 1) * 20],
+  );
+  return { items: rows, total, pages, page, counts };
 }
+type ChangeRow = {
+  version: string;
+  recorded_at: string;
+  id: string;
+  name: string;
+  sku: string;
+  image: string | null;
+  kind: string;
+  price: string | null;
+  old_price: string | null;
+  currency: string | null;
+  old_currency: string | null;
+  stock: number | null;
+  old_stock: number | null;
+  fields: string[];
+};
 export async function adminCatalogs() {
   await requireSession();
   const context = await adminContext();

@@ -1,11 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import {
-  LocateFixed,
-  MapPin,
-  PersonStanding,
-  ExternalLink,
-} from "lucide-react";
+import { LocateFixed, MapPin } from "lucide-react";
 import PitterSpinner from "./PitterSpinner";
 import type { readDestinations } from "../../server/sales/destinations";
 import type { Map as LeafletMap } from "leaflet";
@@ -16,7 +11,6 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
   const mapRef = useRef<LeafletMap | null>(null);
   const resetRef = useRef<() => void>(() => {});
   const [ready, setReady] = useState(false);
-  const [streetViewUrl, setStreetViewUrl] = useState("");
   const [failed, setFailed] = useState(false);
   const [tilesFailed, setTilesFailed] = useState(false);
   const located = cities.filter((c) => c.location);
@@ -27,7 +21,6 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
     let cancelled = false;
     let cleanup = () => {};
     setReady(false);
-    setStreetViewUrl("");
     setFailed(false);
     setTilesFailed(false);
     void import("leaflet")
@@ -40,16 +33,6 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
           maxZoom: 16,
         }).setView([-15.5, -51], 4);
         mapRef.current = map;
-        const updateStreetView = () => {
-          const center = map.getCenter();
-          const params = new URLSearchParams({
-            api: "1",
-            map_action: "pano",
-            viewpoint: `${center.lat.toFixed(6)},${center.lng.toFixed(6)}`,
-          });
-          setStreetViewUrl(`https://www.google.com/maps/@?${params}`);
-        };
-        map.on("moveend", updateStreetView);
         L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
         const tiles = L.tileLayer(
           "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -83,7 +66,6 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
         };
         resetRef.current = reset;
         reset();
-        updateStreetView();
         const markers = L.layerGroup().addTo(map);
         function draw() {
           markers.clearLayers();
@@ -226,20 +208,6 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
           role="region"
           aria-label="Mapa interativo das entregas por cidade. Passe o mouse ou use Tab nos pontos para consultar quantidades. Clique nos agrupamentos para aproximar."
         />
-        {ready && streetViewUrl && (
-          <a
-            className="delivery-map-street-view"
-            href={streetViewUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Abrir Street View da região central do mapa em outra aba"
-          >
-            <PersonStanding size={25} aria-hidden="true" />
-            <span>
-              Ver ruas <ExternalLink size={12} aria-hidden="true" />
-            </span>
-          </a>
-        )}
         {!ready && !failed && (
           <div className="delivery-map-overlay">
             <PitterSpinner label="Preparando o mapa…" />
@@ -274,9 +242,7 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
       <p className="delivery-map-note">
         Localização aproximada por cidade, sem indicar o endereço do cliente.
         Passe o mouse nos pontos para ver pedidos e unidades. Clique nos
-        agrupamentos para aproximar. Para explorar as ruas, centralize a região
-        desejada e use “Ver ruas”. O Street View abre em outra aba, conforme a
-        cobertura disponível, sem representar o endereço da entrega.
+        agrupamentos para aproximar.
         {missing > 0 &&
           ` ${number(missing)} pedidos sem coordenadas nesta seleção estão na tabela.`}
       </p>

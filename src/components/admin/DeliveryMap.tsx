@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { LocateFixed, MapPin } from "lucide-react";
+import {
+  LocateFixed,
+  MapPin,
+  PersonStanding,
+  ExternalLink,
+} from "lucide-react";
 import PitterSpinner from "./PitterSpinner";
 import type { readDestinations } from "../../server/sales/destinations";
 import type { Map as LeafletMap } from "leaflet";
@@ -11,6 +16,7 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
   const mapRef = useRef<LeafletMap | null>(null);
   const resetRef = useRef<() => void>(() => {});
   const [ready, setReady] = useState(false);
+  const [streetViewUrl, setStreetViewUrl] = useState("");
   const [failed, setFailed] = useState(false);
   const [tilesFailed, setTilesFailed] = useState(false);
   const located = cities.filter((c) => c.location);
@@ -21,6 +27,7 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
     let cancelled = false;
     let cleanup = () => {};
     setReady(false);
+    setStreetViewUrl("");
     setFailed(false);
     setTilesFailed(false);
     void import("leaflet")
@@ -33,6 +40,16 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
           maxZoom: 16,
         }).setView([-15.5, -51], 4);
         mapRef.current = map;
+        const updateStreetView = () => {
+          const center = map.getCenter();
+          const params = new URLSearchParams({
+            api: "1",
+            map_action: "pano",
+            viewpoint: `${center.lat.toFixed(6)},${center.lng.toFixed(6)}`,
+          });
+          setStreetViewUrl(`https://www.google.com/maps/@?${params}`);
+        };
+        map.on("moveend", updateStreetView);
         L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
         const tiles = L.tileLayer(
           "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -66,6 +83,7 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
         };
         resetRef.current = reset;
         reset();
+        updateStreetView();
         const markers = L.layerGroup().addTo(map);
         function draw() {
           markers.clearLayers();
@@ -94,7 +112,6 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
             ];
             const title = `${places.length === 1 ? places[0] : `${places.length} cidades`}: ${number(orders)} pedidos, ${number(units)} unidades`;
             const marker = L.marker([lat, lng], {
-              title,
               alt: title,
               keyboard: true,
               icon: L.divIcon({
@@ -106,21 +123,6 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
               riseOnHover: true,
             }).addTo(markers);
             // DOM textContent avoids interpreting merchant or customer text as HTML.
-            const popup = document.createElement("div");
-            popup.className = "delivery-map-popup";
-            const heading = document.createElement("strong");
-            heading.textContent =
-              places.length === 1
-                ? places[0]
-                : `${places.length} cidades nesta região`;
-            const metrics = document.createElement("p");
-            metrics.textContent = `${number(orders)} pedidos · ${number(units)} unidades`;
-            const note = document.createElement("small");
-            note.textContent =
-              places.length === 1
-                ? "Ponto aproximado do município"
-                : "Aproxime o mapa para separar os destinos.";
-            popup.append(heading, metrics, note);
             const tooltip = document.createElement("div");
             const tooltipTitle = document.createElement("strong");
             tooltipTitle.textContent =
@@ -146,20 +148,28 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
               more.textContent = `Mais ${places.length - 4} cidades. Aproxime para detalhar.`;
               list.append(more);
             }
-            if (places.length > 1) {
-              tooltip.append(list);
-              popup.append(list.cloneNode(true));
-            }
-            marker.bindTooltip(tooltip, {
+            if (places.length > 1) tooltip.append(list);
+            // Explicit hover events keep Leaflet's click/touch bindings out.
+            const hover = L.tooltip({
               direction: "auto",
               offset: [0, -14],
               className: "delivery-map-hover",
+            }).setContent(tooltip);
+            const showDetails = () =>
+              hover.setLatLng(marker.getLatLng()).addTo(map);
+            const hideDetails = () => hover.remove();
+            marker.on("mouseover", showDetails);
+            marker.on("mouseout", hideDetails);
+            marker.on("remove", hideDetails);
+            const element = marker.getElement();
+            element?.setAttribute("aria-label", title);
+            element?.addEventListener("focus", () => {
+              if (element.matches(":focus-visible")) showDetails();
             });
-            marker.on("focus", () => marker.openTooltip());
-            marker.on("blur", () => marker.closeTooltip());
-            marker.bindPopup(popup, { minWidth: 230, maxWidth: 300 });
-            if (places.length > 1)
-              marker.on("click", () => {
+            element?.addEventListener("blur", hideDetails);
+            marker.on("click", () => {
+              hideDetails();
+              if (places.length > 1) {
                 const groupBounds = L.latLngBounds(
                   group.map((c) => [c.location.latitude, c.location.longitude]),
                 );
@@ -167,7 +177,8 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
                   padding: [65, 65],
                   maxZoom: Math.min(16, map.getZoom() + 3),
                 });
-              });
+              }
+            });
           }
         }
         map.on("zoomend", draw);
@@ -213,8 +224,22 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
           ref={container}
           className="delivery-map-canvas"
           role="region"
-          aria-label="Mapa interativo das entregas por cidade. Use os botões de zoom e selecione os pontos para consultar quantidades."
+          aria-label="Mapa interativo das entregas por cidade. Passe o mouse ou use Tab nos pontos para consultar quantidades. Clique nos agrupamentos para aproximar."
         />
+        {ready && streetViewUrl && (
+          <a
+            className="delivery-map-street-view"
+            href={streetViewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Abrir Street View da região central do mapa em outra aba"
+          >
+            <PersonStanding size={25} aria-hidden="true" />
+            <span>
+              Ver ruas <ExternalLink size={12} aria-hidden="true" />
+            </span>
+          </a>
+        )}
         {!ready && !failed && (
           <div className="delivery-map-overlay">
             <PitterSpinner label="Preparando o mapa…" />
@@ -248,7 +273,10 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
       </div>
       <p className="delivery-map-note">
         Localização aproximada por cidade, sem indicar o endereço do cliente.
-        Clique nos pontos para ver pedidos e unidades.
+        Passe o mouse nos pontos para ver pedidos e unidades. Clique nos
+        agrupamentos para aproximar. Para explorar as ruas, centralize a região
+        desejada e use “Ver ruas”. O Street View abre em outra aba, conforme a
+        cobertura disponível, sem representar o endereço da entrega.
         {missing > 0 &&
           ` ${number(missing)} pedidos sem coordenadas nesta seleção estão na tabela.`}
       </p>

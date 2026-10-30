@@ -1,3 +1,4 @@
+import { readOrderCustomer, ensureOrderCustomers } from "./customers.ts";
 import { readOrderDestination } from "./destinations.ts";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -85,6 +86,11 @@ async function completeOrder(order: SalesOrder, deadline: number) {
     order.id,
     order.updatedAt,
   );
+  order.customerInfo = await readOrderCustomer(
+    client,
+    order.id,
+    order.updatedAt,
+  );
   order.lineItems.pageInfo = info;
   return order;
 }
@@ -94,6 +100,7 @@ export async function syncSalesPage() {
     pool = database(),
     store = api.domain,
     lease = randomUUID();
+  await ensureOrderCustomers(pool);
   await pool.query(
     "INSERT INTO pitterpan_sales_sync(store) VALUES($1) ON CONFLICT DO NOTHING",
     [store],

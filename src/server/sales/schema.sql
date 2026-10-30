@@ -39,3 +39,6 @@ ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS delivery_label text 
 ALTER TABLE pitterpan_sales_items ADD COLUMN IF NOT EXISTS image_url text;
 
 ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS destination jsonb;
+
+ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS customer jsonb;
+CREATE INDEX IF NOT EXISTS pitterpan_sales_customer ON pitterpan_sales_orders(store,(customer->>'id'));

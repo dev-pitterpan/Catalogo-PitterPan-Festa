@@ -10,6 +10,8 @@ import {
   RefreshCw,
   ShoppingCart,
 } from "lucide-react";
+import OrderCustomer from "./OrderCustomer";
+import OrderCustomerRefresh from "./OrderCustomerRefresh";
 import DeliveryMark from "./DeliveryMark";
 import DragScroll from "./DragScroll";
 import {
@@ -76,6 +78,20 @@ export default function SalesDashboard({
     delivery: string;
   } | null>(null);
   const [revision, setRevision] = useState(0);
+  const updateCustomers = useCallback((rows: Record<string, string>[]) => {
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    setData((old) =>
+      old
+        ? {
+            ...old,
+            orders: old.orders.map((order) => ({
+              ...order,
+              ...byId.get(order.id),
+            })),
+          }
+        : old,
+    );
+  }, []);
   const cursor = useRef<string | undefined>(undefined),
     fetching = useRef(0),
     motion = usePartyMotion();
@@ -660,11 +676,16 @@ export default function SalesDashboard({
                 {expanded.current &&
                   " A atualização automática da lista fica pausada durante esta consulta."}
               </p>
+              <OrderCustomerRefresh
+                orders={data.orders}
+                onUpdate={updateCustomers}
+              />
               <DragScroll>
                 <table className="admin-table">
                   <thead>
                     <tr>
                       <th>Pedido</th>
+                      <th>Cliente</th>
                       <th>Situação</th>
                       <th>Entrega escolhida</th>
                       <th>Total do pedido</th>
@@ -676,7 +697,7 @@ export default function SalesDashboard({
                   <tbody>
                     {!data.orders.length && (
                       <tr>
-                        <td colSpan={7}>
+                        <td colSpan={8}>
                           Nenhum pedido corresponde aos filtros escolhidos.
                         </td>
                       </tr>
@@ -690,6 +711,9 @@ export default function SalesDashboard({
                               "pt-BR",
                             )}
                           </small>
+                        </td>
+                        <td>
+                          <OrderCustomer order={o} />
                         </td>
                         <td>
                           <span

@@ -1,3 +1,4 @@
+import { orderCustomerSchema } from "./customers.ts";
 import { destinationSchema } from "./destinations.ts";
 import { z } from "zod";
 const money = z.object({
@@ -32,6 +33,7 @@ export const orderSchema = z
     displayFinancialStatus: z.string().nullable(),
     displayFulfillmentStatus: z.string(),
     destination: destinationSchema.nullable().optional(),
+    customerInfo: orderCustomerSchema.nullable().optional(),
     shippingLines: z
       .object({
         nodes: z.array(

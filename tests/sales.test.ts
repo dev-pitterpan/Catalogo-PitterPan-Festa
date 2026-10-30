@@ -830,3 +830,106 @@ test("financeiro separa recebido, estorno e expirado, preservando reembolsos de 
     await db.close();
   }
 });
+
+test("clientes: compara por ID, separa moeda e loja e mantém pendências independentes do filtro", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      await readFile(
+        new URL("../src/server/sales/schema.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    const customer = {
+      id: "gid://shopify/Customer/77",
+      name: "Pessoa Exemplo",
+      checkedAt: new Date().toISOString(),
+    };
+    const paid = { ...order("701"), customerInfo: customer };
+    const pending = {
+      ...order("702"),
+      customerInfo: customer,
+      displayFinancialStatus: "PENDING",
+      totalReceivedSet: { shopMoney: { amount: "0.00", currencyCode: "BRL" } },
+      netPaymentSet: { shopMoney: { amount: "0.00", currencyCode: "BRL" } },
+    };
+    const namesake = {
+      ...pending,
+      id: "gid://shopify/Order/703",
+      customerInfo: { ...customer, id: "gid://shopify/Customer/88" },
+    };
+    await saveOrder(db, store, paid);
+    await saveOrder(db, store, pending);
+    await saveOrder(db, store, namesake);
+    await saveOrder(db, "other.myshopify.com", {
+      ...pending,
+      id: "gid://shopify/Order/704",
+    });
+    const foreign = {
+      ...pending,
+      id: "gid://shopify/Order/705",
+      totalPriceSet: { shopMoney: { amount: "5.00", currencyCode: "USD" } },
+      totalReceivedSet: { shopMoney: { amount: "0.00", currencyCode: "USD" } },
+      totalRefundedSet: { shopMoney: { amount: "0.00", currencyCode: "USD" } },
+      netPaymentSet: { shopMoney: { amount: "0.00", currencyCode: "USD" } },
+    };
+    await saveOrder(db, store, foreign);
+    const { readSalesOrders } =
+      await import("../src/server/sales/repository.ts");
+    const data = await readSalesOrders(db, store, 30, {
+      status: "PAID",
+      category: "",
+      delivery: "all",
+      start: "",
+      end: "",
+    });
+    assert.equal(data.orders.length, 1);
+    assert.equal(data.orders[0].customer_name, "Pessoa Exemplo");
+    assert.equal(data.orders[0].customer_pending_orders, "1");
+    assert.equal(data.orders[0].customer_pending_value, "100.00");
+    assert.equal(data.orders[0].customer_paid_orders, "1");
+    const { readOrderCustomer, refreshOrderCustomers } =
+      await import("../src/server/sales/customers.ts");
+    const restricted = {
+      query: async <T>(q: string): Promise<T> => {
+        if (q.includes("displayName")) throw Error("restricted");
+        return {
+          order: { updatedAt: paid.updatedAt, customer: { id: customer.id } },
+        } as T;
+      },
+    };
+    const identity = await readOrderCustomer(
+      restricted,
+      paid.id,
+      paid.updatedAt,
+    );
+    assert.equal(identity?.id, customer.id);
+    assert.equal(identity?.name, null);
+    const result = await refreshOrderCustomers(
+      db,
+      {
+        query: async <T>(): Promise<T> =>
+          ({
+            nodes: [
+              {
+                id: paid.id,
+                updatedAt: paid.updatedAt,
+                customer: { id: customer.id, displayName: "Nome atualizado" },
+              },
+              {
+                id: "gid://shopify/Order/704",
+                updatedAt: paid.updatedAt,
+                customer: { id: customer.id, displayName: "Outra loja" },
+              },
+            ],
+          }) as T,
+      },
+      store,
+      [paid.id],
+    );
+    assert.equal(result.loaded, 1);
+    assert.equal(result.orders[0].customer_name, "Nome atualizado");
+  } finally {
+    await db.close();
+  }
+});

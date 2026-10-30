@@ -146,6 +146,21 @@ try {
       .status,
     400,
   );
+  assert.equal(
+    (await rawFetch(base + "/api/admin/sales/customers/", { method: "POST" }))
+      .status,
+    401,
+  );
+  assert.equal(
+    (
+      await fetch(base + "/api/admin/sales/customers/", {
+        method: "POST",
+        headers: { origin: "https://invalid.example" },
+        body: "{}",
+      })
+    ).status,
+    403,
+  );
   for (const suffix of [
     "?report=unknown",
     "?report=sales-time&start=2026-02-30&end=2026-03-01",

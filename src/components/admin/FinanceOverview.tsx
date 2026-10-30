@@ -187,8 +187,8 @@ export default function FinanceOverview({ params }: { params: string }) {
           },
           {
             key: "outstanding",
-            label: "Ainda a receber",
-            hint: `${totals.pending} pedidos pendentes, autorizados ou parcialmente pagos, sem cancelamento.`,
+            label: "Saldo não pago (calculado)",
+            hint: `Total do pedido antes de devoluções − recebido em ${totals.pending} pendentes, autorizados ou parcialmente pagos não cancelados. Não é saldo bancário.`,
             Icon: ArrowDownLeft,
             tone: "gold",
           },

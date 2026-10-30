@@ -500,7 +500,7 @@ export default function SalesDashboard({
               <div className="sales-status-values">
                 {[
                   {
-                    label: "A receber",
+                    label: "Saldo não pago (calculado)",
                     count: t.pending,
                     value: t.outstanding,
                     status: "PENDING",

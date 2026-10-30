@@ -7,7 +7,7 @@ O resumo financeiro das Análises usa os pedidos sincronizados da Shopify, em um
 - **Recebido confirmado:** soma de `totalReceivedSet` em pedidos não teste da loja, inclusive pagamentos parciais e pedidos posteriormente cancelados/reembolsados.
 - **Estornos / reembolsos:** soma de `totalRefundedSet`, incluindo estorno parcial e pedidos cancelados.
 - **Líquido após estornos:** recebido menos estornado, calculado em SQL decimal. Divergência em relação ao `netPaymentSet` armazenado aparece como aviso, sem transformar o saldo em lucro.
-- **Ainda a receber:** saldo positivo de total menos recebido em pedidos pendentes, autorizados ou parcialmente pagos e não cancelados.
+- **Saldo não pago (calculado):** saldo positivo do total antes de devoluções menos recebido em pedidos pendentes, autorizados ou parcialmente pagos e não cancelados. É um cálculo sobre os campos já sincronizados, não uma reprodução do campo `totalOutstandingSet` da Shopify.
 - **Expirados e anulados:** quantidade e valor nominal dos pedidos no estado financeiro EXPIRED/VOIDED. Não são recebimentos. Não se infere expiração por tempo nem se converte automaticamente um pagamento anulado em reembolso.
 - **Cancelados:** dimensão independente do pagamento. Um cancelado pode estar pago, parcialmente reembolsado ou totalmente reembolsado; seus recebimentos e reembolsos permanecem nos totais monetários. O quadro de cancelados não é somado aos setores do gráfico financeiro.
 

@@ -1,4 +1,6 @@
 "use client";
+import OccasionChip from "./OccasionChip";
+import { occasionTheme } from "../../../lib/agenda/occasion-theme";
 import type { Occasion } from "../../../lib/agenda/occasions";
 import OccasionEditor, { occasionLabels } from "./OccasionEditor";
 import { useState } from "react";
@@ -179,19 +181,15 @@ export default function MeetingCalendar({
                     .filter((item) => item.event_date === date)
                     .slice(0, 2)
                     .map((item) => (
-                      <button
-                        type="button"
+                      <OccasionChip
                         key={item.id}
-                        className={`agenda-occasion ${item.kind} ${item.hidden ? "is-hidden" : ""}`}
-                        title={`${item.title}${item.notes ? `: ${item.notes}` : ""}`}
-                        onClick={() => {
+                        item={item}
+                        onEdit={() => {
                           setDay(date);
                           setEditor(null);
                           setDateEditor(item);
                         }}
-                      >
-                        {item.title}
-                      </button>
+                      />
                     ))}
                   {rows.slice(0, 2).map((a) => (
                     <button
@@ -264,6 +262,9 @@ export default function MeetingCalendar({
                   setDateEditor(item);
                 }}
               >
+                <span className="agenda-date-character" aria-hidden="true">
+                  {occasionTheme(item).symbol}
+                </span>{" "}
                 {item.title}
               </button>
               <p>

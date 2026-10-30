@@ -892,3 +892,89 @@
     min-height: 360px;
   }
 }
+
+.admin-app .agenda-occasion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 5px 6px;
+}
+.agenda-occasion-character {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 8px;
+  background: #ffffffa6;
+  font-size: 19px;
+  line-height: 1;
+  flex-shrink: 0;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+}
+.agenda-occasion-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-app .agenda-occasion:focus-visible {
+  outline: 2px solid #639bdb;
+  outline-offset: 2px;
+}
+.agenda-date-character {
+  font-size: 23px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+.agenda-occasion-tooltip {
+  position: fixed;
+  z-index: 10000;
+  width: min(320px, calc(100vw - 24px));
+  max-height: 240px;
+  overflow: hidden;
+  box-sizing: border-box;
+  pointer-events: none;
+  padding: 15px;
+  border: 1px solid #d6e4f3;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 8px 30px #20446d24;
+  color: #315a87;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.agenda-occasion-tooltip-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.agenda-occasion-tooltip-heading > span {
+  font-size: 30px;
+  flex-shrink: 0;
+}
+.agenda-occasion-tooltip-heading strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.agenda-occasion-tooltip > span {
+  display: block;
+  color: #6a85a2;
+  font-size: 11px;
+}
+.agenda-occasion-tooltip p {
+  margin: 9px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.agenda-occasion-tooltip small {
+  display: block;
+  margin-top: 9px;
+  color: #7b94af;
+  font-size: 10px;
+}

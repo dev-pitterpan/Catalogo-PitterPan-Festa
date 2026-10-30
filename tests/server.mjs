@@ -105,6 +105,7 @@ try {
     "/gestor/mapa/",
     "/gestor/analises/",
     "/gestor/halloween/",
+    "/gestor/agenda/",
   ]) {
     const denied = await rawFetch(base + route, { redirect: "manual" });
     const html = await denied.text();
@@ -123,8 +124,28 @@ try {
     "/api/admin/overview/",
     "/api/admin/products/",
     "/api/admin/users/",
+    "/api/admin/agenda/",
   ])
     assert.equal((await rawFetch(base + route)).status, 401);
+  assert.equal(
+    (await rawFetch(base + "/api/admin/agenda/", { method: "POST" })).status,
+    401,
+  );
+  assert.equal(
+    (
+      await fetch(base + "/api/admin/agenda/", {
+        method: "POST",
+        headers: { origin: "https://invalid.example" },
+        body: "{}",
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (await fetch(base + "/api/admin/agenda/?start=invalid&end=2026-10-30"))
+      .status,
+    400,
+  );
   for (const suffix of [
     "?report=unknown",
     "?report=sales-time&start=2026-02-30&end=2026-03-01",

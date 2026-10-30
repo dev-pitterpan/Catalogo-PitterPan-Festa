@@ -5,6 +5,7 @@ import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
+  CalendarDays,
   ShieldCheck,
   LoaderCircle,
   MapPinned,
@@ -46,6 +47,12 @@ const links = [
   { href: "/gestor/ofertas/", label: "Ofertas", icon: BadgePercent },
   { href: "/gestor/catalogos/", label: "Catálogos", icon: BookOpen },
   {
+    href: "/gestor/agenda/",
+    label: "Agenda e fornecedores",
+    icon: CalendarDays,
+    financial: true,
+  },
+  {
     href: "/gestor/alteracoes/",
     label: "Histórico de alterações",
     icon: ArrowLeftRight,
@@ -80,7 +87,12 @@ const navigationGroups = [
   },
   {
     label: "Planejar e compartilhar",
-    paths: ["/gestor/catalogos/", "/gestor/analises/", "/gestor/relatorios/"],
+    paths: [
+      "/gestor/agenda/",
+      "/gestor/catalogos/",
+      "/gestor/analises/",
+      "/gestor/relatorios/",
+    ],
   },
   {
     label: "Gestão da equipe",

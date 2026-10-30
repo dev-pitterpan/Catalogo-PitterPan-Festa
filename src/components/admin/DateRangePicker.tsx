@@ -24,6 +24,43 @@ export default function DateRangePicker({
     [draft, setDraft] = useState<DateRange>(value),
     [choosingEnd, setChoosingEnd] = useState(false),
     [month, setMonth] = useState(today.slice(0, 7) + "-01");
+  const [position, setPosition] = useState({
+    left: 16,
+    top: 80,
+    maxHeight: 480,
+  });
+  useEffect(() => {
+    if (!open) return;
+    function place() {
+      const rect = trigger.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = Math.min(560, window.innerWidth - 32);
+      const height = Math.min(490, window.innerHeight - 32);
+      const below = window.innerHeight - rect.bottom - 24;
+      const top =
+        below >= height
+          ? rect.bottom + 8
+          : Math.max(
+              16,
+              Math.min(rect.top - height - 8, window.innerHeight - height - 16),
+            );
+      setPosition({
+        left: Math.max(
+          16,
+          Math.min(rect.right - width, window.innerWidth - width - 16),
+        ),
+        top,
+        maxHeight: window.innerHeight - top - 16,
+      });
+    }
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     function dismiss(e: PointerEvent) {
@@ -80,6 +117,15 @@ export default function DateRangePicker({
       {open && (
         <div
           className="admin-date-popover"
+          style={{
+            position: "fixed",
+            left: position.left,
+            top: position.top,
+            right: "auto",
+            width: "min(560px, calc(100vw - 32px))",
+            maxHeight: position.maxHeight,
+            overflowY: "auto",
+          }}
           id={id}
           role="dialog"
           aria-label="Selecionar intervalo de datas"

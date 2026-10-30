@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import AdminSelect from "./AdminSelect";
 import DateRangePicker from "./DateRangePicker";
 import {
   shiftDate,
@@ -7,20 +8,38 @@ import {
   type DateRange,
 } from "../../lib/admin/date-range";
 
-export default function ChangeHistoryFilters({ range }: { range: DateRange }) {
+export default function ChangeHistoryFilters({
+  range,
+  kind,
+}: {
+  range: DateRange;
+  kind: string;
+}) {
   const router = useRouter();
   function apply(value: DateRange) {
-    router.push(`/gestor/alteracoes/?${new URLSearchParams(value)}`);
+    router.push(
+      `/gestor/alteracoes/?${new URLSearchParams({ ...value, kind })}`,
+    );
   }
   return (
-    <div className="sales-toolbar">
-      <label>
-        Período das publicações
-        <select
-          aria-label="Período das publicações"
+    <div className="sales-toolbar history-filters">
+      <div>
+        <span>Período das publicações</span>
+        <AdminSelect
+          label="Período das publicações"
           value={range.start ? "custom" : "latest"}
-          onChange={(event) => {
-            const days = Number(event.target.value);
+          options={[
+            { value: "latest", label: "Última publicação" },
+            { value: "1", label: "Hoje" },
+            { value: "7", label: "Últimos 7 dias" },
+            { value: "30", label: "Últimos 30 dias" },
+            ...(range.start
+              ? [{ value: "custom", label: "Período selecionado" }]
+              : []),
+          ]}
+          onValueChange={(value) => {
+            if (value === "custom") return;
+            const days = Number(value);
             const end = todayDate();
             apply(
               days
@@ -28,16 +47,8 @@ export default function ChangeHistoryFilters({ range }: { range: DateRange }) {
                 : { start: "", end: "" },
             );
           }}
-        >
-          <option value="latest">Última publicação</option>
-          <option value="1">Hoje</option>
-          <option value="7">Últimos 7 dias</option>
-          <option value="30">Últimos 30 dias</option>
-          <option value="custom" disabled>
-            Período selecionado
-          </option>
-        </select>
-      </label>
+        />
+      </div>
       <DateRangePicker value={range} onChange={apply} />
     </div>
   );

@@ -130,20 +130,34 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
             const tooltipCount = document.createElement("span");
             tooltipCount.textContent = `${number(orders)} pedidos · ${number(units)} unidades`;
             tooltip.append(tooltipTitle, tooltipCount);
+            const list = document.createElement("div");
+            list.className = "delivery-map-city-list";
+            for (const city of group.slice(0, 4)) {
+              const row = document.createElement("div");
+              const name = document.createElement("span");
+              name.textContent = `${city.city} · ${city.state}`;
+              const count = document.createElement("b");
+              count.textContent = `${number(city.orders)} pedidos`;
+              row.append(name, count);
+              list.append(row);
+            }
+            if (places.length > 4) {
+              const more = document.createElement("small");
+              more.textContent = `Mais ${places.length - 4} cidades. Aproxime para detalhar.`;
+              list.append(more);
+            }
             if (places.length > 1) {
-              const list = document.createElement("small");
-              list.textContent =
-                places.slice(0, 5).join(" / ") + (places.length > 5 ? "…" : "");
               tooltip.append(list);
+              popup.append(list.cloneNode(true));
             }
             marker.bindTooltip(tooltip, {
-              direction: "top",
+              direction: "auto",
               offset: [0, -14],
               className: "delivery-map-hover",
             });
             marker.on("focus", () => marker.openTooltip());
             marker.on("blur", () => marker.closeTooltip());
-            marker.bindPopup(popup);
+            marker.bindPopup(popup, { minWidth: 230, maxWidth: 300 });
             if (places.length > 1)
               marker.on("click", () => {
                 const groupBounds = L.latLngBounds(

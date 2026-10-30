@@ -2205,3 +2205,47 @@
 .admin-app .sales-orders-panel .admin-table tr > :not(:last-child) {
   border-right: 1px solid #e6eef7;
 }
+
+.admin-app .history-summary > a {
+  display: grid;
+  gap: 9px;
+  padding: 22px;
+  border: 1px solid #d8e5f2;
+  border-radius: 16px;
+  background: #f9fbfe;
+  color: #527494;
+  text-decoration: none;
+  transition:
+    background 150ms,
+    border-color 150ms;
+}
+.admin-app .history-summary > a strong {
+  font-size: 30px;
+}
+.admin-app .history-summary > a small {
+  font-size: 11px;
+  color: #7189a3;
+}
+.admin-app .history-summary > a:hover,
+.admin-app .history-summary > a[aria-current="page"] {
+  border-color: #78a0ca;
+  background: #edf4fc;
+}
+.admin-app .history-summary > a:focus-visible {
+  outline: 2px solid #356da9;
+  outline-offset: 3px;
+}
+.admin-app .history-filters {
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.admin-app .history-filters > div:first-child {
+  display: grid;
+  gap: 7px;
+  min-width: 210px;
+}
+.admin-app .history-filters > div:first-child > span {
+  font-size: 11px;
+  color: #7189a3;
+}

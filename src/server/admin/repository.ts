@@ -265,6 +265,7 @@ export async function adminProducts(input: AdminQuery) {
 export async function adminChanges(
   page: number,
   range = { start: "", end: "" },
+  kind = "all",
 ) {
   const context = await adminContext();
   const empty = {
@@ -314,12 +315,15 @@ export async function adminChanges(
     removed: Number(totals.rows[0].removed),
     changed: Number(totals.rows[0].changed),
   };
-  const total = counts.added + counts.removed + counts.changed;
+  const total =
+    kind === "all"
+      ? counts.added + counts.removed + counts.changed
+      : counts[kind as keyof typeof counts];
   const pages = Math.max(1, Math.ceil(total / 20));
   page = Math.min(page, pages);
   const { rows } = await database().query<ChangeRow>(
-    `${sql} SELECT * FROM changes ORDER BY recorded_at DESC,version,kind,name,id LIMIT 20 OFFSET $4`,
-    [...values, (page - 1) * 20],
+    `${sql} SELECT * FROM changes WHERE ($5='all' OR kind=$5) ORDER BY recorded_at DESC,version,kind,name,id LIMIT 20 OFFSET $4`,
+    [...values, (page - 1) * 20, kind],
   );
   return { items: rows, total, pages, page, counts };
 }

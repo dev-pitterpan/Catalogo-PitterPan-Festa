@@ -1,4 +1,5 @@
 "use client";
+import { customerDiagnostic } from "./customerDiagnostic";
 import { UserRound } from "lucide-react";
 export default function OrderCustomer({
   order,
@@ -20,6 +21,10 @@ export default function OrderCustomer({
         {id ? (
           <>
             <small>Cliente Shopify #{id.split("/").at(-1)}</small>
+            {order.customer_diagnostic &&
+              order.customer_diagnostic !== "identified" && (
+                <small>{customerDiagnostic(order.customer_diagnostic)}</small>
+              )}
             <span className="sales-customer-history">
               {order.customer_paid_orders || 0} pagos ·{" "}
               {order.customer_pending_orders || 0} pendentes
@@ -35,7 +40,7 @@ export default function OrderCustomer({
             )}
           </>
         ) : (
-          <small>Aguardando identificação pela Shopify</small>
+          <small>{customerDiagnostic(order.customer_diagnostic)}</small>
         )}
       </div>
     </div>

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import PitterSpinner from "./PitterSpinner";
+import { customerDiagnostic } from "./customerDiagnostic";
 export default function OrderCustomerRefresh({
   orders,
   onUpdate,
@@ -33,14 +34,17 @@ export default function OrderCustomerRefresh({
             result.error || "Não foi possível consultar os clientes.",
           );
         onUpdate(result.orders);
+        const counts = Object.values(result.diagnostics || {}).reduce<
+          Record<string, number>
+        >((all, code) => {
+          const key = String(code);
+          all[key] = (all[key] || 0) + 1;
+          return all;
+        }, {});
         setMessage(
-          result.unavailable
-            ? "Alguns clientes não puderam ser identificados. Confira o acesso do aplicativo na Shopify ou sincronize os pedidos novamente."
-            : result.orders.some(
-                  (o: Record<string, string>) => !o.customer_name,
-                )
-              ? "Consulta concluída. Nomes ausentes podem estar indisponíveis na Shopify ou não vinculados ao pedido."
-              : "Clientes atualizados.",
+          Object.entries(counts)
+            .map(([code, count]) => `${count}: ${customerDiagnostic(code)}`)
+            .join(" · ") || "Consulta concluída.",
         );
       } catch (error) {
         setMessage(

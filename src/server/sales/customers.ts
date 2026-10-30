@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ShopifyGraphQLError } from "../shopify/client.ts";
 import type { SqlClient } from "../database/catalog-repository.ts";
 export const orderCustomerSchema = z.object({
   id: z
@@ -77,6 +78,15 @@ export async function refreshOrderCustomers(
   );
   const matches = new Map(rows.map((row) => [row.id, row.updated_at]));
   let loaded = 0;
+  const diagnostics: Record<string, string> = Object.fromEntries(
+    ids.map((id) => [id, "not_imported"]),
+  );
+  rows.forEach((row) => {
+    diagnostics[row.id] = "order_unavailable";
+  });
+  let queryFailure = "",
+    nameFailure = "";
+
   for (const names of [true, false]) {
     try {
       const raw = await client.query<unknown>(
@@ -93,31 +103,57 @@ export async function refreshOrderCustomers(
         })
         .parse(raw).nodes;
       for (const node of nodes) {
-        if (
-          !node ||
-          !matches.has(node.id) ||
-          Date.parse(node.updatedAt) !== Date.parse(matches.get(node.id)!)
-        )
+        if (!node || !matches.has(node.id)) continue;
+        if (Date.parse(node.updatedAt) !== Date.parse(matches.get(node.id)!)) {
+          diagnostics[node.id] = "stale_order";
           continue;
+        }
+        diagnostics[node.id] = !names
+          ? nameFailure === "access_denied"
+            ? "name_access_denied"
+            : "name_query_failed"
+          : !node.customer
+            ? "no_customer"
+            : node.customer.displayName?.trim()
+              ? "identified"
+              : "name_unavailable";
         const value = {
           id: node.customer?.id || null,
           name: node.customer?.displayName?.trim() || null,
           checkedAt: new Date().toISOString(),
         };
         await db.query(
-          "UPDATE pitterpan_sales_orders SET customer=$3::jsonb WHERE store=$1 AND id=$2 AND updated_at=$4::timestamptz",
+          "UPDATE pitterpan_sales_orders SET customer=CASE WHEN $3::jsonb->>'id' IS NOT DISTINCT FROM customer->>'id' THEN jsonb_build_object('id',$3::jsonb->>'id','name',COALESCE($3::jsonb->>'name',customer->>'name'),'checkedAt',$3::jsonb->>'checkedAt') ELSE $3::jsonb END WHERE store=$1 AND id=$2 AND updated_at=$4::timestamptz",
           [store, node.id, JSON.stringify(value), matches.get(node.id)],
         );
         loaded++;
       }
+      queryFailure = "";
       break;
-    } catch {
-      /* If names are restricted, try IDs only without disrupting order totals. */
+    } catch (error) {
+      // Only controlled categories leave the server; never upstream messages.
+      queryFailure =
+        error instanceof ShopifyGraphQLError && error.accessDenied
+          ? "access_denied"
+          : error instanceof z.ZodError
+            ? "invalid_response"
+            : "query_failed";
+      if (names) nameFailure = queryFailure;
     }
   }
+  if (queryFailure)
+    rows.forEach((row) => {
+      diagnostics[row.id] = queryFailure;
+    });
   return {
+    diagnostics,
     loaded,
     unavailable: rows.length - loaded,
-    orders: await readCustomerFields(db, store, ids),
+    orders: (await readCustomerFields(db, store, ids)).map(
+      (row): Record<string, string> => ({
+        ...row,
+        customer_diagnostic: diagnostics[row.id],
+      }),
+    ),
   };
 }

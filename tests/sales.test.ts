@@ -929,6 +929,75 @@ test("clientes: compara por ID, separa moeda e loja e mantém pendências indepe
     );
     assert.equal(result.loaded, 1);
     assert.equal(result.orders[0].customer_name, "Nome atualizado");
+    assert.equal(result.diagnostics[paid.id], "identified");
+    const { ShopifyGraphQLError } =
+      await import("../src/server/shopify/client.ts");
+    const denied = await refreshOrderCustomers(
+      db,
+      {
+        query: async () => {
+          throw new ShopifyGraphQLError(["ACCESS_DENIED"]);
+        },
+      },
+      store,
+      [paid.id],
+    );
+    assert.equal(denied.diagnostics[paid.id], "access_denied");
+    assert.equal(denied.orders[0].customer_name, "Nome atualizado");
+    const fallback = await refreshOrderCustomers(
+      db,
+      {
+        query: async <T>(q: string): Promise<T> => {
+          if (q.includes("displayName"))
+            throw new ShopifyGraphQLError(["ACCESS_DENIED"]);
+          return {
+            nodes: [
+              {
+                id: paid.id,
+                updatedAt: paid.updatedAt,
+                customer: { id: customer.id },
+              },
+            ],
+          } as T;
+        },
+      },
+      store,
+      [paid.id],
+    );
+    assert.equal(fallback.diagnostics[paid.id], "name_access_denied");
+    assert.equal(fallback.orders[0].customer_name, "Nome atualizado");
+    const stale = await refreshOrderCustomers(
+      db,
+      {
+        query: async <T>(): Promise<T> =>
+          ({
+            nodes: [
+              {
+                id: paid.id,
+                updatedAt: "2099-01-01T00:00:00Z",
+                customer: null,
+              },
+            ],
+          }) as T,
+      },
+      store,
+      [paid.id],
+    );
+    assert.equal(stale.diagnostics[paid.id], "stale_order");
+    assert.equal(stale.loaded, 0);
+    const absent = await refreshOrderCustomers(
+      db,
+      {
+        query: async <T>(): Promise<T> =>
+          ({
+            nodes: [{ id: paid.id, updatedAt: paid.updatedAt, customer: null }],
+          }) as T,
+      },
+      store,
+      [paid.id],
+    );
+    assert.equal(absent.diagnostics[paid.id], "no_customer");
+    assert.equal(absent.orders[0].customer_name, "");
   } finally {
     await db.close();
   }

@@ -29,3 +29,11 @@ Links externos somente HTTPS. WhatsApp usa `wa.me` com telefone brasileiro valid
 ## Verificação
 
 `node --experimental-strip-types --test tests/agenda.test.ts`, `npm run typecheck`, `npm run build` e verificações HTTP do projeto. Integração PostgreSQL validada com PGlite, sem conexão ao banco real do WinThor.
+
+## Paginação e planejamento de datas
+
+Fornecedores usam páginas de 10 registros com navegação no topo e no rodapé; buscar reinicia na primeira página. Controles locais de data têm calendário compacto posicionado dentro da tela; hora/minuto usam o AdminSelect do sistema, preservando todos os minutos (sem arredondar).
+
+`src/lib/agenda/occasions.ts` gera referências anuais nacionais/comerciais, incluindo datas móveis como Páscoa, Dia das Mães/Pais e Black Friday. Datas religiosas, Carnaval, Corpus Christi e aniversário de Joinville são separados de feriados nacionais: sua classificação local/expediente precisa ser conferida. Fontes legais nacionais são vinculadas no registro, sem presumir que ponto facultativo federal é feriado do comércio. Referências não definem escala de trabalho nem substituem calendário municipal/convenção.
+
+O gestor clica na data da grade para ver informações e editar o planejamento, ou usa Adicionar data para criar uma ocasião interna. `pitterpan_calendar_dates` guarda personalizações (título/data/notas/categoria/visibilidade) com revisão; a referência original é preservada para consulta e o registro editado é identificado como personalizado. Datas ocultas reaparecem com Ver ocultas para permitir edição. Datas oficiais não são modificadas em fontes externas. Datas personalizadas são de uma ocorrência; não há repetição anual automática delas.

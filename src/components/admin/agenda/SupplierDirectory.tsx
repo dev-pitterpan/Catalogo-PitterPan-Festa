@@ -190,7 +190,8 @@ export default function SupplierDirectory({
   busy: boolean;
 }) {
   const [query, setQuery] = useState("");
-  const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const normalize = (s: string) =>
@@ -236,12 +237,36 @@ export default function SupplierDirectory({
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
-                setLimit(20);
+                setPage(1);
               }}
             />
           </label>
+          <div className="agenda-list-footer agenda-pagination-top">
+            <small>{rows.length} fornecedores encontrados</small>
+            <div className="agenda-pagination">
+              <button
+                type="button"
+                className="admin-button"
+                disabled={page === 1}
+                onClick={() => setPage((n) => n - 1)}
+              >
+                Anterior
+              </button>
+              <span>
+                {page} / {Math.max(1, Math.ceil(rows.length / pageSize))}
+              </span>
+              <button
+                type="button"
+                className="admin-button"
+                disabled={page * pageSize >= rows.length}
+                onClick={() => setPage((n) => n + 1)}
+              >
+                Próxima
+              </button>
+            </div>
+          </div>
           <div className="agenda-supplier-list">
-            {rows.slice(0, limit).map((s) => {
+            {rows.slice((page - 1) * pageSize, page * pageSize).map((s) => {
               const whatsapp = whatsappLink(
                 s.phone,
                 `Olá! Aqui é da Pitter Pan Festas. Gostaria de falar com ${s.contact || "o responsável"}.`,
@@ -312,16 +337,30 @@ export default function SupplierDirectory({
           </div>
           <div className="agenda-list-footer">
             <small>
-              {Math.min(limit, rows.length)} de {rows.length} fornecedores
+              Página {page} de {Math.max(1, Math.ceil(rows.length / pageSize))}{" "}
+              · {rows.length} fornecedores
             </small>
-            {rows.length > limit && (
+            <div
+              className="agenda-pagination"
+              aria-label="Paginação de fornecedores"
+            >
               <button
+                type="button"
                 className="admin-button"
-                onClick={() => setLimit((n) => n + 20)}
+                disabled={page === 1}
+                onClick={() => setPage((n) => n - 1)}
               >
-                Carregar mais 20
+                Anterior
               </button>
-            )}
+              <button
+                type="button"
+                className="admin-button"
+                disabled={page * pageSize >= rows.length}
+                onClick={() => setPage((n) => n + 1)}
+              >
+                Próxima
+              </button>
+            </div>
           </div>
         </section>
         {creating || current ? (

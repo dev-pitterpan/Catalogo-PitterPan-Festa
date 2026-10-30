@@ -1,4 +1,5 @@
 "use client";
+import { AgendaDateField, AgendaTimeField } from "./DateTimeFields";
 import { useState, type FormEvent } from "react";
 import { CalendarPlus, Video, X } from "lucide-react";
 import AdminSelect from "../AdminSelect";
@@ -77,50 +78,32 @@ export default function AppointmentEditor({
             onChange={setSupplier}
           />
           <div className="agenda-field-pair">
-            <label>
-              Data inicial
-              <input
-                type="date"
-                name="day"
-                required
-                defaultValue={
-                  appointment ? localDay(appointment.starts_at) : day
-                }
-              />
-            </label>
-            <label>
-              Horário
-              <input
-                type="time"
-                name="start"
-                required
-                defaultValue={
-                  appointment ? localTime(appointment.starts_at) : "09:00"
-                }
-              />
-            </label>
+            <AgendaDateField
+              name="day"
+              label="Data inicial"
+              initial={appointment ? localDay(appointment.starts_at) : day}
+              disabled={busy}
+            />
+            <AgendaTimeField
+              name="start"
+              label="Horário"
+              initial={appointment ? localTime(appointment.starts_at) : "09:00"}
+              disabled={busy}
+            />
           </div>
           <div className="agenda-field-pair">
-            <label>
-              Data final
-              <input
-                type="date"
-                name="end_day"
-                required
-                defaultValue={appointment ? localDay(appointment.ends_at) : day}
-              />
-            </label>
-            <label>
-              Até
-              <input
-                type="time"
-                name="end"
-                required
-                defaultValue={
-                  appointment ? localTime(appointment.ends_at) : "10:00"
-                }
-              />
-            </label>
+            <AgendaDateField
+              name="end_day"
+              label="Data final"
+              initial={appointment ? localDay(appointment.ends_at) : day}
+              disabled={busy}
+            />
+            <AgendaTimeField
+              name="end"
+              label="Até"
+              initial={appointment ? localTime(appointment.ends_at) : "10:00"}
+              disabled={busy}
+            />
           </div>
           <p className="agenda-hint">
             Horário de Brasília · o responsável é quem cria o compromisso.

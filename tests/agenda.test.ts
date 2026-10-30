@@ -254,3 +254,110 @@ test("agenda: validação de links, telefone brasileiro e calendário", () => {
   assert.equal(localDay("2026-10-30T02:00:00Z"), "2026-10-29");
   assert.equal(localTime("2026-10-30T12:00:00Z"), "09:00");
 });
+
+test("agenda: datas anuais corretas, planejamento editável e referência preservada", async () => {
+  const { referenceOccasions, calendarOccasions } =
+    await import("../src/lib/agenda/occasions.ts");
+  const references = referenceOccasions(2026);
+  assert.equal(
+    references.find((row) => row.id.endsWith("-easter"))?.event_date,
+    "2026-04-05",
+  );
+  assert.equal(
+    references.find((row) => row.id.endsWith("-mothers"))?.event_date,
+    "2026-05-10",
+  );
+  assert.equal(
+    references.find((row) => row.id.endsWith("-fathers"))?.event_date,
+    "2026-08-09",
+  );
+  assert.equal(
+    references.find((row) => row.id.endsWith("-black-friday"))?.event_date,
+    "2026-11-27",
+  );
+  assert.equal(
+    references.find((row) => row.id.endsWith("-carnival"))?.kind,
+    "optional",
+  );
+  const halloween = references.find((row) => row.id === "ref-2026-10-31")!;
+  const db = new PGlite();
+  try {
+    await ensureAgenda(db);
+    const data = {
+      id: halloween.id,
+      title: "Ação Halloween Pitter",
+      event_date: "2026-10-30",
+      kind: "commercial" as const,
+      notes: "Revisar fantasias com os fornecedores",
+      hidden: false,
+    };
+    await saveWorkspace(
+      db,
+      { entity: "date", revision: 0, data },
+      "gestor@exemplo.com",
+    );
+    let workspace = await readWorkspace(
+      db,
+      "2026-10-01T00:00:00-03:00",
+      "2026-11-01T00:00:00-03:00",
+    );
+    const saved = workspace.dates.find((row) => row.id === halloween.id)!;
+    assert.equal(saved.title, "Ação Halloween Pitter");
+    assert.equal(saved.reference_title, "Halloween");
+    assert.equal(saved.reference_date, "2026-10-31");
+    assert.equal(saved.event_date, "2026-10-30");
+    assert.equal(saved.revision, 1);
+    await assert.rejects(
+      saveWorkspace(
+        db,
+        { entity: "date", revision: 0, data },
+        "outro@exemplo.com",
+      ),
+      /alterada/,
+    );
+    await saveWorkspace(
+      db,
+      { entity: "date", revision: 1, data: { ...data, hidden: true } },
+      "gestor@exemplo.com",
+    );
+    workspace = await readWorkspace(
+      db,
+      "2026-10-01T00:00:00-03:00",
+      "2026-11-01T00:00:00-03:00",
+    );
+    assert.equal(
+      workspace.dates.find((row) => row.id === halloween.id)?.hidden,
+      true,
+    );
+    assert.equal(
+      calendarOccasions("2026-10-01", "2026-10-31", []).find(
+        (row) => row.id === halloween.id,
+      )?.event_date,
+      "2026-10-31",
+    );
+    await saveWorkspace(
+      db,
+      {
+        entity: "date",
+        data: {
+          title: "Aniversário da loja",
+          event_date: "2026-11-05",
+          kind: "observance",
+          notes: "Preparar balões",
+          hidden: false,
+        },
+      },
+      "gestor@exemplo.com",
+    );
+    workspace = await readWorkspace(
+      db,
+      "2026-11-01T00:00:00-03:00",
+      "2026-12-01T00:00:00-03:00",
+    );
+    assert.ok(
+      workspace.dates.some((row) => row.title === "Aniversário da loja"),
+    );
+  } finally {
+    await db.close();
+  }
+});

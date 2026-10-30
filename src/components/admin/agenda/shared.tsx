@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { Supplier } from "../../../lib/agenda/types";
 export type Save = (
-  entity: "supplier" | "appointment" | "note" | "import",
+  entity: "supplier" | "appointment" | "note" | "import" | "date",
   data: unknown,
   id?: string,
   revision?: number,

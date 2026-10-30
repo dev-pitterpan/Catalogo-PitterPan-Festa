@@ -1,4 +1,7 @@
 export const agendaSchema = `
+CREATE TABLE IF NOT EXISTS pitterpan_calendar_dates (
+ id text PRIMARY KEY,title text NOT NULL,event_date date NOT NULL,kind text NOT NULL,notes text NOT NULL DEFAULT '',hidden boolean NOT NULL DEFAULT false,revision integer NOT NULL DEFAULT 1,updated_at timestamptz NOT NULL DEFAULT now()
+);
 CREATE TABLE IF NOT EXISTS pitterpan_suppliers (
  id uuid PRIMARY KEY, code text NOT NULL UNIQUE, name text NOT NULL, trade_name text NOT NULL DEFAULT '', state text NOT NULL DEFAULT '',
  contact text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', email text NOT NULL DEFAULT '', catalog_url text NOT NULL DEFAULT '',

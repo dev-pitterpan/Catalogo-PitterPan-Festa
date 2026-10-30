@@ -9,7 +9,12 @@ import type { Save } from "./shared";
 import MeetingCalendar from "./MeetingCalendar";
 import SupplierDirectory from "./SupplierDirectory";
 import NotesWorkspace from "./NotesWorkspace";
-const empty: Workspace = { suppliers: [], appointments: [], notes: [] };
+const empty: Workspace = {
+  suppliers: [],
+  appointments: [],
+  notes: [],
+  dates: [],
+};
 export default function AgendaWorkspace() {
   const [tab, setTab] = useState("agenda"),
     [month, setMonth] = useState(todayDate().slice(0, 7));
@@ -20,29 +25,34 @@ export default function AgendaWorkspace() {
     [message, setMessage] = useState("");
   const generation = useRef(0),
     saving = useRef(false);
-  const load = useCallback(async () => {
-    const seq = ++generation.current;
-    const days = monthDays(month);
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/admin/agenda/?${new URLSearchParams({ start: days[0], end: days[41] })}`,
-        { cache: "no-store" },
-      );
-      const result = await response.json();
-      if (!response.ok)
-        throw Error(result.error || "Não foi possível carregar.");
-      if (seq === generation.current) {
-        setData(result);
-        setError("");
+  const load = useCallback(
+    async (silent = false) => {
+      const seq = ++generation.current;
+      const days = monthDays(month);
+      if (!silent) setLoading(true);
+      try {
+        const response = await fetch(
+          `/api/admin/agenda/?${new URLSearchParams({ start: days[0], end: days[41] })}`,
+          { cache: "no-store" },
+        );
+        const result = await response.json();
+        if (!response.ok)
+          throw Error(result.error || "Não foi possível carregar.");
+        if (seq === generation.current) {
+          setData(result);
+          setError("");
+        }
+      } catch (error) {
+        if (seq === generation.current)
+          setError(
+            error instanceof Error ? error.message : "Falha de conexão.",
+          );
+      } finally {
+        if (!silent && seq === generation.current) setLoading(false);
       }
-    } catch (error) {
-      if (seq === generation.current)
-        setError(error instanceof Error ? error.message : "Falha de conexão.");
-    } finally {
-      if (seq === generation.current) setLoading(false);
-    }
-  }, [month]);
+    },
+    [month],
+  );
   useEffect(() => {
     void load();
     return () => {
@@ -68,7 +78,7 @@ export default function AgendaWorkspace() {
           ? `${result.added} fornecedores incluídos e ${result.updated} atualizados. Contatos preservados.`
           : "Informações salvas com sucesso.",
       );
-      await load();
+      await load(true);
       return true;
     } catch (error) {
       setError(
@@ -141,6 +151,7 @@ export default function AgendaWorkspace() {
           month={month}
           onMonth={setMonth}
           appointments={data.appointments}
+          dates={data.dates || []}
           suppliers={data.suppliers}
           save={save}
           busy={busy}

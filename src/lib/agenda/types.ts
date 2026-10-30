@@ -1,3 +1,4 @@
+import type { Occasion } from "./occasions";
 export type Supplier = {
   id: string;
   code: string;
@@ -34,6 +35,7 @@ export type Note = {
   revision: number;
 };
 export type Workspace = {
+  dates: Occasion[];
   suppliers: Supplier[];
   appointments: Appointment[];
   notes: Note[];

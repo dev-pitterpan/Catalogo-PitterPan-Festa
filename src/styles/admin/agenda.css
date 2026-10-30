@@ -350,8 +350,8 @@
   color: #7a94b0;
 }
 .admin-app .agenda-supplier-list {
-  max-height: 650px;
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
   overscroll-behavior: contain;
 }
 .admin-app .agenda-supplier-row {
@@ -576,4 +576,256 @@
   .admin-app .agenda-avatar {
     display: none;
   }
+}
+/* Local button styles also cover text actions that aren't links. */
+.admin-app .agenda-workspace button.admin-text-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #d9e5f2;
+  border-radius: 9px;
+  padding: 8px 12px;
+  background: #f5f9fe;
+  color: #527ca6;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  box-shadow: none;
+  text-decoration: none;
+}
+.admin-app .agenda-workspace button.admin-text-link:hover {
+  background: #eaf2fc;
+  border-color: #a9c2df;
+}
+.admin-app .agenda-pagination {
+  display: flex;
+  gap: 8px;
+}
+.admin-app .agenda-date-field,
+.admin-app .agenda-time-field {
+  display: grid;
+  gap: 7px;
+  position: relative;
+  min-width: 0;
+  font-size: 11px;
+  color: #6b839d;
+}
+.admin-app .agenda-date-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 11px 12px;
+  min-height: 42px;
+  border: 1px solid #dae6f1;
+  border-radius: 10px;
+  background: #fbfdff;
+  color: #456580;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.admin-app .agenda-date-dialog {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: min(290px, calc(100vw - 64px));
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #d7e5f2;
+  border-radius: 14px;
+  box-shadow: 0 12px 35px #33557724;
+  z-index: 30;
+  box-sizing: border-box;
+}
+.admin-app .agenda-field-pair > .agenda-date-field .agenda-date-dialog {
+  left: auto;
+  right: 0;
+}
+.admin-app .agenda-date-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.admin-app .agenda-date-dialog strong {
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.admin-app .agenda-date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.admin-app .agenda-date-grid > span {
+  text-align: center;
+  font-size: 10px;
+  padding: 6px 0;
+  color: #899bb0;
+}
+.admin-app .agenda-date-grid > button {
+  padding: 7px 0;
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: #527494;
+  font-size: 11px;
+  cursor: pointer;
+}
+.admin-app .agenda-date-grid > button:hover {
+  background: #eaf2fc;
+}
+.admin-app .agenda-date-grid > button.is-other {
+  color: #aab9c8;
+}
+.admin-app .agenda-date-grid > button.is-selected {
+  background: #356da9;
+  color: #fff;
+}
+.admin-app .agenda-time-field > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 5px;
+  align-items: center;
+}
+.admin-app .agenda-time-field .admin-select-trigger {
+  padding: 11px 8px;
+  min-height: 42px;
+}
+.admin-app .agenda-pagination {
+  align-items: center;
+}
+.admin-app .agenda-pagination-top {
+  margin: 0 0 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e6eef7;
+}
+.admin-app .agenda-calendar-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0 0 16px;
+  font-size: 10px;
+  color: #7d92a8;
+}
+.admin-app .agenda-calendar-legend > span {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.admin-app .agenda-calendar-legend i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #879bc4;
+}
+.admin-app .agenda-calendar-legend i.holiday {
+  background: #6ba891;
+}
+.admin-app .agenda-calendar-legend i.commercial {
+  background: #e4b452;
+}
+.admin-app .agenda-occasion {
+  border: 0;
+  border-left: 3px solid #8b9cc5;
+  background: #f0f2fb;
+  color: #667da2;
+  border-radius: 5px;
+  padding: 6px;
+  text-align: left;
+  font-size: 10px;
+  cursor: pointer;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-app .agenda-occasion.holiday {
+  background: #ecf6f1;
+  border-color: #6ba891;
+  color: #4e8b75;
+}
+.admin-app .agenda-occasion.commercial {
+  background: #fff7e6;
+  border-color: #e4b452;
+  color: #9c7d3c;
+}
+.admin-app .agenda-occasion.is-hidden {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.admin-app .agenda-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #7d92a8;
+}
+.admin-app .agenda-checkbox > input {
+  width: 15px;
+  height: 15px;
+  accent-color: #356da9;
+}
+.admin-app .agenda-reference-note {
+  display: grid;
+  gap: 7px;
+  background: #f1f6fc;
+  border: 1px solid #dce8f5;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 11px;
+  margin-bottom: 18px;
+  line-height: 1.6;
+  color: #7890a8;
+}
+.admin-app .agenda-reference-note strong {
+  color: #527494;
+  font-size: 12px;
+}
+.admin-app .agenda-reference-note p {
+  margin: 0;
+}
+.admin-app .agenda-reference-note a {
+  color: #527ca6;
+}
+.admin-app .agenda-date-detail {
+  display: grid;
+  gap: 10px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e7eef6;
+}
+.admin-app .agenda-date-detail p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #7890a8;
+  margin: 0;
+}
+.admin-app .agenda-occasion-label {
+  font-size: 10px;
+  color: #8c9eaf;
+}
+.admin-app .agenda-occasion-label.holiday {
+  color: #4e8b75;
+}
+.admin-app .agenda-occasion-label.commercial {
+  color: #9c7d3c;
+}
+.admin-app .agenda-date-title {
+  border: 0;
+  background: none;
+  font-size: 14px;
+  color: #456c96;
+  font-weight: 600;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+.admin-app .agenda-date-detail > .admin-text-link {
+  justify-self: start;
 }

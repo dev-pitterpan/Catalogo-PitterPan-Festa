@@ -1,3 +1,8 @@
+import {
+  calendarOccasions,
+  referenceOccasions,
+  type OccasionOverride,
+} from "../../lib/agenda/occasions.ts";
 import { randomUUID } from "node:crypto";
 import type { z } from "zod";
 import type { SqlClient } from "../database/catalog-repository.ts";
@@ -17,7 +22,7 @@ export async function ensureAgenda(db: SqlClient) {
   }
 }
 export async function readWorkspace(db: SqlClient, start: string, end: string) {
-  const [suppliers, appointments, notes] = await Promise.all([
+  const [suppliers, appointments, notes, dates] = await Promise.all([
     db.query<Supplier>(
       "SELECT id,code,name,trade_name,state,contact,phone,email,catalog_url,revision,updated_at::text FROM pitterpan_suppliers ORDER BY name,code LIMIT 5000",
     ),
@@ -28,8 +33,16 @@ export async function readWorkspace(db: SqlClient, start: string, end: string) {
     db.query<Note>(
       "SELECT id,supplier_id,title,body,owner,revision,updated_at::text FROM pitterpan_supplier_notes ORDER BY updated_at DESC,id LIMIT 1000",
     ),
+    db.query<OccasionOverride>(
+      "SELECT id,title,event_date::text,kind,notes,hidden,revision FROM pitterpan_calendar_dates LIMIT 5000",
+    ),
   ]);
   return {
+    dates: calendarOccasions(
+      start.slice(0, 10),
+      new Date(Date.parse(end) - 86400000).toISOString().slice(0, 10),
+      dates.rows,
+    ),
     suppliers: suppliers.rows.map((row) => ({
       ...row,
       updated_at: new Date(row.updated_at).toISOString(),
@@ -55,6 +68,45 @@ export async function saveWorkspace(
   try {
     // Serializes writes across instances, including import and overlap checks.
     await db.query("SELECT pg_advisory_xact_lock(81643002)");
+    if (input.entity === "date") {
+      const value = input.data;
+      const id = value.id || randomUUID();
+      if (id.startsWith("ref-")) {
+        const reference = referenceOccasions(Number(id.split("-")[1])).find(
+          (row) => row.id === id,
+        );
+        if (!reference)
+          throw new AgendaError("Referência de data inválida.", 400);
+      }
+      const current = (
+        await db.query<{ revision: number }>(
+          "SELECT revision FROM pitterpan_calendar_dates WHERE id=$1 FOR UPDATE",
+          [id],
+        )
+      ).rows[0];
+      if ((current?.revision || 0) !== (input.revision || 0))
+        throw new AgendaError(
+          "Esta data foi alterada por outra pessoa. Reabra antes de salvar.",
+        );
+      await db.query(
+        `INSERT INTO pitterpan_calendar_dates(id,title,event_date,kind,notes,hidden) VALUES($1,$2,$3,$4,$5,$6)
+        ON CONFLICT(id) DO UPDATE SET title=EXCLUDED.title,event_date=EXCLUDED.event_date,kind=EXCLUDED.kind,notes=EXCLUDED.notes,hidden=EXCLUDED.hidden,revision=pitterpan_calendar_dates.revision+1,updated_at=now()`,
+        [
+          id,
+          value.title,
+          value.event_date,
+          value.kind,
+          value.notes,
+          value.hidden,
+        ],
+      );
+      await db.query(
+        "INSERT INTO pitterpan_agenda_events(actor,action,entity_id) VALUES($1,'date.saved',$2)",
+        [actor, id],
+      );
+      await db.query("COMMIT");
+      return { id };
+    }
     if (input.entity === "import") {
       const existing = await db.query<{ code: string }>(
         "SELECT code FROM pitterpan_suppliers WHERE code=ANY($1::text[])",

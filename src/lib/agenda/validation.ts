@@ -1,3 +1,4 @@
+import { calendarDate } from "../admin/date-range.ts";
 import { z } from "zod";
 const text = (max: number) => z.string().trim().max(max);
 const url = text(2000).refine((v) => {
@@ -68,7 +69,24 @@ export const noteSchema = z.object({
   title: text(180).min(2),
   body: text(20000),
 });
+export const occasionSchema = z.object({
+  id: z
+    .string()
+    .max(90)
+    .regex(/^(ref-\d{4}-[a-z0-9-]+|[a-f0-9-]{36})$/)
+    .optional(),
+  title: text(180).min(2),
+  event_date: calendarDate,
+  kind: z.enum(["holiday", "commercial", "observance", "optional"]),
+  notes: text(6000).default(""),
+  hidden: z.boolean().default(false),
+});
 export const mutationSchema = z.discriminatedUnion("entity", [
+  z.object({
+    entity: z.literal("date"),
+    revision: z.number().int().nonnegative().optional(),
+    data: occasionSchema,
+  }),
   z.object({
     entity: z.literal("supplier"),
     id: z.uuid().optional(),

@@ -1,3 +1,4 @@
+import ProductThumbnail from "../../../../components/admin/ProductThumbnail";
 import {
   adminContext,
   adminChanges,
@@ -70,8 +71,13 @@ export default async function Changes({
                 {data.items.map((item) => (
                   <tr key={item.id}>
                     <td>
-                      <strong>{item.name}</strong>
-                      <small>SKU {item.sku || "não informado"}</small>
+                      <div className="admin-product-name admin-change-product">
+                        <ProductThumbnail src={item.image} />
+                        <div>
+                          <strong>{item.name}</strong>
+                          <small>SKU {item.sku || "não informado"}</small>
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <span

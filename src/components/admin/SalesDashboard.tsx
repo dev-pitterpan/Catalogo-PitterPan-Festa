@@ -585,7 +585,7 @@ export default function SalesDashboard({
               Ver produtos vendidos <ArrowUpRight size={16} />
             </a>
           </section>
-          <div className="admin-overview-grid">
+          <div className="admin-overview-grid sales-comparison-grid">
             <section className="admin-panel" id="sold-products">
               <header>
                 <div>
@@ -648,7 +648,7 @@ export default function SalesDashboard({
                 <p>Sem unidades vendidas para este período.</p>
               )}
             </section>
-            <section className="admin-panel">
+            <section className="admin-panel sales-orders-panel">
               <header>
                 <h2>Pedidos recentes</h2>
                 <ShoppingCart size={22} />

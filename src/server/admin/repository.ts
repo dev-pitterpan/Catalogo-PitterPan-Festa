@@ -267,7 +267,7 @@ export async function adminChanges(page: number) {
   if (!context.active || !context.previous)
     return { items: [], total: 0, pages: 1, page: 1 };
   const sql = `WITH a AS(SELECT * FROM catalog_items WHERE import_id=$1),b AS(SELECT * FROM catalog_items WHERE import_id=$2)
- SELECT COALESCE(a.variant_id,b.variant_id) AS id,COALESCE(a.name,b.name) AS name,COALESCE(a.sku,b.sku,a.id,b.id) AS sku,
+ SELECT COALESCE(a.variant_id,b.variant_id) AS id,COALESCE(a.name,b.name) AS name,COALESCE(a.sku,b.sku,a.id,b.id) AS sku,COALESCE(a.image_url,b.image_url) AS image,
  CASE WHEN b.variant_id IS NULL THEN 'added' WHEN a.variant_id IS NULL THEN 'removed' ELSE 'changed' END AS kind,
  a.price::text AS price,b.price::text AS old_price,a.inventory_quantity AS stock,b.inventory_quantity AS old_stock
  FROM a FULL JOIN b USING(variant_id) WHERE a.variant_id IS NULL OR b.variant_id IS NULL OR ROW(a.name,a.price,a.inventory_quantity,a.image_url,a.category) IS DISTINCT FROM ROW(b.name,b.price,b.inventory_quantity,b.image_url,b.category)`;
@@ -278,6 +278,7 @@ export async function adminChanges(page: number) {
     id: string;
     name: string;
     sku: string;
+    image: string | null;
     kind: string;
     price: string | null;
     old_price: string | null;

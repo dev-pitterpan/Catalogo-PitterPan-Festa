@@ -2141,3 +2141,48 @@
     transition: none;
   }
 }
+/* The product ranking determines the shared card height on desktop. */
+.admin-app .sales-comparison-grid > #sold-products {
+  min-height: 400px;
+}
+.admin-app .sales-comparison-grid > .sales-orders-panel {
+  contain: size;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.admin-app .sales-orders-panel > header,
+.admin-app .sales-orders-panel > .sales-definition,
+.admin-app .sales-orders-panel > .sales-pagination {
+  flex: 0 0 auto;
+}
+.admin-app .sales-orders-panel > .finance-table-viewport {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+  overflow: auto !important;
+}
+.admin-app .admin-change-product {
+  align-items: center;
+}
+.admin-app .admin-change-product img {
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.admin-app .admin-change-product > div {
+  min-width: 180px;
+  max-width: 440px;
+}
+@media (max-width: 700px) {
+  .admin-app .sales-comparison-grid > #sold-products {
+    min-height: 0;
+  }
+  .admin-app .sales-comparison-grid > .sales-orders-panel {
+    contain: none;
+  }
+  .admin-app .sales-orders-panel > .finance-table-viewport {
+    flex: 0 1 auto;
+    max-height: 420px;
+  }
+}

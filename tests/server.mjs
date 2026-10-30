@@ -33,6 +33,7 @@ const child = spawn(process.execPath, ["scripts/run-next.ts", "start"], {
     NEXT_TELEMETRY_DISABLED: "1",
     CATALOG_DATA_SOURCE: "json",
     DATABASE_URL: "",
+    JITSI_BASE_URL: "",
     SHOPIFY_SALES_STORE_DOMAIN: "fixture.myshopify.com",
     SHOPIFY_SALES_CLIENT_ID: "fixture",
     SHOPIFY_SALES_CLIENT_SECRET: "test-webhook-secret",
@@ -223,6 +224,29 @@ try {
   assert.equal(
     (await rawFetch(base + "/api/admin/sales/?view=finance&days=1")).status,
     401,
+  );
+  assert.equal((await rawFetch(base + "/api/admin/agenda/video/")).status, 401);
+  assert.equal(
+    (await rawFetch(base + "/api/admin/agenda/video/", { method: "POST" }))
+      .status,
+    401,
+  );
+  assert.equal(
+    (
+      await fetch(base + "/api/admin/agenda/video/", {
+        method: "POST",
+        headers: { origin: "https://other.example.test" },
+      })
+    ).status,
+    403,
+  );
+  const videoConfig = await fetch(base + "/api/admin/agenda/video/");
+  assert.equal(videoConfig.status, 200);
+  assert.deepEqual(await videoConfig.json(), { configured: false });
+  assert.ok(
+    (await (await fetch(base + "/gestor/reunioes/invalid/")).text()).includes(
+      "Página não encontrada",
+    ),
   );
   const filteredSales = await fetch(
     base +

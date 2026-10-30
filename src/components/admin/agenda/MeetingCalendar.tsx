@@ -308,7 +308,7 @@ export default function MeetingCalendar({
               {a.video_url && (
                 <a
                   className="agenda-icon-button"
-                  href={a.video_url}
+                  href={`/gestor/reunioes/${a.id}/`}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Abrir reunião: ${a.title}`}

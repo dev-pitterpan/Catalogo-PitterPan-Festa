@@ -1,7 +1,8 @@
 "use client";
 import { AgendaDateField, AgendaTimeField } from "./DateTimeFields";
 import { useState, type FormEvent } from "react";
-import { CalendarPlus, Video, X } from "lucide-react";
+import MeetingActions from "./video/MeetingActions";
+import { CalendarPlus, X } from "lucide-react";
 import AdminSelect from "../AdminSelect";
 import { localDay, localTime } from "../../../lib/agenda/calendar";
 import type { Appointment, Supplier } from "../../../lib/agenda/types";
@@ -21,6 +22,11 @@ export default function AppointmentEditor({
   onClose: () => void;
   busy: boolean;
 }) {
+  const [videoUrl, setVideoUrl] = useState(appointment?.video_url || "");
+  const [savedVideoUrl, setSavedVideoUrl] = useState(
+    appointment?.video_url || "",
+  );
+  const [revision, setRevision] = useState(appointment?.revision);
   const [supplier, setSupplier] = useState(appointment?.supplier_id || null);
   const [status, setStatus] = useState(appointment?.status || "scheduled");
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -39,7 +45,7 @@ export default function AppointmentEditor({
         description: data.description,
       },
       appointment?.id,
-      appointment?.revision,
+      revision,
     );
     if (ok) onClose();
   }
@@ -136,21 +142,32 @@ export default function AppointmentEditor({
             <input
               type="url"
               name="video_url"
-              defaultValue={appointment?.video_url}
+              value={videoUrl}
+              onChange={(event) => setVideoUrl(event.target.value)}
               placeholder="https://…"
               maxLength={2000}
             />
           </label>
-          {appointment?.video_url && (
-            <a
-              className="admin-text-link"
-              href={appointment.video_url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Video size={16} /> Abrir reunião
-            </a>
-          )}
+          <MeetingActions
+            appointment={
+              appointment
+                ? {
+                    ...appointment,
+                    revision: revision!,
+                    video_url: savedVideoUrl,
+                  }
+                : undefined
+            }
+            supplier={suppliers.find(
+              (item) => item.id === appointment?.supplier_id,
+            )}
+            busy={busy}
+            onCreated={(url, nextRevision) => {
+              setVideoUrl(url);
+              setSavedVideoUrl(url);
+              setRevision(nextRevision);
+            }}
+          />
           <label>
             Pauta e observações
             <textarea

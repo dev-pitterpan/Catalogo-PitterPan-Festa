@@ -829,3 +829,66 @@
 .admin-app .agenda-date-detail > .admin-text-link {
   justify-self: start;
 }
+
+.agenda-video-tools {
+  padding: 16px;
+  border: 1px solid #dbe7f4;
+  border-radius: 14px;
+  background: #f4f8fe;
+  display: grid;
+  gap: 10px;
+}
+.agenda-video-tools > strong,
+.agenda-video-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.agenda-video-actions {
+  margin: 14px 0;
+}
+.agenda-video-actions button.admin-text-link {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+.agenda-video-actions > small {
+  color: #6e89a6;
+  font-size: 11px;
+}
+.agenda-video-room {
+  margin-top: 20px;
+}
+.agenda-video-frame {
+  height: min(75vh, 800px);
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid #dbe7f4;
+  border-radius: 16px;
+  background: #10233d;
+}
+.agenda-video-frame iframe {
+  border: 0;
+  width: 100%;
+  height: 100%;
+}
+.agenda-video-placeholder {
+  display: grid;
+  place-items: center;
+  gap: 14px;
+  min-height: 300px;
+  padding: 30px;
+  text-align: center;
+  color: #6585ab;
+  border-radius: 16px;
+  background: #f2f7fd;
+}
+@media (max-width: 600px) {
+  .agenda-video-frame {
+    height: 70vh;
+    min-height: 360px;
+  }
+}

@@ -122,11 +122,28 @@ try {
   assert.ok(managerCatalogHtml.includes("Copiar link do cliente"));
   assert.ok(
     managerCatalogHtml.includes(
-      'href="https://catalogopitterpanfesta.vercel.app/halloween/"',
+      'href="https://catalogopitterpanfesta.vercel.app/halloween/?view=client"',
     ),
   );
   const publicCatalogHtml = await (await rawFetch(base + "/halloween/")).text();
   assert.ok(!publicCatalogHtml.includes("Copiar link do cliente"));
+  const authenticatedPublicHtml = await (
+    await fetch(base + "/halloween/")
+  ).text();
+  assert.ok(authenticatedPublicHtml.includes("Copiar link do cliente"));
+  const clientPreviewHtml = await (
+    await fetch(base + "/halloween/?view=client")
+  ).text();
+  assert.ok(!clientPreviewHtml.includes("Copiar link do cliente"));
+  assert.ok(clientPreviewHtml.includes("quote-cart-trigger"));
+  const catalogListHtml = await (
+    await fetch(base + "/gestor/catalogos/")
+  ).text();
+  assert.ok(
+    /<a(?=[^>]*href="\/gestor\/halloween\/")(?=[^>]*target="_blank")[^>]*>/.test(
+      catalogListHtml,
+    ),
+  );
   for (const route of [
     "/api/admin/sync/",
     "/api/admin/sales/",

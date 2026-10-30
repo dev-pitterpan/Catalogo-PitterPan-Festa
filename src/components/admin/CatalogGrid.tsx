@@ -103,10 +103,12 @@ export default function CatalogGrid({
               <p>{c.description}</p>
               <Link
                 href={`/gestor/${c.slug}/`}
+                target="_blank"
+                rel="noopener noreferrer"
                 prefetch={false}
                 className="admin-text-link"
               >
-                Abrir catálogo <ArrowUpRight size={16} />
+                Abrir catálogo em nova aba <ArrowUpRight size={16} />
               </Link>
               <div className="admin-catalog-card-actions">
                 <button onClick={() => share(c.slug, c.name, "copy")}>
@@ -120,7 +122,7 @@ export default function CatalogGrid({
                   <Share2 size={16} />
                 </button>
                 <a
-                  href={publicCatalogUrl(c.slug, base)}
+                  href={`${publicCatalogUrl(c.slug, base)}?view=client`}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Ver ${c.name} como cliente`}

@@ -61,7 +61,7 @@ export default function ShareBar({
         </button>
         <a
           className="owner-action owner-action--preview"
-          href={url}
+          href={`${url}${url.includes("?") ? "&" : "?"}view=client`}
           target="_blank"
           rel="noopener noreferrer"
         >

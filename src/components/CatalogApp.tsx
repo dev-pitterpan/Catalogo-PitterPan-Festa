@@ -18,14 +18,28 @@ import { MAX_CART_ITEMS, whatsappUrl } from "../lib/quote";
 
 export default function CatalogApp({
   initialData,
+  managerView,
 }: {
+  managerView?: boolean;
   initialData: CatalogPageData;
 }) {
   const pathname = usePathname() || "/";
-  return <CatalogPage key={pathname} initialData={initialData} />;
+  return (
+    <CatalogPage
+      key={`${pathname}-${managerView}`}
+      initialData={initialData}
+      managerView={managerView}
+    />
+  );
 }
 
-function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
+function CatalogPage({
+  initialData,
+  managerView,
+}: {
+  initialData: CatalogPageData;
+  managerView?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [category, setCategory] = useState("");
@@ -41,13 +55,17 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
     loading,
     error,
     fetching,
-  } = useCatalogPage(initialData, {
-    q: debouncedQuery,
-    category,
-    page,
-    vendor,
-    sort,
-  });
+  } = useCatalogPage(
+    initialData,
+    {
+      q: debouncedQuery,
+      category,
+      page,
+      vendor,
+      sort,
+    },
+    managerView,
+  );
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query);

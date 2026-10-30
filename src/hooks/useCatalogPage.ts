@@ -13,9 +13,14 @@ export function useCatalogPage(
     vendor: string;
     sort: "name" | "price-asc" | "price-desc";
   },
+  managerView?: boolean,
 ) {
   const pathname = usePathname() || "/";
-  const route = resolveCatalogRoute(pathname);
+  const resolved = resolveCatalogRoute(pathname);
+  const route = {
+    ...resolved,
+    isClient: managerView === undefined ? resolved.isClient : !managerView,
+  };
   const result = useQuery({
     queryKey: [
       "catalog-page",

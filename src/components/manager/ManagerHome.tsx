@@ -76,6 +76,8 @@ function CatalogTile({
     <Link
       className={`manager-hub__tile ${compact ? "manager-hub__tile--compact" : ""}`}
       href={`${publicView ? "" : "/gestor"}/${catalog.slug}/`}
+      target={publicView ? undefined : "_blank"}
+      rel={publicView ? undefined : "noopener noreferrer"}
       prefetch={false}
     >
       <span className="manager-hub__icon">
@@ -171,6 +173,8 @@ export default function ManagerHome({
             <Link
               className="manager-hub__all"
               href={publicView ? "/todos/" : "/gestor/todos/"}
+              target={publicView ? undefined : "_blank"}
+              rel={publicView ? undefined : "noopener noreferrer"}
               prefetch={false}
             >
               <span className="manager-hub__all-icon">

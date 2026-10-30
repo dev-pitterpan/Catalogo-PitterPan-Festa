@@ -10,6 +10,7 @@ import {
   RefreshCw,
   ShoppingCart,
 } from "lucide-react";
+import OrderStatusSearch from "./OrderStatusSearch";
 import SalesStatusSelect from "./SalesStatusSelect";
 import OrderCustomer from "./OrderCustomer";
 import OrderCustomerRefresh from "./OrderCustomerRefresh";
@@ -96,11 +97,11 @@ export default function SalesDashboard({
   const cursor = useRef<string | undefined>(undefined),
     fetching = useRef(0),
     motion = usePartyMotion();
-  const resetList = () => {
+  const resetList = (preserveData = false) => {
     generation.current++;
     expanded.current = false;
     cursor.current = undefined;
-    setData(null);
+    if (!preserveData) setData(null);
     setLoading(true);
     setMoreLoading(false);
     moreBusy.current = false;
@@ -201,7 +202,7 @@ export default function SalesDashboard({
     return () => clearTimeout(timer);
   }, [celebration]);
   async function loadMore() {
-    if (!data?.nextCursor || moreBusy.current) return;
+    if (loading || !data?.nextCursor || moreBusy.current) return;
     const epoch = generation.current;
     moreBusy.current = true;
     setMoreLoading(true);
@@ -656,13 +657,12 @@ export default function SalesDashboard({
               </header>
               <div className="sales-orders-status-filter">
                 <label htmlFor="recent-orders-status">
-                  Filtrar por situação
+                  Buscar situação do pedido
                 </label>
-                <SalesStatusSelect
-                  id="recent-orders-status"
+                <OrderStatusSearch
                   value={filters.status}
                   onChange={(status) => {
-                    resetList();
+                    resetList(true);
                     setFilters((old) => ({ ...old, status }));
                   }}
                 />
@@ -693,8 +693,9 @@ export default function SalesDashboard({
                 orders={data.orders}
                 onUpdate={updateCustomers}
               />
+              {loading && <small role="status">Atualizando pedidos…</small>}
               <DragScroll>
-                <table className="admin-table">
+                <table aria-busy={loading} className="admin-table">
                   <thead>
                     <tr>
                       <th>Pedido</th>

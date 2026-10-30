@@ -2,6 +2,7 @@
 import AdminSelect from "./AdminSelect";
 import type { SalesFilters } from "../../server/sales/filters";
 const options = [
+  { value: "NO_MATCH", label: "Nenhuma situação encontrada" },
   { value: "all", label: "Todas as situações" },
   { value: "PAID", label: "Pagos" },
   { value: "EXPIRED", label: "Expirados" },

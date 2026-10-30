@@ -1,6 +1,6 @@
 "use client";
 import { customerDiagnostic } from "./customerDiagnostic";
-import { UserRound } from "lucide-react";
+import CustomerBalloonAvatar from "./CustomerBalloonAvatar";
 export default function OrderCustomer({
   order,
 }: {
@@ -11,7 +11,7 @@ export default function OrderCustomer({
   return (
     <div className="sales-order-customer">
       <span className="sales-customer-avatar" aria-hidden="true">
-        <UserRound size={20} />
+        <CustomerBalloonAvatar />
       </span>
       <div>
         <strong>

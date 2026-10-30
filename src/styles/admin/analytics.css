@@ -2412,15 +2412,15 @@
   max-width: 310px;
 }
 .admin-app .sales-customer-avatar {
-  width: 34px;
+  width: 28px;
   height: 34px;
   flex-shrink: 0;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #edf3fb;
+  background: transparent;
   color: #6f8eb2;
-  border: 1px solid #dce7f3;
+  border: 0;
 }
 .admin-app .sales-order-customer > div {
   display: grid;
@@ -2489,4 +2489,33 @@
   color: #6683a3;
   font-size: 11px;
   line-height: 1.5;
+}
+
+.admin-app .sales-status-search-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #d2e1f3;
+  border-radius: 12px;
+  padding: 0 12px;
+  background: #fff;
+  color: #7393b7;
+}
+.admin-app .sales-status-search-field:focus-within {
+  outline: 2px solid #91bbed;
+  outline-offset: 2px;
+}
+.admin-app .sales-status-search-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #315b88;
+  font: inherit;
+  font-size: 12px;
+}
+.admin-app .sales-status-search-field input::placeholder {
+  color: #7e97b3;
 }

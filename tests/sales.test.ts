@@ -797,6 +797,12 @@ test("financeiro separa recebido, estorno e expirado, preservando reembolsos de 
       status: "EXPIRED",
       category: "",
     });
+    const noMatch = await readSalesOrders(db, store, 30, {
+      status: "NO_MATCH",
+      category: "",
+    });
+    assert.equal(noMatch.orders.length, 0);
+    assert.equal(noMatch.hasMore, false);
     assert.equal(expiredOnly.orders.length, 1);
     assert.equal(expiredOnly.orders[0].financial_status, "EXPIRED");
     const cancelledOnly = await readSalesOrders(db, store, 30, {

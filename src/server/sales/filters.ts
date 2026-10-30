@@ -10,6 +10,7 @@ export const salesFilterSchema = z
     status: z
       .enum([
         "all",
+        "NO_MATCH",
         "PAID",
         "PENDING",
         "AUTHORIZED",

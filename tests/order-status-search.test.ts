@@ -17,3 +17,22 @@ test("busca de situação reconhece digitação, plurais, acentos e estornos sem
   assert.equal(searchOrderStatus("   "), "all");
   assert.equal(searchOrderStatus("qualquer coisa"), "NO_MATCH");
 });
+
+test("busca tolera pequenas trocas, omissões e letras extras sem adivinhar situações ambíguas", () => {
+  for (const term of [
+    "expriados",
+    "expriado",
+    "expirdos",
+    "expirrados",
+    "EXPRÍADOS",
+  ])
+    assert.equal(searchOrderStatus(term), "EXPIRED", term);
+  assert.equal(searchOrderStatus("canceldaos"), "CANCELLED");
+  assert.equal(searchOrderStatus("reembolsdaos"), "REFUNDS");
+  assert.equal(searchOrderStatus("pendnete"), "PENDING");
+  assert.equal(searchOrderStatus("pgao"), "PAID");
+  assert.equal(searchOrderStatus("xyz"), "NO_MATCH");
+  assert.equal(searchOrderStatus("a".repeat(500)), "NO_MATCH");
+  assert.equal(searchOrderStatus("banana"), "NO_MATCH");
+  assert.equal(searchOrderStatus(""), "all");
+});

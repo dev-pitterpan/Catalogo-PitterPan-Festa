@@ -776,6 +776,35 @@ test("financeiro separa recebido, estorno e expirado, preservando reembolsos de 
       status: "REFUNDED",
       category: "",
     });
+    const allRefunds = await readSalesOrders(db, store, 30, {
+      status: "REFUNDS",
+      category: "",
+    });
+    assert.equal(allRefunds.orders.length, 2);
+    assert.ok(allRefunds.orders.every((o) => Number(o.refunded) > 0));
+    assert.ok(
+      allRefunds.orders.some(
+        (o) => o.financial_status === "PARTIALLY_REFUNDED",
+      ),
+    );
+    assert.ok(allRefunds.orders.some((o) => o.cancelled_at));
+    const refundTotals = await readSalesFinance(db, store, 30, {
+      status: "REFUNDS",
+      category: "",
+    });
+    assert.equal(Number(refundTotals.totals[0].refunded), 125.5);
+    const expiredOnly = await readSalesOrders(db, store, 30, {
+      status: "EXPIRED",
+      category: "",
+    });
+    assert.equal(expiredOnly.orders.length, 1);
+    assert.equal(expiredOnly.orders[0].financial_status, "EXPIRED");
+    const cancelledOnly = await readSalesOrders(db, store, 30, {
+      status: "CANCELLED",
+      category: "",
+    });
+    assert.equal(cancelledOnly.orders.length, 2);
+    assert.ok(cancelledOnly.orders.every((o) => o.cancelled_at));
     assert.ok(page.orders[0].cancelled_at);
     assert.equal(Number(page.orders[0].received), 100);
     assert.equal(Number(page.orders[0].refunded), 100);

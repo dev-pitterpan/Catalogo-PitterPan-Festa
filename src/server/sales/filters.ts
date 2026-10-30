@@ -16,6 +16,7 @@ export const salesFilterSchema = z
         "PARTIALLY_PAID",
         "PARTIALLY_REFUNDED",
         "REFUNDED",
+        "REFUNDS",
         "VOIDED",
         "EXPIRED",
         "UNKNOWN",

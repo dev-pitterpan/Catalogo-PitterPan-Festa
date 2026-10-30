@@ -10,6 +10,7 @@ import {
   RefreshCw,
   ShoppingCart,
 } from "lucide-react";
+import SalesStatusSelect from "./SalesStatusSelect";
 import OrderCustomer from "./OrderCustomer";
 import OrderCustomerRefresh from "./OrderCustomerRefresh";
 import DeliveryMark from "./DeliveryMark";
@@ -319,30 +320,13 @@ export default function SalesDashboard({
         />
         <div>
           <label htmlFor="sales-status">Situação do pagamento</label>
-          <AdminSelect
+          <SalesStatusSelect
             id="sales-status"
-            label="Situação do pagamento"
             value={filters.status}
-            onValueChange={(status) => {
+            onChange={(status) => {
               resetList();
-              setFilters((old) => ({
-                ...old,
-                status: status as SalesFilters["status"],
-              }));
+              setFilters((old) => ({ ...old, status }));
             }}
-            options={[
-              { value: "all", label: "Todas as situações" },
-              { value: "PAID", label: "Pago" },
-              { value: "PENDING", label: "Pendente" },
-              { value: "EXPIRED", label: "Expirado" },
-              { value: "CANCELLED", label: "Cancelado" },
-              { value: "AUTHORIZED", label: "Autorizado" },
-              { value: "PARTIALLY_PAID", label: "Parcialmente pago" },
-              { value: "PARTIALLY_REFUNDED", label: "Reembolso parcial" },
-              { value: "REFUNDED", label: "Reembolsado" },
-              { value: "VOIDED", label: "Anulado" },
-              { value: "UNKNOWN", label: "Não informado" },
-            ]}
           />
         </div>
         <div>
@@ -670,6 +654,35 @@ export default function SalesDashboard({
                 <h2>Pedidos recentes</h2>
                 <ShoppingCart size={22} />
               </header>
+              <div className="sales-orders-status-filter">
+                <label htmlFor="recent-orders-status">
+                  Filtrar por situação
+                </label>
+                <SalesStatusSelect
+                  id="recent-orders-status"
+                  value={filters.status}
+                  onChange={(status) => {
+                    resetList();
+                    setFilters((old) => ({ ...old, status }));
+                  }}
+                />
+                <small>
+                  Combina com período, categoria e entrega. Atualiza também os
+                  indicadores desta página.
+                </small>
+                {filters.status === "REFUNDS" && (
+                  <small>
+                    Inclui estornos totais e parciais com valor reembolsado,
+                    mesmo em pedidos cancelados.
+                  </small>
+                )}
+                {filters.status === "CANCELLED" && (
+                  <small>
+                    Inclui pedidos cancelados com ou sem reembolso. Confira as
+                    colunas Recebido e Estornado.
+                  </small>
+                )}
+              </div>
               <p className="sales-definition">
                 Mostrando {data.orders.length} pedidos nesta seleção, em lotes
                 de 10.

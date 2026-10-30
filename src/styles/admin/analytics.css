@@ -2469,3 +2469,24 @@
   cursor: wait;
   opacity: 0.7;
 }
+
+.admin-app .sales-orders-status-filter {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  margin: 12px 0 0;
+  border: 1px solid #dce7f4;
+  border-radius: 14px;
+  background: #f5f9fe;
+}
+.admin-app .sales-orders-status-filter > label {
+  color: #315b88;
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-app .sales-orders-status-filter > small {
+  color: #6683a3;
+  font-size: 11px;
+  line-height: 1.5;
+}

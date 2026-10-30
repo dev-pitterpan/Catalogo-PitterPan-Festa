@@ -110,7 +110,7 @@ function selection(filters: SalesFilters) {
   const period = filters.start
     ? `o.processed_at>=($2::date::timestamp AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((($${endIndex}::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')`
     : "o.processed_at>=((((now() AT TIME ZONE 'America/Sao_Paulo')::date-($2::int-1))::timestamp) AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((((now() AT TIME ZONE 'America/Sao_Paulo')::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')";
-  const status = `($3='all' OR ($3='CANCELLED' AND o.cancelled_at IS NOT NULL) OR o.financial_status=$3)`;
+  const status = `($3='all' OR ($3='CANCELLED' AND o.cancelled_at IS NOT NULL) OR ($3='REFUNDS' AND o.refunded>0) OR o.financial_status=$3)`;
   const delivery =
     filters.delivery === "all"
       ? ""

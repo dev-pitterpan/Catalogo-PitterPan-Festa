@@ -1959,6 +1959,13 @@
 .finance-table-viewport th:first-child {
   z-index: 3;
 }
+.admin-app .finance-table-viewport .admin-table tbody td:first-child {
+  background: #fff;
+  transition: none;
+}
+.admin-app .finance-table-viewport .admin-table tbody tr:hover td:first-child {
+  background: #f9fbfd;
+}
 .finance-table-viewport tfoot th:first-child {
   top: auto;
   background: #edf4fc !important;

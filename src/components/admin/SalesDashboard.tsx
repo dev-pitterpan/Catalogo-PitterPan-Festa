@@ -11,6 +11,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import DeliveryMark from "./DeliveryMark";
+import DragScroll from "./DragScroll";
 import {
   deliveryKinds,
   deliveryLabels,
@@ -659,12 +660,7 @@ export default function SalesDashboard({
                 {expanded.current &&
                   " A atualização automática da lista fica pausada durante esta consulta."}
               </p>
-              <div
-                className="admin-table-scroll finance-table-viewport"
-                role="region"
-                tabIndex={0}
-                aria-label="Pedidos com rolagem"
-              >
+              <DragScroll>
                 <table className="admin-table">
                   <thead>
                     <tr>
@@ -730,7 +726,7 @@ export default function SalesDashboard({
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </DragScroll>
               <div className="sales-pagination">
                 {moreError && <p role="alert">{moreError}</p>}
                 {data.hasMore && (

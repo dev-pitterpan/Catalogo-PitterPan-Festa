@@ -2187,6 +2187,14 @@
   }
 }
 /* Light column guides keep financial values easy to scan. */
+.admin-app .drag-scroll {
+  cursor: grab;
+}
+.admin-app .drag-scroll[data-dragging="true"] {
+  cursor: grabbing;
+  user-select: none;
+}
+
 .admin-app .sales-orders-panel .admin-table tr > :not(:last-child) {
   border-right: 1px solid #e6eef7;
 }

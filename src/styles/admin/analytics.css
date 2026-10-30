@@ -2148,12 +2148,11 @@
     transition: none;
   }
 }
-/* The product ranking determines the shared card height on desktop. */
+/* Both cards stretch together; an empty ranking must not collapse orders. */
 .admin-app .sales-comparison-grid > #sold-products {
   min-height: 400px;
 }
 .admin-app .sales-comparison-grid > .sales-orders-panel {
-  contain: size;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -2165,8 +2164,9 @@
   flex: 0 0 auto;
 }
 .admin-app .sales-orders-panel > .finance-table-viewport {
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 1 1 360px;
+  height: 360px;
+  min-height: 280px;
   max-height: none;
   overflow: auto !important;
 }
@@ -2190,6 +2190,8 @@
   }
   .admin-app .sales-orders-panel > .finance-table-viewport {
     flex: 0 1 auto;
+    height: 360px;
+    min-height: 240px;
     max-height: 420px;
   }
 }

@@ -3,6 +3,7 @@
 @import "./styles/components/sidebar.css";
 @import "./styles/catalog/catalog-base.css";
 @import "./styles/pages/gestor-home.css";
+@import "./styles/catalog/catalog-controls.css";
 @import "./styles/components/sidebar-practical.css";
 @import "./styles/components/catalog-loader.css";
 @import "tailwindcss/theme.css" layer(theme);

@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import CatalogShell from "../components/CatalogShell";
 import ProductCard from "../components/ProductCard";
 import QuoteCart from "../components/QuoteCart";
+import AdminSelect from "./admin/AdminSelect";
 import ShareBar from "../components/ShareBar";
 import ManagerHome from "./manager/ManagerHome";
 import { useQuote } from "../hooks/useQuote";
@@ -135,7 +136,7 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
   );
   return (
     <div
-      className={`catalog-page catalog-unified theme-${catalog.slug}${isClient ? " client-page" : ""}`}
+      className={`catalog-page catalog-unified theme-${catalog.slug}${isClient ? " client-page" : " manager-catalog-page"}`}
     >
       {quote.storageError && (
         <p role="alert">
@@ -176,58 +177,64 @@ function CatalogPage({ initialData }: { initialData: CatalogPageData }) {
         }
       >
         <div className="catalog-filters">
-          <label>
-            Categoria
-            <select
+          <div className="catalog-filter-field">
+            <span>Categoria</span>
+            <AdminSelect
+              label="Categoria"
               value={category}
-              onChange={(event) => {
-                setCategory(event.target.value);
+              onValueChange={(value) => {
+                setCategory(value);
                 setPage(1);
               }}
-            >
-              <option value="">Todas as categorias</option>
-              {category &&
+              options={[
+                { value: "", label: "Todas as categorias" },
+                ...(category &&
                 !catalog.pagination?.categories.some(
                   (item) => item.name === category,
-                ) && <option value={category}>{category}</option>}
-              {catalog.pagination?.categories.map((item) => (
-                <option key={item.name} value={item.name}>
-                  {item.name} ({item.count})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Marca
-            <select
+                )
+                  ? [{ value: category, label: category }]
+                  : []),
+                ...(catalog.pagination?.categories.map((item) => ({
+                  value: item.name,
+                  label: `${item.name} (${item.count})`,
+                })) || []),
+              ]}
+            />
+          </div>
+          <div className="catalog-filter-field">
+            <span>Marca</span>
+            <AdminSelect
+              label="Marca"
               value={vendor}
-              onChange={(event) => {
-                setVendor(event.target.value);
+              onValueChange={(value) => {
+                setVendor(value);
                 setPage(1);
               }}
-            >
-              <option value="">Todas as marcas</option>
-              {catalog.pagination?.vendors.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Ordenar
-            <select
+              options={[
+                { value: "", label: "Todas as marcas" },
+                ...(catalog.pagination?.vendors.map((name) => ({
+                  value: name,
+                  label: name,
+                })) || []),
+              ]}
+            />
+          </div>
+          <div className="catalog-filter-field">
+            <span>Ordenar</span>
+            <AdminSelect
+              label="Ordenar produtos"
               value={sort}
-              onChange={(event) => {
-                setSort(event.target.value as typeof sort);
+              onValueChange={(value) => {
+                setSort(value as typeof sort);
                 setPage(1);
               }}
-            >
-              <option value="name">Nome</option>
-              <option value="price-asc">Menor preço</option>
-              <option value="price-desc">Maior preço</option>
-            </select>
-          </label>
+              options={[
+                { value: "name", label: "Nome" },
+                { value: "price-asc", label: "Menor preço" },
+                { value: "price-desc", label: "Maior preço" },
+              ]}
+            />
+          </div>
           <span role="status">
             {fetching
               ? "Atualizando produtos…"

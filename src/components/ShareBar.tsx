@@ -37,16 +37,23 @@ export default function ShareBar({
       aria-label="Ações do catálogo"
     >
       <div className="owner-link-wrap">
-        <span className="owner-kicker">Catálogo {catalog.name}</span>
+        <span className="owner-kicker">
+          LINK PÚBLICO DO CLIENTE · {catalog.name}
+        </span>
         <div className="owner-link">
           <Link2 aria-hidden="true" />
-          <strong>{url.replace(/^https?:\/\//, "")}</strong>
+          <input
+            aria-label="Link público do catálogo para o cliente"
+            readOnly
+            value={url}
+            onFocus={(event) => event.currentTarget.select()}
+          />
         </div>
       </div>
       <div className="owner-actions">
         <button className="owner-action" onClick={copy}>
           <Copy aria-hidden="true" />
-          <span>{copied ? "Link copiado" : "Copiar link"}</span>
+          <span>{copied ? "Link copiado" : "Copiar link do cliente"}</span>
         </button>
         <button className="owner-action owner-action--share" onClick={share}>
           <Share2 aria-hidden="true" />
@@ -54,7 +61,7 @@ export default function ShareBar({
         </button>
         <a
           className="owner-action owner-action--preview"
-          href={`/${catalog.slug}/`}
+          href={url}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -62,6 +69,11 @@ export default function ShareBar({
           <span>Ver como cliente</span>
         </a>
       </div>
+      <p className="owner-share-note" role="status">
+        {copied
+          ? "Link público copiado. Pode enviar ao cliente."
+          : "Compartilhe este link: o cliente acessa o catálogo sem entrar na conta do gestor."}
+      </p>
     </section>
   );
 }

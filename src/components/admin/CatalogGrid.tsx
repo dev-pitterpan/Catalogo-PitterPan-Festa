@@ -120,7 +120,7 @@ export default function CatalogGrid({
                   <Share2 size={16} />
                 </button>
                 <a
-                  href={`/${c.slug}/`}
+                  href={publicCatalogUrl(c.slug, base)}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Ver ${c.name} como cliente`}

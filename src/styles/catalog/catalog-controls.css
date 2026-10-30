@@ -1,0 +1,205 @@
+/* Reuses AdminSelect behavior with catalog-scoped styles and the management palette. */
+.catalog-unified .catalog-filters {
+  gap: 18px;
+  padding: 18px 0;
+  align-items: end;
+}
+.catalog-unified .catalog-filter-field {
+  display: grid;
+  gap: 7px;
+  flex: 1;
+  min-width: 170px;
+  color: #6e88a3;
+  font-size: 11px;
+}
+.catalog-unified .catalog-filter-field .admin-select {
+  position: relative;
+  min-width: 0;
+  font-size: 13px;
+  color: #456580;
+}
+.catalog-unified .catalog-filter-field .admin-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 43px;
+  border: 1px solid #d5e2ef;
+  border-radius: 11px;
+  padding: 11px 13px;
+  background: linear-gradient(180deg, #fff, #f7faff);
+  color: #456580;
+  box-shadow: 0 2px 6px #30486006;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.catalog-unified .catalog-filter-field .admin-select-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catalog-unified .catalog-filter-field .admin-select-trigger svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+}
+.catalog-unified .catalog-filter-field .admin-select-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+  border: 1px solid #d5e2ef;
+  border-radius: 12px;
+  padding: 6px;
+  z-index: 60;
+  box-shadow: 0 12px 30px #33557724;
+}
+.catalog-unified .catalog-filter-field .admin-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  color: #527494;
+  cursor: pointer;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.catalog-unified .catalog-filter-field .admin-select-option.is-active,
+.catalog-unified
+  .catalog-filter-field
+  .admin-select-option[aria-selected="true"] {
+  background: #edf4fc;
+  color: #356da9;
+}
+.catalog-unified .catalog-filter-field .admin-select-option > svg {
+  flex-shrink: 0;
+}
+.catalog-unified .catalog-filter-field .admin-select-trigger:focus-visible {
+  outline: 2px solid #88abd1;
+  outline-offset: 3px;
+}
+.catalog-unified .catalog-filters > [role="status"] {
+  padding-bottom: 12px;
+  font-size: 12px;
+  color: #6e88a3;
+  white-space: nowrap;
+}
+.catalog-page.manager-catalog-page .owner-sharebar {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #d7e4f1;
+  border-radius: 17px;
+  background: linear-gradient(135deg, #fff, #f3f8fe);
+  box-shadow: 0 5px 18px #3355770b;
+  margin-bottom: 20px;
+}
+.catalog-page.manager-catalog-page .owner-kicker {
+  color: #6484a6;
+  font-size: 10px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+  letter-spacing: 0.04em;
+}
+.catalog-page.manager-catalog-page .owner-link {
+  height: 44px;
+  border: 1px solid #d7e4f1;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: none;
+  padding: 0 12px;
+  min-width: 0;
+}
+.catalog-page.manager-catalog-page .owner-link::after {
+  display: none;
+}
+.catalog-page.manager-catalog-page .owner-link svg {
+  color: #6f91b6;
+  stroke: #6f91b6;
+  flex-shrink: 0;
+}
+.catalog-page.manager-catalog-page .owner-link input {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #527494;
+  font: inherit;
+  font-size: 12px;
+  outline-offset: 3px;
+}
+.catalog-page.manager-catalog-page .owner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.catalog-page.manager-catalog-page .owner-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 10px 13px;
+  border: 1px solid #d4e1ef;
+  border-radius: 10px;
+  background: #fff;
+  color: #527ca6;
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: 500;
+  transform: none;
+}
+.catalog-page.manager-catalog-page .owner-action--share {
+  background: #356da9;
+  border-color: #356da9;
+  color: #fff;
+}
+.catalog-page.manager-catalog-page .owner-action svg {
+  width: 16px;
+  height: 16px;
+}
+.catalog-page.manager-catalog-page .owner-action:hover {
+  filter: brightness(0.97);
+}
+.catalog-page.manager-catalog-page .owner-share-note {
+  grid-column: 1/-1;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #7b90a5;
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .catalog-page.manager-catalog-page .owner-sharebar {
+    grid-template-columns: 1fr;
+  }
+  .catalog-unified .catalog-filters > [role="status"] {
+    white-space: normal;
+  }
+}
+@media (max-width: 600px) {
+  .catalog-unified .catalog-filter-field {
+    flex-basis: 100%;
+  }
+  .catalog-page.manager-catalog-page .owner-sharebar {
+    padding: 15px;
+  }
+  .catalog-page.manager-catalog-page .owner-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .catalog-page.manager-catalog-page .owner-action--preview {
+    grid-column: 1/-1;
+  }
+}

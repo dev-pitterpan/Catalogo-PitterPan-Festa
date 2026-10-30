@@ -116,6 +116,17 @@ try {
     );
     assert.ok(!html.includes('class="admin-stats"'));
   }
+  const managerCatalogHtml = await (
+    await fetch(base + "/gestor/halloween/")
+  ).text();
+  assert.ok(managerCatalogHtml.includes("Copiar link do cliente"));
+  assert.ok(
+    managerCatalogHtml.includes(
+      'href="https://catalogopitterpanfesta.vercel.app/halloween/"',
+    ),
+  );
+  const publicCatalogHtml = await (await rawFetch(base + "/halloween/")).text();
+  assert.ok(!publicCatalogHtml.includes("Copiar link do cliente"));
   for (const route of [
     "/api/admin/sync/",
     "/api/admin/sales/",

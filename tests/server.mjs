@@ -229,7 +229,7 @@ try {
       "/gestor/vendas/?days=7&status=REFUNDED&start=2026-10-01&end=2026-10-02",
   );
   assert.equal(filteredSales.status, 200);
-  assert.ok((await filteredSales.text()).includes("Reembolsado"));
+  assert.ok((await filteredSales.text()).includes("Somente reembolso total"));
   const analyticsPage = await fetch(base + "/gestor/analises/");
   const analyticsHtml = await analyticsPage.text();
   assert.equal(analyticsPage.status, 200);

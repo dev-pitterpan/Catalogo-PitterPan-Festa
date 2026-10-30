@@ -28,9 +28,9 @@ export default async function Changes({
   return (
     <>
       <PageHeading
-        eyebrow="ACOMPANHE CADA MOVIMENTO"
-        title="O que entrou. O que mudou."
-        description="Comparação das versões publicadas por ID de variante. Sair do catálogo não significa que o produto foi vendido."
+        eyebrow="SHOPIFY → CATÁLOGO"
+        title="Histórico de alterações"
+        description="Confira produtos incluídos, removidos e mudanças de preço ou estoque entre a última sincronização publicada e a versão anterior. As alterações da Shopify aparecem aqui depois de sincronizadas e publicadas no catálogo."
       />
       <DataNotice context={context} />
       <div className="admin-mini-stats">
@@ -62,7 +62,7 @@ export default async function Changes({
               <thead>
                 <tr>
                   <th>Produto / SKU</th>
-                  <th>Movimento</th>
+                  <th>Alteração</th>
                   <th>Preço anterior → atual</th>
                   <th>Estoque anterior → atual</th>
                 </tr>

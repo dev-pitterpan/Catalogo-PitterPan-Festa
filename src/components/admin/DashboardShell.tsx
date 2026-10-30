@@ -47,7 +47,7 @@ const links = [
   { href: "/gestor/catalogos/", label: "Catálogos", icon: BookOpen },
   {
     href: "/gestor/alteracoes/",
-    label: "Entradas e saídas",
+    label: "Histórico de alterações",
     icon: ArrowLeftRight,
   },
   { href: "/gestor/sincronizacoes/", label: "Sincronizações", icon: RefreshCw },

@@ -27,7 +27,7 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
       .then((L) => {
         if (cancelled || !container.current) return;
         const map = L.map(container.current, {
-          scrollWheelZoom: false,
+          scrollWheelZoom: true,
           zoomControl: true,
           minZoom: 3,
           maxZoom: 16,

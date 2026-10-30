@@ -2186,3 +2186,7 @@
     max-height: 420px;
   }
 }
+/* Light column guides keep financial values easy to scan. */
+.admin-app .sales-orders-panel .admin-table tr > :not(:last-child) {
+  border-right: 1px solid #e6eef7;
+}

@@ -26,7 +26,6 @@ import PitterSpinner from "./PitterSpinner";
 import type { SalesFilters } from "../../server/sales/filters";
 import AdminSelect from "./AdminSelect";
 import DateRangePicker from "./DateRangePicker";
-import { usePartyMotion } from "./PartyExperience";
 import type { readSales } from "../../server/sales/repository";
 type Data = Awaited<ReturnType<typeof readSales>>;
 const count = (n: string | number) =>
@@ -74,11 +73,6 @@ export default function SalesDashboard({
     [loading, setLoading] = useState(true),
     [syncing, setSyncing] = useState(false),
     [message, setMessage] = useState("");
-  const [celebration, setCelebration] = useState<{
-    id: string;
-    title: string;
-    delivery: string;
-  } | null>(null);
   const [revision, setRevision] = useState(0);
   const updateCustomers = useCallback((rows: Record<string, string>[]) => {
     const byId = new Map(rows.map((row) => [row.id, row]));
@@ -94,13 +88,10 @@ export default function SalesDashboard({
         : old,
     );
   }, []);
-  const cursor = useRef<string | undefined>(undefined),
-    fetching = useRef(0),
-    motion = usePartyMotion();
+  const fetching = useRef(0);
   const resetList = (preserveData = false) => {
     generation.current++;
     expanded.current = false;
-    cursor.current = undefined;
     if (!preserveData) setData(null);
     setLoading(true);
     setMoreLoading(false);
@@ -131,7 +122,6 @@ export default function SalesDashboard({
           category: filters.category,
           delivery: filters.delivery || "all",
         });
-        if (cursor.current) params.set("after", cursor.current);
         const url = `/api/admin/sales/?${params}`;
         const response = await fetch(url, {
           signal: signal
@@ -151,16 +141,6 @@ export default function SalesDashboard({
             body.error || "Não foi possível consultar as vendas.",
           );
         const next = body as Data;
-        if (cursor.current && next.events.length)
-          setCelebration({
-            id: next.events[0].id,
-            delivery: next.events[0].delivery_kind || "UNKNOWN",
-            title:
-              next.events.length > 1
-                ? `${next.events.length} vendas confirmadas`
-                : next.events[0].title,
-          });
-        cursor.current = next.cursor;
         setData(next);
         setError("");
       } catch (err) {
@@ -196,11 +176,6 @@ export default function SalesDashboard({
       clearInterval(timer);
     };
   }, [load, revision]);
-  useEffect(() => {
-    if (!celebration) return;
-    const timer = setTimeout(() => setCelebration(null), 4500);
-    return () => clearTimeout(timer);
-  }, [celebration]);
   async function loadMore() {
     if (loading || !data?.nextCursor || moreBusy.current) return;
     const epoch = generation.current;
@@ -300,7 +275,6 @@ export default function SalesDashboard({
             onValueChange={(value) => {
               if (Number(value) === days && !filters.start) return;
               resetList();
-              setCelebration(null);
               setDays(Number(value));
               setFilters((old) => ({ ...old, start: "", end: "" }));
             }}
@@ -559,34 +533,6 @@ export default function SalesDashboard({
               </p>
             </div>
           )}
-          <section className="sales-delivery" aria-label="Vendas confirmadas">
-            <div>
-              <span className="admin-eyebrow">DA LOJA PARA O PAINEL</span>
-              <strong>Uma venda real. Um motivo para celebrar.</strong>
-              <p role="status">
-                {celebration
-                  ? `Venda confirmada: ${celebration.title}`
-                  : "A modalidade de entrega aparece quando um novo pagamento confirmado é recebido e processado."}
-              </p>
-            </div>
-            <div className="sales-delivery-stage" aria-hidden="true">
-              {celebration && (
-                <div
-                  key={celebration.id}
-                  className={`sales-cart${motion ? " is-moving" : ""}`}
-                >
-                  <DeliveryMark kind={celebration.delivery} />
-                </div>
-              )}
-              <span className="sales-delivery-destination">
-                <Boxes size={28} />
-                <b>Vendidos</b>
-              </span>
-            </div>
-            <a className="admin-text-link" href="#sold-products">
-              Ver produtos vendidos <ArrowUpRight size={16} />
-            </a>
-          </section>
           <div className="admin-overview-grid sales-comparison-grid">
             <section className="admin-panel" id="sold-products">
               <header>

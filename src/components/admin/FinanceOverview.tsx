@@ -307,10 +307,12 @@ export default function FinanceOverview({ params }: { params: string }) {
               {statuses.map((s) => (
                 <button
                   key={s.status}
+                  type="button"
                   className={active === s.status ? "is-selected" : ""}
-                  onClick={() =>
-                    setActive(active === s.status ? null : s.status)
-                  }
+                  aria-pressed={active === s.status}
+                  onPointerEnter={() => setActive(s.status)}
+                  onFocus={() => setActive(s.status)}
+                  onClick={() => setActive(s.status)}
                 >
                   <i
                     style={{ background: colors[s.status] || colors.UNKNOWN }}
@@ -324,7 +326,7 @@ export default function FinanceOverview({ params }: { params: string }) {
           <p className="finance-chart-caption">
             {selected
               ? `${labels[selected.status] || selected.status}: ${money(selected.order_value)} em pedidos; ${money(selected.received)} recebido e ${money(selected.refunded)} estornado.`
-              : "Passe pelo círculo ou selecione uma situação para conferir os valores."}
+              : "Passe pelo círculo ou pela legenda para conferir os valores."}
           </p>
         </section>
       </div>

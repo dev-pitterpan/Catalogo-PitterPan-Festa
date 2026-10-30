@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { UserPlus, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import AdminSelect from "./AdminSelect";
 import { dateTime } from "./Primitives";
 const roleLabels: Record<string, string> = {
   admin: "Administrador",
@@ -26,6 +27,7 @@ export default function Team({
   self: string;
 }) {
   const router = useRouter();
+  const [role, setRole] = useState("atendimento");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
@@ -44,6 +46,7 @@ export default function Team({
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       form.reset();
+      setRole("atendimento");
       setShowPassword(false);
       setMessage(
         "Acesso criado. Compartilhe as credenciais com a pessoa por um canal seguro.",
@@ -172,27 +175,35 @@ export default function Team({
               disabled={!ready || busy}
             />
           </label>
-          <label>
-            Permissão
-            <select
+          <div className="admin-team-role">
+            <label htmlFor="team-role">Permissão</label>
+            <AdminSelect
+              id="team-role"
               name="role"
-              defaultValue="atendimento"
+              label="Permissão"
+              value={role}
+              onValueChange={setRole}
               disabled={!ready || busy}
-            >
-              <option value="atendimento">
-                Atendimento · consulta e compartilhamento
-              </option>
-              <option value="gestor">
-                Gestor · acompanhamento da operação
-              </option>
-              <option value="gerente_compras">
-                Gerente de Compras · acesso completo
-              </option>
-              <option value="admin">
-                Administrador · acessos e configurações
-              </option>
-            </select>
-          </label>
+              options={[
+                {
+                  value: "atendimento",
+                  label: "Atendimento · consulta e compartilhamento",
+                },
+                {
+                  value: "gestor",
+                  label: "Gestor · acompanhamento da operação",
+                },
+                {
+                  value: "gerente_compras",
+                  label: "Gerente de Compras · acesso completo",
+                },
+                {
+                  value: "admin",
+                  label: "Administrador · acessos e configurações",
+                },
+              ]}
+            />
+          </div>
           <label htmlFor="team-initial-password">
             Senha inicial
             <span className="admin-team-password">

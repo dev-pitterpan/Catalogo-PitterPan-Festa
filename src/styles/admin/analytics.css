@@ -2249,3 +2249,16 @@
   font-size: 11px;
   color: #7189a3;
 }
+.admin-app .admin-team-role {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.admin-app .admin-team-role .admin-select-trigger > span {
+  white-space: normal;
+  text-align: left;
+}
+.admin-app .admin-select-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

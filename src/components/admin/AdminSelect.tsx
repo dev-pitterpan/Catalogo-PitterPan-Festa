@@ -10,6 +10,7 @@ export default function AdminSelect({
   label,
   name,
   id,
+  disabled = false,
 }: {
   value: string;
   onValueChange: (value: string) => void;
@@ -17,6 +18,7 @@ export default function AdminSelect({
   label: string;
   name?: string;
   id?: string;
+  disabled?: boolean;
 }) {
   const listId = useId();
   const root = useRef<HTMLDivElement>(null);
@@ -41,7 +43,7 @@ export default function AdminSelect({
   }, [open, active, listId]);
   function choose(index: number) {
     const option = options[index];
-    if (!option) return;
+    if (!option || disabled) return;
     onValueChange(option.value);
     setOpen(false);
     autoFilter?.(true);
@@ -55,9 +57,12 @@ export default function AdminSelect({
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
       }}
     >
-      {name && <input type="hidden" name={name} value={value} />}
+      {name && (
+        <input type="hidden" name={name} value={value} disabled={disabled} />
+      )}
       <button
         ref={trigger}
+        disabled={disabled}
         id={id}
         type="button"
         className="admin-select-trigger"
@@ -99,7 +104,7 @@ export default function AdminSelect({
         <span>{options[selected]?.label || label}</span>
         <ChevronDown size={15} aria-hidden="true" />
       </button>
-      {open && (
+      {open && !disabled && (
         <div
           className="admin-select-menu"
           role="listbox"

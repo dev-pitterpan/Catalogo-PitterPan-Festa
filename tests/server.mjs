@@ -105,6 +105,7 @@ try {
     "/gestor/vendas/",
     "/gestor/mapa/",
     "/gestor/analises/",
+    "/gestor/produtos-vendidos/",
     "/gestor/halloween/",
     "/gestor/agenda/",
   ]) {
@@ -148,6 +149,7 @@ try {
   for (const route of [
     "/api/admin/sync/",
     "/api/admin/sales/",
+    "/api/admin/sales/?view=sold-products",
     "/api/admin/destinations/",
     "/api/admin/analytics/",
     "/api/admin/overview/",

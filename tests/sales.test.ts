@@ -12,6 +12,7 @@ import {
   readSales,
   readSalesOrders,
   readSalesFinance,
+  readSoldProducts,
 } from "../src/server/sales/repository.ts";
 import { orderSchema, type SalesOrder } from "../src/server/sales/model.ts";
 import { ShopifyClient } from "../src/server/shopify/client.ts";
@@ -1033,6 +1034,92 @@ test("clientes: compara por ID, separa moeda e loja e mantém pendências indepe
     );
     assert.equal(absent.diagnostics[paid.id], "no_customer");
     assert.equal(absent.orders[0].customer_name, "");
+  } finally {
+    await db.close();
+  }
+});
+
+test("produtos vendidos: páginas completas, busca literal, entregas e período preservam todo o histórico", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      await readFile(
+        new URL("../src/server/sales/schema.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    for (let id = 1; id <= 23; id++) {
+      const sale = order(String(id));
+      sale.lineItems.nodes[0].variant = {
+        id: `gid://shopify/ProductVariant/${100 + id}`,
+      };
+      sale.lineItems.nodes[0].title = `Produto ${id}`;
+      sale.lineItems.nodes[0].sku = id === 1 ? "SKU%1" : `SKU-${id}`;
+      sale.shippingLines = {
+        nodes: [
+          {
+            title: id % 2 ? "Motoboy" : "Sedex",
+            code: null,
+            source: null,
+            deliveryCategory: null,
+          },
+        ],
+        pageInfo: { hasNextPage: false, endCursor: null },
+      };
+      await saveOrder(db, store, sale);
+    }
+    const first = await readSoldProducts(db, store, 30);
+    const second = await readSoldProducts(db, store, 30, undefined, 2);
+    const third = await readSoldProducts(db, store, 30, undefined, 3);
+    assert.equal(first.total, 23);
+    assert.equal(first.pages, 3);
+    assert.equal(first.items.length, 10);
+    assert.equal(second.items.length, 10);
+    assert.equal(third.items.length, 3);
+    assert.equal(
+      new Set(
+        [...first.items, ...second.items, ...third.items].map((p) => p.id),
+      ).size,
+      23,
+    );
+    assert.equal(
+      (await readSoldProducts(db, store, 30, undefined, 999)).page,
+      3,
+    );
+    const search = await readSoldProducts(db, store, 30, undefined, 1, "%");
+    assert.equal(search.total, 1);
+    assert.equal(search.items[0].sku, "SKU%1");
+    const moto = await readSoldProducts(
+      db,
+      store,
+      30,
+      { status: "all", category: "", delivery: "MOTOBOY" },
+      2,
+    );
+    assert.equal(moto.total, 12);
+    assert.equal(moto.items.length, 2);
+    assert.ok(
+      moto.items.every((p) => p.motoboy_units === "3" && !p.sedex_units),
+    );
+    const date = new Date();
+    date.setUTCFullYear(date.getUTCFullYear() - 2);
+    const end = date.toISOString().slice(0, 10);
+    assert.equal(
+      (
+        await readSoldProducts(db, store, 30, {
+          status: "all",
+          category: "",
+          start: end,
+          end,
+        })
+      ).total,
+      0,
+    );
+    assert.equal(
+      (await readSoldProducts(db, "other.myshopify.com", 30)).total,
+      0,
+    );
+    await assert.rejects(() => readSoldProducts(db, store, 30, undefined, -1));
   } finally {
     await db.close();
   }

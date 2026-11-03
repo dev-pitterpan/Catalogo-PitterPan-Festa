@@ -33,8 +33,14 @@ const links = [
   { href: "/gestor/", label: "Visão geral", icon: LayoutDashboard },
   {
     href: "/gestor/vendas/",
-    label: "Vendas e vendidos",
+    label: "Vendas e pedidos",
     icon: ShoppingCart,
+    financial: true,
+  },
+  {
+    href: "/gestor/produtos-vendidos/",
+    label: "Produtos vendidos",
+    icon: Package,
     financial: true,
   },
   {
@@ -79,6 +85,7 @@ const navigationGroups = [
     paths: [
       "/gestor/",
       "/gestor/vendas/",
+      "/gestor/produtos-vendidos/",
       "/gestor/mapa/",
       "/gestor/estoque/",
       "/gestor/ofertas/",

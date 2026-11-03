@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowDownLeft,
@@ -542,6 +543,12 @@ export default function SalesDashboard({
                 </div>
                 <Boxes size={22} />
               </header>
+              <Link
+                className="admin-text-link"
+                href={`/gestor/produtos-vendidos/?${new URLSearchParams({ days: String(days), status: filters.status, category: filters.category, delivery: filters.delivery || "all", start: filters.start || "", end: filters.end || "" })}`}
+              >
+                Ver histórico de produtos vendidos <ArrowUpRight size={16} />
+              </Link>
               <p className="sales-definition">
                 Top 10 por unidades atuais em pedidos com recebimento, pagos ou
                 reembolsados parcialmente. Unidades removidas e reembolsadas são
@@ -584,7 +591,7 @@ export default function SalesDashboard({
                             <DeliveryMark
                               key={kind}
                               kind={kind}
-                              units={count(value)}
+                              label={false}
                             />
                           ) : null;
                         })}

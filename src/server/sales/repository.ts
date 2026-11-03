@@ -171,20 +171,43 @@ export async function readSalesOrders(
   };
 }
 
-export async function readSales(
+export async function readSoldProducts(
   db: SqlClient,
   store: string,
   days: number,
-  after?: string,
   input: SalesFilters = { status: "all", category: "", delivery: "all" },
+  requestedPage = 1,
+  search = "",
 ) {
   const period = Math.max(1, Math.min(60, Math.floor(days) || 30));
   const filters = salesFilterSchema.parse(input);
+  if (
+    !Number.isInteger(requestedPage) ||
+    requestedPage < 1 ||
+    requestedPage > 10000 ||
+    search.length > 200
+  )
+    throw new Error("Filtros inválidos.");
   const values = filterValues(store, period, filters);
   const where = selection(filters);
-  const totals = await financialTotals(db, values, where);
+  const parameters = [
+    ...values,
+    paidStatuses.filter((status) => status !== "REFUNDED"),
+    search.trim() ? containsPattern(search.trim()) : "",
+  ];
+  const counted = await db.query<{ total: string }>(
+    `SELECT count(*)::text AS total FROM (SELECT COALESCE(i.variant_id,i.product_id,i.id) AS id
+    FROM pitterpan_sales_items i JOIN pitterpan_sales_orders o ON o.store=i.store AND o.id=i.order_id
+    WHERE ${where} AND o.received>0 AND o.cancelled_at IS NULL AND o.financial_status=ANY($${values.length + 1}::text[])${filters.category ? ` AND EXISTS (SELECT 1 FROM catalog_items ci JOIN catalog_state cs ON cs.singleton=true AND cs.active_import=ci.import_id WHERE ci.product_id=i.product_id AND ci.category ILIKE $4)` : ""}
+    AND ($${values.length + 2}='' OR i.title ILIKE $${values.length + 2} OR i.sku ILIKE $${values.length + 2})
+    GROUP BY COALESCE(i.variant_id,i.product_id,i.id) HAVING sum(i.current_quantity)>0) grouped`,
+    parameters,
+  );
+  const total = Number(counted.rows[0].total);
+  const pages = Math.max(1, Math.ceil(total / 10));
+  const page = Math.min(requestedPage, pages);
   const items = await db.query<Record<string, string>>(
-    `SELECT COALESCE(i.variant_id,i.product_id,i.id) AS id,min(i.title) AS title,min(i.sku) AS sku,
+    `SELECT COALESCE(i.variant_id,i.product_id,i.id) AS id,min(i.title) AS title,min(i.sku) AS sku,max(o.processed_at) FILTER(WHERE i.current_quantity>0)::text AS last_sold_at,
     sum(i.current_quantity)::text AS units,
     min(to_jsonb(i)->>'image_url') AS image,
     sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='PICKUP')::text AS pickup_units,
@@ -195,8 +218,9 @@ export async function readSales(
     sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='UNKNOWN')::text AS unknown_units
     FROM pitterpan_sales_items i JOIN pitterpan_sales_orders o ON o.store=i.store AND o.id=i.order_id
     WHERE ${where} AND o.received>0 AND o.cancelled_at IS NULL AND o.financial_status=ANY($${values.length + 1}::text[])${filters.category ? ` AND EXISTS (SELECT 1 FROM catalog_items ci JOIN catalog_state cs ON cs.singleton=true AND cs.active_import=ci.import_id WHERE ci.product_id=i.product_id AND ci.category ILIKE $4)` : ""}
-    GROUP BY COALESCE(i.variant_id,i.product_id,i.id) HAVING sum(i.current_quantity)>0 ORDER BY sum(i.current_quantity) DESC,id LIMIT 10`,
-    [...values, paidStatuses.filter((status) => status !== "REFUNDED")],
+    AND ($${values.length + 2}='' OR i.title ILIKE $${values.length + 2} OR i.sku ILIKE $${values.length + 2})
+    GROUP BY COALESCE(i.variant_id,i.product_id,i.id) HAVING sum(i.current_quantity)>0 ORDER BY sum(i.current_quantity) DESC,id LIMIT 10 OFFSET $${values.length + 3}`,
+    [...parameters, (page - 1) * 10],
   );
   // Existing sales can reuse current catalog photos before the metadata backfill.
   const catalog = await db.query<{ exists: boolean }>(
@@ -214,6 +238,22 @@ export async function readSales(
     for (const item of items.rows)
       item.image = shopifyImageUrl(item.image || byId.get(item.id)) || "";
   }
+  return { items: items.rows, total, pages, page };
+}
+
+export async function readSales(
+  db: SqlClient,
+  store: string,
+  days: number,
+  after?: string,
+  input: SalesFilters = { status: "all", category: "", delivery: "all" },
+) {
+  const period = Math.max(1, Math.min(60, Math.floor(days) || 30));
+  const filters = salesFilterSchema.parse(input);
+  const values = filterValues(store, period, filters);
+  const where = selection(filters);
+  const totals = await financialTotals(db, values, where);
+  const items = await readSoldProducts(db, store, period, filters);
   const deliveries = await db.query<{ kind: string; orders: string }>(
     `SELECT COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN') AS kind,count(*)::text AS orders FROM pitterpan_sales_orders o WHERE ${where} GROUP BY 1 ORDER BY 1`,
     values,
@@ -243,7 +283,7 @@ export async function readSales(
   return {
     days: period,
     totals: totals.rows,
-    top: items.rows,
+    top: items.items,
     ...ordersPage,
     filters,
     deliveries: deliveries.rows,

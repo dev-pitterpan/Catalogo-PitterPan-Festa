@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Boxes, ChevronLeft, ChevronRight } from "lucide-react";
+import { Boxes, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import DeliveryMark from "./DeliveryMark";
 import PitterSpinner from "./PitterSpinner";
 import { deliveryKinds } from "../../lib/admin/delivery";
+import { compactQuantity, exactQuantity } from "../../lib/admin/quantity";
 import { cardImage } from "../../lib/catalog/image";
 import type { SalesFilters } from "../../server/sales/filters";
 import type { readSoldProducts } from "../../server/sales/repository";
@@ -90,14 +91,17 @@ export default function SoldProductsHistory({
       <div className="sales-toolbar">
         <div>
           <label htmlFor="sold-product-search">Produto ou SKU</label>
-          <input
-            id="sold-product-search"
-            type="search"
-            value={search}
-            maxLength={200}
-            placeholder="Digite o nome ou SKU…"
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div className="admin-filter-search sold-product-search">
+            <Search size={16} aria-hidden="true" />
+            <input
+              id="sold-product-search"
+              type="search"
+              value={search}
+              maxLength={200}
+              placeholder="Digite o nome ou SKU…"
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </div>
       </div>
       {error && (
@@ -146,12 +150,19 @@ export default function SoldProductsHistory({
                 <small>SKU {p.sku || "não informado"}</small>
               </div>
               <div className="sales-product-deliveries">
-                <b>
-                  {count(p.units)} <small>un.</small>
+                <b title={`${exactQuantity(p.units)} unidades no total`}>
+                  {compactQuantity(p.units)} <small>un.</small>
                 </b>
                 {deliveryKinds.map((kind) =>
                   Number(p[`${kind.toLowerCase()}_units`]) > 0 ? (
-                    <DeliveryMark key={kind} kind={kind} />
+                    <DeliveryMark
+                      key={kind}
+                      kind={kind}
+                      units={compactQuantity(p[`${kind.toLowerCase()}_units`])}
+                      exactUnits={exactQuantity(
+                        p[`${kind.toLowerCase()}_units`],
+                      )}
+                    />
                   ) : null,
                 )}
               </div>

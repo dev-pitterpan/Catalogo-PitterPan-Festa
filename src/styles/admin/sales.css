@@ -472,3 +472,31 @@
   justify-content: space-between;
   flex-wrap: wrap;
 }
+
+.admin-app .sold-history .sales-toolbar > div {
+  width: 100%;
+}
+.admin-app .sold-product-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d9e5ef;
+}
+.admin-app .sold-product-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  font: inherit;
+}
+.admin-app .sold-history .sales-product-deliveries .delivery-mark {
+  white-space: nowrap;
+}
+.admin-app .sold-history .sales-product-deliveries b {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

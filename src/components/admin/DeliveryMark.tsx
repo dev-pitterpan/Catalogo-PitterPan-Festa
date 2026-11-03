@@ -3,10 +3,12 @@ import { deliveryLabels, type DeliveryKind } from "../../lib/admin/delivery";
 export default function DeliveryMark({
   kind,
   units,
+  exactUnits,
   label = true,
 }: {
   kind: DeliveryKind | string;
   units?: string | number;
+  exactUnits?: string;
   label?: boolean;
 }) {
   const safe = Object.prototype.hasOwnProperty.call(deliveryLabels, kind)
@@ -15,7 +17,11 @@ export default function DeliveryMark({
   return (
     <span
       className={`delivery-mark delivery-mark--${safe.toLowerCase()}`}
-      title={deliveryLabels[safe]}
+      title={
+        exactUnits
+          ? `${deliveryLabels[safe]}: ${exactUnits} unidades`
+          : deliveryLabels[safe]
+      }
     >
       {safe === "MOTOBOY" ? (
         <svg viewBox="0 0 64 44" fill="none" aria-hidden="true">

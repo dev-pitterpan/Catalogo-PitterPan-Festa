@@ -179,7 +179,7 @@ export default function SoldProductsHistory({
       >
         <button
           type="button"
-          className="admin-button-secondary"
+          className="admin-button"
           disabled={loading || !data || data.page <= 1}
           onClick={() => setPage((data?.page || 1) - 1)}
         >
@@ -190,7 +190,7 @@ export default function SoldProductsHistory({
         </span>
         <button
           type="button"
-          className="admin-button-secondary"
+          className="admin-button"
           disabled={loading || !data || data.page >= data.pages}
           onClick={() => setPage((data?.page || 1) + 1)}
         >

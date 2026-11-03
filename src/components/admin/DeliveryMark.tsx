@@ -63,7 +63,7 @@ export default function DeliveryMark({
             SEDEX
           </text>
         </svg>
-      ) : safe === "PICKUP" || safe === "OTHER" ? (
+      ) : safe === "PICKUP" ? (
         <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
           <ellipse cx="32" cy="59" rx="21" ry="3" fill="#dce6f3" />
           <path

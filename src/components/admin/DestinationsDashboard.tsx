@@ -82,6 +82,7 @@ export default function DestinationsDashboard() {
           onValueChange={setDelivery}
           options={[
             { value: "all", label: "Todas as entregas" },
+            { value: "PICKUP", label: deliveryLabels.PICKUP },
             { value: "MOTOBOY", label: "Motoboy" },
             { value: "SEDEX", label: "Sedex" },
             { value: "OTHER", label: deliveryLabels.OTHER },

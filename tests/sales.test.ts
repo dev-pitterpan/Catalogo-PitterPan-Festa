@@ -14,6 +14,8 @@ import {
   readSalesFinance,
   readSoldProducts,
 } from "../src/server/sales/repository.ts";
+import { deliveryKinds } from "../src/lib/admin/delivery.ts";
+import { salesFilterSchema } from "../src/server/sales/filters.ts";
 import { orderSchema, type SalesOrder } from "../src/server/sales/model.ts";
 import { ShopifyClient } from "../src/server/shopify/client.ts";
 const store = "fixture.myshopify.com";
@@ -1120,6 +1122,110 @@ test("produtos vendidos: páginas completas, busca literal, entregas e período 
       0,
     );
     await assert.rejects(() => readSoldProducts(db, store, 30, undefined, -1));
+  } finally {
+    await db.close();
+  }
+});
+
+test("matriz de filtros: entrega, situação, categoria e data selecionam os mesmos pedidos e produtos", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      await readFile(
+        new URL("../src/server/sales/schema.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    await db.exec(`CREATE TABLE catalog_items(import_id text,product_id text,category text,variant_id text,image_url text);
+      CREATE TABLE catalog_state(singleton boolean,active_import text);
+      INSERT INTO catalog_state VALUES(true,'active');
+      INSERT INTO catalog_items(import_id,product_id,category) VALUES('active','gid://shopify/Product/1','Festas'),('active','gid://shopify/Product/2','Natal');`);
+    const statuses = [
+      "PAID",
+      "EXPIRED",
+      "PENDING",
+      "PARTIALLY_REFUNDED",
+      "REFUNDED",
+    ];
+    const fixtures: {
+      id: string;
+      kind: string;
+      status: string;
+      category: string;
+      day: string;
+    }[] = [];
+    let id = 100;
+    for (const kind of deliveryKinds)
+      for (const status of statuses) {
+        const sale = order(String(++id));
+        sale.displayFinancialStatus = status;
+        if (["EXPIRED", "PENDING"].includes(status))
+          sale.totalReceivedSet.shopMoney.amount = "0";
+        sale.lineItems.nodes[0].variant = {
+          id: `gid://shopify/ProductVariant/${id}`,
+        };
+        const category = id % 2 ? "Festas" : "Natal";
+        sale.lineItems.nodes[0].product = {
+          id: `gid://shopify/Product/${id % 2 ? 1 : 2}`,
+        };
+        sale.processedAt = `2026-10-${id % 2 ? "01" : "02"}T15:00:00Z`;
+        await saveOrder(db, store, sale);
+        await db.query(
+          "UPDATE pitterpan_sales_orders SET delivery_kind=$2 WHERE id=$1",
+          [sale.id, kind],
+        );
+        fixtures.push({
+          id: sale.id,
+          kind,
+          status,
+          category,
+          day: sale.processedAt.slice(0, 10),
+        });
+      }
+    for (const delivery of deliveryKinds)
+      for (const category of ["", "fest", "natal"])
+        for (const status of ["all", ...statuses, "NO_MATCH", "CANCELLED"]) {
+          const filters = salesFilterSchema.parse({
+            delivery,
+            category,
+            status,
+            start: "2026-10-01",
+            end: "2026-10-02",
+          });
+          const expected = fixtures.filter(
+            (f) =>
+              f.kind === delivery &&
+              (!category || f.category.toLowerCase().includes(category)) &&
+              (status === "all" || f.status === status),
+          );
+          const orders = await readSalesOrders(db, store, 30, filters);
+          assert.deepEqual(
+            orders.orders.map((o) => o.id).sort(),
+            expected.map((f) => f.id).sort(),
+            JSON.stringify(filters),
+          );
+          const products = await readSoldProducts(db, store, 30, filters);
+          assert.equal(
+            products.total,
+            expected.filter((f) =>
+              ["PAID", "PARTIALLY_REFUNDED"].includes(f.status),
+            ).length,
+            JSON.stringify(filters),
+          );
+        }
+    for (const delivery of deliveryKinds) {
+      const filters = salesFilterSchema.parse({
+        delivery,
+        start: "2026-10-01",
+        end: "2026-10-01",
+      });
+      const result = await readSales(db, store, 30, undefined, filters);
+      assert.equal(
+        Number(result.totals[0]?.orders || 0),
+        fixtures.filter((f) => f.kind === delivery && f.day === "2026-10-01")
+          .length,
+      );
+    }
   } finally {
     await db.close();
   }

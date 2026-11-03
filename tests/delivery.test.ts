@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifyDelivery } from "../src/lib/admin/delivery.ts";
+import {
+  deliveryKinds,
+  deliveryLabels,
+  classifyDelivery,
+} from "../src/lib/admin/delivery.ts";
 test("modalidade vem de serviços explícitos, sem tratar frete grátis ou PAC como retirada/Sedex", () => {
   assert.equal(
     classifyDelivery([{ title: "Retirada na Loja América" }]).kind,
@@ -34,4 +38,13 @@ test("modalidade vem de serviços explícitos, sem tratar frete grátis ou PAC c
     ]).kind,
     "PICKUP",
   );
+});
+
+test("cada modalidade tem rótulo próprio, sem confundir outras entregas com retirada", () => {
+  assert.equal(
+    new Set(deliveryKinds.map((kind) => deliveryLabels[kind])).size,
+    deliveryKinds.length,
+  );
+  assert.equal(deliveryLabels.PICKUP, "Retirada na loja");
+  assert.equal(deliveryLabels.OTHER, "Outras entregas");
 });

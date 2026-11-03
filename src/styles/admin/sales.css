@@ -500,3 +500,14 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+/* Separate the total from its delivery breakdown without dividing delivery rows. */
+.admin-app .sold-history .sales-product-deliveries > b {
+  align-self: stretch;
+  padding-bottom: 7px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid #dfe7f3;
+}
+.admin-app .sold-history .sales-product-deliveries .delivery-mark > b,
+.admin-app .sold-history .sales-product-deliveries .delivery-mark > b small {
+  color: #6676ad;
+}

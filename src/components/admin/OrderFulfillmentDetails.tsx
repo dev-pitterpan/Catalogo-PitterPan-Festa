@@ -51,7 +51,7 @@ export default function OrderFulfillmentDetails({
     <>
       <button
         type="button"
-        className="admin-text-link fulfillment-details-trigger"
+        className="admin-button fulfillment-details-trigger"
         onClick={() => {
           dialog.current?.showModal();
           setOpen(true);

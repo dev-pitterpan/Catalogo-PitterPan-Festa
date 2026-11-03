@@ -317,7 +317,8 @@
   height: 25px;
   flex-shrink: 0;
 }
-.delivery-mark--sedex > svg {
+.delivery-mark--sedex > svg,
+.delivery-mark--jadlog > svg {
   width: 42px;
 }
 .delivery-mark--motoboy {
@@ -427,7 +428,8 @@
   height: 22px;
 }
 .sales-product-deliveries .delivery-mark--sedex > svg,
-.sales-product-deliveries .delivery-mark--pac > svg {
+.sales-product-deliveries .delivery-mark--pac > svg,
+.sales-product-deliveries .delivery-mark--jadlog > svg {
   width: 35px;
 }
 .sales-cart {
@@ -442,7 +444,8 @@
   width: 66px;
   height: 49px;
 }
-.sales-cart .delivery-mark--sedex > svg {
+.sales-cart .delivery-mark--sedex > svg,
+.sales-cart .delivery-mark--jadlog > svg {
   width: 76px;
 }
 @media (max-width: 600px) {
@@ -618,11 +621,13 @@
   }
 }
 
-.fulfillment-details-trigger {
+.admin-app .admin-button.fulfillment-details-trigger {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   margin-top: 7px;
+  min-height: 30px;
+  padding: 6px 10px;
   font-size: 11px;
   white-space: nowrap;
 }

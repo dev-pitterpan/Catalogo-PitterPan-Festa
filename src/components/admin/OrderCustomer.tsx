@@ -1,6 +1,5 @@
 "use client";
 import { customerDiagnostic } from "./customerDiagnostic";
-import CustomerBalloonAvatar from "./CustomerBalloonAvatar";
 export default function OrderCustomer({
   order,
 }: {
@@ -10,9 +9,6 @@ export default function OrderCustomer({
     name = order.customer_name;
   return (
     <div className="sales-order-customer">
-      <span className="sales-customer-avatar" aria-hidden="true">
-        <CustomerBalloonAvatar />
-      </span>
       <div>
         <strong>
           {name ||

@@ -30,9 +30,10 @@ export default async function SalesPage({
         description="Pedidos reais da Shopify. Pagamentos, reembolsos e produtos vendidos em um só lugar."
       />
       <SalesDashboard
-        key={JSON.stringify([filters, days])}
+        key={JSON.stringify([filters, days, value("focus")])}
         initialFilters={filters}
         initialDays={days}
+        initialOperations={value("focus") === "operations"}
       />
     </>
   );

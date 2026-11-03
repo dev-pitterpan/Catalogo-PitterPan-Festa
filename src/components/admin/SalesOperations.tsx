@@ -57,6 +57,9 @@ export default function SalesOperations({
   const filters = new URLSearchParams(params);
   filters.delete("revision");
   const salesHref = `/gestor/vendas/?${filters}`;
+  const operationFilters = new URLSearchParams(filters);
+  operationFilters.set("focus", "operations");
+  const operationHref = `/gestor/vendas/?${operationFilters}#sales-operations`;
   const refundsFilter = new URLSearchParams(filters);
   refundsFilter.set("status", "REFUNDS");
   const orderHref = (id: string) =>
@@ -221,10 +224,7 @@ export default function SalesOperations({
                   </ul>
                 )}
                 {overview && (
-                  <Link
-                    className="admin-text-link"
-                    href={`${salesHref}#sales-operations`}
-                  >
+                  <Link className="admin-text-link" href={operationHref}>
                     Conferir atendimentos <ArrowUpRight size={14} />
                   </Link>
                 )}
@@ -293,7 +293,7 @@ export default function SalesOperations({
                 )}
                 <Link
                   className="admin-text-link"
-                  href={`/gestor/vendas/?${refundsFilter}`}
+                  href={`/gestor/vendas/?${refundsFilter}#recent-orders`}
                 >
                   Ver todos os pedidos com reembolso <ArrowUpRight size={14} />
                 </Link>

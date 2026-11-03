@@ -49,9 +49,11 @@ const status: Record<string, string> = {
 export default function SalesDashboard({
   initialFilters,
   initialDays = 30,
+  initialOperations = false,
 }: {
   initialFilters?: SalesFilters;
   initialDays?: number;
+  initialOperations?: boolean;
 }) {
   const [filters, setFilters] = useState<SalesFilters>(
     initialFilters || {
@@ -75,6 +77,20 @@ export default function SalesDashboard({
     [syncing, setSyncing] = useState(false),
     [message, setMessage] = useState("");
   const [revision, setRevision] = useState(0);
+  const entryPositioned = useRef(false);
+  useEffect(() => {
+    if (entryPositioned.current) return;
+    const hash = window.location.hash;
+    if (hash === "#sales-operations" || hash === "#recent-orders") {
+      if (!data) return;
+      const target = document.getElementById(hash.slice(1));
+      if (!target) return;
+      target.scrollIntoView({ block: "start" });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+    entryPositioned.current = true;
+  }, [data]);
   const updateCustomers = useCallback((rows: Record<string, string>[]) => {
     const byId = new Map(rows.map((row) => [row.id, row]));
     setData((old) =>
@@ -536,20 +552,6 @@ export default function SalesDashboard({
               </p>
             </div>
           )}
-          <SalesOperations
-            params={new URLSearchParams({
-              days: String(days),
-              start: filters.start || "",
-              end: filters.end || "",
-              status: filters.status,
-              delivery: filters.delivery || "all",
-              category: filters.category,
-              revision: String(revision),
-              snapshot: data.state?.completed_at || "",
-              webhook: data.state?.last_webhook_at || "",
-              cursor: data.cursor,
-            }).toString()}
-          />
           <div className="admin-overview-grid sales-comparison-grid">
             <SoldProductsHistory
               key={JSON.stringify([filters, days])}
@@ -557,7 +559,10 @@ export default function SalesDashboard({
               days={days}
               revision={revision}
             />
-            <section className="admin-panel sales-orders-panel">
+            <section
+              id="recent-orders"
+              className="admin-panel sales-orders-panel"
+            >
               <header>
                 <h2>Pedidos recentes</h2>
                 <ShoppingCart size={22} />
@@ -725,6 +730,27 @@ export default function SalesDashboard({
               </div>
             </section>
           </div>
+          {(initialOperations ||
+            filters.status !== "all" ||
+            filters.delivery !== "all" ||
+            !!filters.category ||
+            !!filters.start ||
+            days !== 30) && (
+            <SalesOperations
+              params={new URLSearchParams({
+                days: String(days),
+                start: filters.start || "",
+                end: filters.end || "",
+                status: filters.status,
+                delivery: filters.delivery || "all",
+                category: filters.category,
+                revision: String(revision),
+                snapshot: data.state?.completed_at || "",
+                webhook: data.state?.last_webhook_at || "",
+                cursor: data.cursor,
+              }).toString()}
+            />
+          )}
         </>
       )}
     </div>

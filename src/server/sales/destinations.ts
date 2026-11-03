@@ -1,3 +1,4 @@
+import { orderDeliverySql } from "./delivery.ts";
 import { z } from "zod";
 import {
   dateRangeFields,
@@ -59,7 +60,8 @@ export const destinationFilterSchema = z
       .default(30),
     delivery: z
       .enum(["all", "PICKUP", "SEDEX", "MOTOBOY", "OTHER", "MIXED", "UNKNOWN"])
-      .default("all"),
+      .default("all")
+      .transform((value) => (value === "OTHER" ? ("PICKUP" as const) : value)),
     fulfillment: z
       .enum(["all", "FULFILLED", "UNFULFILLED", "PARTIALLY_FULFILLED"])
       .default("all"),
@@ -89,7 +91,7 @@ export async function readDestinations(
     ? "o.processed_at>=($2::date::timestamp AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((($5::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')"
     : "o.processed_at>=now()-($2*interval '1 day')";
   if (f.start) values.push(f.end);
-  const where = `o.store=$1 AND NOT o.test AND o.cancelled_at IS NULL AND o.financial_status IN ('PAID','PARTIALLY_REFUNDED','REFUNDED') AND ${period} AND ($3='all' OR COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')=$3) AND ($4='all' OR o.fulfillment_status=$4)`;
+  const where = `o.store=$1 AND NOT o.test AND o.cancelled_at IS NULL AND o.financial_status IN ('PAID','PARTIALLY_REFUNDED','REFUNDED') AND ${period} AND ($3='all' OR ${orderDeliverySql}=$3) AND ($4='all' OR o.fulfillment_status=$4)`;
   const { rows } = await db.query<{
     city: string | null;
     state: string | null;
@@ -98,7 +100,7 @@ export async function readDestinations(
     units: string;
     pickup: boolean;
   }>(
-    `SELECT NULLIF(trim(to_jsonb(o)->'destination'->>'city'),'') AS city,NULLIF(trim(to_jsonb(o)->'destination'->>'state'),'') AS state,NULLIF(to_jsonb(o)->'destination'->>'country','') AS country,COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN') ='PICKUP' AS pickup,count(*)::text AS orders,COALESCE(sum((SELECT COALESCE(sum(i.current_quantity),0) FROM pitterpan_sales_items i WHERE i.store=o.store AND i.order_id=o.id)),0)::text AS units FROM pitterpan_sales_orders o WHERE ${where} GROUP BY 1,2,3,4 ORDER BY count(*) DESC,city,state`,
+    `SELECT NULLIF(trim(to_jsonb(o)->'destination'->>'city'),'') AS city,NULLIF(trim(to_jsonb(o)->'destination'->>'state'),'') AS state,NULLIF(to_jsonb(o)->'destination'->>'country','') AS country,${orderDeliverySql} ='PICKUP' AS pickup,count(*)::text AS orders,COALESCE(sum((SELECT COALESCE(sum(i.current_quantity),0) FROM pitterpan_sales_items i WHERE i.store=o.store AND i.order_id=o.id)),0)::text AS units FROM pitterpan_sales_orders o WHERE ${where} GROUP BY 1,2,3,4 ORDER BY count(*) DESC,city,state`,
     values,
   );
   const delivery = rows.filter((r) => !r.pickup);

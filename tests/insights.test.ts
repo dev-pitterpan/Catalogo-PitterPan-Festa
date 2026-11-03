@@ -113,35 +113,35 @@ test("mapa contabiliza cidade, unidades, retirada, internacional e destino ausen
       "fixture",
       destinationFilterSchema.parse({}),
     );
-    assert.equal(result.total, 6);
-    assert.equal(result.pickup, 1);
+    assert.equal(result.total, 5);
+    assert.equal(result.pickup, 2);
     assert.equal(result.international, 1);
     assert.equal(result.missing, 2);
-    assert.equal(result.states.find((r) => r.state === "SC")?.orders, 3);
+    assert.equal(result.states.find((r) => r.state === "SC")?.orders, 2);
     const sc = await readDestinations(
       db,
       "fixture",
       destinationFilterSchema.parse({ state: "SC", q: "join" }),
     );
-    assert.equal(sc.total, 3);
+    assert.equal(sc.total, 2);
     assert.equal(sc.cities.length, 1);
     assert.ok(sc.cities[0].location);
-    assert.equal(sc.cities[0].orders, 3);
-    assert.equal(sc.cities[0].units, 9);
+    assert.equal(sc.cities[0].orders, 2);
+    assert.equal(sc.cities[0].units, 6);
     const pickup = await readDestinations(
       db,
       "fixture",
       destinationFilterSchema.parse({ delivery: "PICKUP" }),
     );
-    assert.equal(pickup.pickup, 1);
+    assert.equal(pickup.pickup, 2);
     assert.equal(pickup.total, 0);
     const other = await readDestinations(
       db,
       "fixture",
       destinationFilterSchema.parse({ delivery: "OTHER" }),
     );
-    assert.equal(other.total, 1);
-    assert.equal(other.pickup, 0);
+    assert.equal(other.total, 0);
+    assert.equal(other.pickup, 2);
     const moto = await readDestinations(
       db,
       "fixture",
@@ -171,7 +171,7 @@ test("mapa contabiliza cidade, unidades, retirada, internacional e destino ausen
     assert.equal(
       (await readDestinations(db, "fixture", destinationFilterSchema.parse({})))
         .total,
-      5,
+      4,
     );
     assert.equal(
       (await readDestinations(db, "another", destinationFilterSchema.parse({})))

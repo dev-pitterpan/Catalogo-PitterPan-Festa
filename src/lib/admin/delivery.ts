@@ -6,12 +6,15 @@ export const deliveryKinds = [
   "MIXED",
   "UNKNOWN",
 ] as const;
+export const deliveryFilterKinds = deliveryKinds.filter(
+  (kind) => kind !== "OTHER",
+);
 export type DeliveryKind = (typeof deliveryKinds)[number];
 export const deliveryLabels: Record<DeliveryKind, string> = {
   PICKUP: "Retirada na loja",
   MOTOBOY: "Motoboy",
   SEDEX: "Sedex",
-  OTHER: "Outras entregas",
+  OTHER: "Retirada na loja",
   MIXED: "Modalidades múltiplas",
   UNKNOWN: "Não identificado",
 };
@@ -28,7 +31,7 @@ const normalize = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/_/g, " ");
-/** Explicit service names only: a free or local rate does not prove pickup/motorcycle. */
+/** Store rule: services other than explicit Motoboy/Sedex are store pickup. */
 export function classifyDelivery(lines: ShippingLine[]): {
   kind: DeliveryKind;
   label: string;
@@ -39,12 +42,17 @@ export function classifyDelivery(lines: ShippingLine[]): {
       [line.title, line.code, line.deliveryCategory].filter(Boolean).join(" "),
     );
     const matches: DeliveryKind[] = [];
-    if (/\b(retirada|retirar|pickup|pick[ -]?up)\b/.test(text))
+    if (
+      /\b(retirada|retirar|pickup|pick[ -]?up)\b/.test(text) ||
+      [line.title, line.code].some(
+        (value) => !!value && /^local[ _-]*delivery$/i.test(value.trim()),
+      )
+    )
       matches.push("PICKUP");
     if (/\b(motoboy|moto[ -]?boy|moto|motocicleta)\b/.test(text))
       matches.push("MOTOBOY");
     if (/\bsedex(?:\s*1[02])?\b/.test(text)) matches.push("SEDEX");
-    return matches.length > 1 ? "UNKNOWN" : matches[0] || "OTHER";
+    return matches.length > 1 ? "UNKNOWN" : matches[0] || "PICKUP";
   });
   const distinct = [...new Set(kinds)];
   return {

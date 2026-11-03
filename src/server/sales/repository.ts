@@ -1,3 +1,4 @@
+import { orderDeliverySql } from "./delivery.ts";
 import { customerColumns, customerJoin } from "./customers.ts";
 import { todayDate, shiftDate } from "../../lib/admin/date-range.ts";
 import { classifyDelivery } from "../../lib/admin/delivery.ts";
@@ -114,7 +115,7 @@ function selection(filters: SalesFilters) {
   const delivery =
     filters.delivery === "all"
       ? ""
-      : ` AND COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')=$${filters.category ? 5 : 4}`;
+      : ` AND ${orderDeliverySql}=$${filters.category ? 5 : 4}`;
   const category = filters.category
     ? ` AND EXISTS (
     SELECT 1 FROM pitterpan_sales_items si JOIN catalog_items ci ON ci.product_id=si.product_id
@@ -150,7 +151,7 @@ export async function readSalesOrders(
     boundary = ` AND (o.processed_at,o.id)<($${values.length - 1}::timestamptz,$${values.length}::text)`;
   }
   const { rows } = await db.query<Record<string, string>>(
-    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.fulfillment_status,o.cancelled_at::text,o.currency,o.total::text,o.received::text,o.refunded::text,(o.received-o.refunded)::text AS net,COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN') AS delivery_kind,COALESCE(to_jsonb(o)->>'delivery_label','') AS delivery_label,${customerColumns}
+    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.fulfillment_status,o.cancelled_at::text,o.currency,o.total::text,o.received::text,o.refunded::text,(o.received-o.refunded)::text AS net,${orderDeliverySql} AS delivery_kind,COALESCE(to_jsonb(o)->>'delivery_label','') AS delivery_label,${customerColumns}
      FROM pitterpan_sales_orders o ${customerJoin}
      WHERE ${selection(filters)}${boundary}
      ORDER BY o.processed_at DESC,o.id DESC LIMIT ${SALES_PAGE_SIZE + 1}`,
@@ -210,12 +211,12 @@ export async function readSoldProducts(
     `SELECT COALESCE(i.variant_id,i.product_id,i.id) AS id,min(i.title) AS title,min(i.sku) AS sku,max(o.processed_at) FILTER(WHERE i.current_quantity>0)::text AS last_sold_at,
     sum(i.current_quantity)::text AS units,
     min(to_jsonb(i)->>'image_url') AS image,
-    sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='PICKUP')::text AS pickup_units,
-    sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='MOTOBOY')::text AS motoboy_units,
-    sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='SEDEX')::text AS sedex_units,
-    sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='OTHER')::text AS other_units,
-    sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='MIXED')::text AS mixed_units,
-    sum(i.current_quantity) FILTER(WHERE COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN')='UNKNOWN')::text AS unknown_units
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='PICKUP')::text AS pickup_units,
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='MOTOBOY')::text AS motoboy_units,
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='SEDEX')::text AS sedex_units,
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='OTHER')::text AS other_units,
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='MIXED')::text AS mixed_units,
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='UNKNOWN')::text AS unknown_units
     FROM pitterpan_sales_items i JOIN pitterpan_sales_orders o ON o.store=i.store AND o.id=i.order_id
     WHERE ${where} AND o.received>0 AND o.cancelled_at IS NULL AND o.financial_status=ANY($${values.length + 1}::text[])${filters.category ? ` AND EXISTS (SELECT 1 FROM catalog_items ci JOIN catalog_state cs ON cs.singleton=true AND cs.active_import=ci.import_id WHERE ci.product_id=i.product_id AND ci.category ILIKE $4)` : ""}
     AND ($${values.length + 2}='' OR i.title ILIKE $${values.length + 2} OR i.sku ILIKE $${values.length + 2})
@@ -255,7 +256,7 @@ export async function readSales(
   const totals = await financialTotals(db, values, where);
   const items = await readSoldProducts(db, store, period, filters);
   const deliveries = await db.query<{ kind: string; orders: string }>(
-    `SELECT COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN') AS kind,count(*)::text AS orders FROM pitterpan_sales_orders o WHERE ${where} GROUP BY 1 ORDER BY 1`,
+    `SELECT ${orderDeliverySql} AS kind,count(*)::text AS orders FROM pitterpan_sales_orders o WHERE ${where} GROUP BY 1 ORDER BY 1`,
     values,
   );
   const ordersPage = await readSalesOrders(db, store, period, filters);
@@ -273,7 +274,7 @@ export async function readSales(
   );
   const events = after
     ? await db.query<Record<string, string>>(
-        `SELECT c.id::text,o.name,COALESCE(to_jsonb(o)->>'delivery_kind','UNKNOWN') AS delivery_kind,COALESCE((SELECT i.title FROM pitterpan_sales_items i WHERE i.store=o.store AND i.order_id=o.id ORDER BY i.id LIMIT 1),'Produto') AS title
+        `SELECT c.id::text,o.name,${orderDeliverySql} AS delivery_kind,COALESCE((SELECT i.title FROM pitterpan_sales_items i WHERE i.store=o.store AND i.order_id=o.id ORDER BY i.id LIMIT 1),'Produto') AS title
     FROM pitterpan_sales_confirmations c JOIN pitterpan_sales_orders o ON o.store=c.store AND o.id=c.order_id
     WHERE c.store=$1 AND c.id>$2::bigint AND c.created_at>now()-interval '5 minutes' AND o.financial_status='PAID' AND o.cancelled_at IS NULL AND NOT o.test
     ORDER BY c.id LIMIT 5`,

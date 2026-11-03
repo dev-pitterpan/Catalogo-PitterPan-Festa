@@ -24,7 +24,10 @@ export const salesFilterSchema = z
         "CANCELLED",
       ])
       .default("all"),
-    delivery: z.enum(["all", ...deliveryKinds]).default("all"),
+    delivery: z
+      .enum(["all", ...deliveryKinds])
+      .default("all")
+      .transform((value) => (value === "OTHER" ? ("PICKUP" as const) : value)),
     category: z.string().trim().max(200).default(""),
   })
   .refine((r) => dateRangeSchema.safeParse(r).success, {
@@ -34,7 +37,7 @@ export type SalesFilters = Omit<
   z.infer<typeof salesFilterSchema>,
   "delivery" | "start" | "end"
 > & {
-  delivery?: z.infer<typeof salesFilterSchema>["delivery"];
+  delivery?: z.input<typeof salesFilterSchema>["delivery"];
   start?: string;
   end?: string;
 };

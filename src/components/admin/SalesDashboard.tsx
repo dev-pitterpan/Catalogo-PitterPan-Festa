@@ -17,7 +17,7 @@ import OrderCustomerRefresh from "./OrderCustomerRefresh";
 import DeliveryMark from "./DeliveryMark";
 import DragScroll from "./DragScroll";
 import {
-  deliveryKinds,
+  deliveryFilterKinds,
   deliveryLabels,
   type DeliveryKind,
 } from "../../lib/admin/delivery";
@@ -318,7 +318,7 @@ export default function SalesDashboard({
             }}
             options={[
               { value: "all", label: "Todas as modalidades" },
-              ...deliveryKinds.map((kind) => ({
+              ...deliveryFilterKinds.map((kind) => ({
                 value: kind,
                 label: deliveryLabels[kind],
               })),

@@ -583,13 +583,13 @@ test("vendas preservam fotos, agrupam modalidades por produto e filtram entregas
     }
     const all = await readSales(db, store, 30);
     assert.equal(all.top[0].units, "15");
-    assert.equal(all.top[0].pickup_units, "3");
+    assert.equal(all.top[0].pickup_units, "6");
     assert.equal(all.top[0].sedex_units, "3");
     assert.equal(all.top[0].motoboy_units, "3");
-    assert.equal(all.top[0].other_units, "3");
+    assert.equal(all.top[0].other_units, null);
     assert.equal(all.top[0].unknown_units, "3");
     assert.match(all.top[0].image, /cdn.shopify.com/);
-    assert.equal(all.deliveries.length, 5);
+    assert.equal(all.deliveries.length, 4);
     const sedex = await readSales(db, store, 30, undefined, {
       status: "PAID",
       category: "",
@@ -1194,7 +1194,7 @@ test("matriz de filtros: entrega, situação, categoria e data selecionam os mes
           });
           const expected = fixtures.filter(
             (f) =>
-              f.kind === delivery &&
+              (f.kind === "OTHER" ? "PICKUP" : f.kind) === filters.delivery &&
               (!category || f.category.toLowerCase().includes(category)) &&
               (status === "all" || f.status === status),
           );
@@ -1222,10 +1222,70 @@ test("matriz de filtros: entrega, situação, categoria e data selecionam os mes
       const result = await readSales(db, store, 30, undefined, filters);
       assert.equal(
         Number(result.totals[0]?.orders || 0),
-        fixtures.filter((f) => f.kind === delivery && f.day === "2026-10-01")
-          .length,
+        fixtures.filter(
+          (f) =>
+            (f.kind === "OTHER" ? "PICKUP" : f.kind) === filters.delivery &&
+            f.day === "2026-10-01",
+        ).length,
       );
     }
+  } finally {
+    await db.close();
+  }
+});
+
+test("retirada encontra Local Delivery já importado em pedidos, totais, produtos e mapa", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      await readFile(
+        new URL("../src/server/sales/schema.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    for (const [id, title] of [
+      ["1", "Local Delivery"],
+      ["2", "Retirada na Loja"],
+      ["3", "Correios PAC"],
+    ]) {
+      const sale = order(id);
+      sale.shippingLines = {
+        nodes: [{ title, code: null, source: null, deliveryCategory: null }],
+        pageInfo: { hasNextPage: false, endCursor: null },
+      };
+      await saveOrder(db, store, sale);
+    }
+    // Reproduce pre-fix imported rows without changing/re-fetching Shopify data.
+    await db.query(
+      "UPDATE pitterpan_sales_orders SET delivery_kind='OTHER' WHERE id=$1",
+      ["gid://shopify/Order/1"],
+    );
+    const filter = salesFilterSchema.parse({ delivery: "PICKUP" });
+    const result = await readSales(db, store, 30, undefined, filter);
+    assert.equal(result.orders.length, 3);
+    assert.ok(result.orders.every((o) => o.delivery_kind === "PICKUP"));
+    assert.equal(result.totals[0].orders, "3");
+    const products = await readSoldProducts(db, store, 30, filter);
+    assert.equal(products.items[0].pickup_units, "9");
+    assert.equal(products.items[0].units, "9");
+    assert.equal(products.items[0].other_units, null);
+    const other = await readSalesOrders(
+      db,
+      store,
+      30,
+      salesFilterSchema.parse({ delivery: "OTHER" }),
+    );
+    assert.equal(other.orders.length, 3);
+    assert.ok(other.orders.every((o) => o.delivery_kind === "PICKUP"));
+    const { readDestinations, destinationFilterSchema } =
+      await import("../src/server/sales/destinations.ts");
+    const map = await readDestinations(
+      db,
+      store,
+      destinationFilterSchema.parse({ delivery: "PICKUP" }),
+    );
+    assert.equal(map.pickup, 3);
+    assert.equal(map.total, 0);
   } finally {
     await db.close();
   }

@@ -85,7 +85,6 @@ export default function DestinationsDashboard() {
             { value: "PICKUP", label: deliveryLabels.PICKUP },
             { value: "MOTOBOY", label: "Motoboy" },
             { value: "SEDEX", label: "Sedex" },
-            { value: "OTHER", label: deliveryLabels.OTHER },
             { value: "MIXED", label: "Modalidades múltiplas" },
             { value: "UNKNOWN", label: "Não identificado" },
           ]}

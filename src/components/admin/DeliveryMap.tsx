@@ -37,6 +37,8 @@ export default function DeliveryMap({ cities }: { cities: City[] }) {
         const tiles = L.tileLayer(
           "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
           {
+            // OSM requires a Referer. Cross-origin sends only our origin, never private filters/paths.
+            referrerPolicy: "strict-origin-when-cross-origin",
             attribution:
               '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>',
             maxZoom: 19,

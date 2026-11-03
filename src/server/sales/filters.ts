@@ -1,3 +1,4 @@
+import { fulfillmentFilters } from "../../lib/admin/fulfillment.ts";
 import { deliveryKinds } from "../../lib/admin/delivery.ts";
 import { z } from "zod";
 import {
@@ -25,6 +26,7 @@ export const salesFilterSchema = z
       ])
       .default("all"),
     delivery: z.enum(["all", ...deliveryKinds]).default("all"),
+    fulfillment: z.enum(fulfillmentFilters).default("all"),
     category: z.string().trim().max(200).default(""),
   })
   .refine((r) => dateRangeSchema.safeParse(r).success, {
@@ -32,8 +34,9 @@ export const salesFilterSchema = z
   });
 export type SalesFilters = Omit<
   z.infer<typeof salesFilterSchema>,
-  "delivery" | "start" | "end"
+  "delivery" | "fulfillment" | "start" | "end"
 > & {
+  fulfillment?: z.input<typeof salesFilterSchema>["fulfillment"];
   delivery?: z.input<typeof salesFilterSchema>["delivery"];
   start?: string;
   end?: string;

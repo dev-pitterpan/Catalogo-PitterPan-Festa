@@ -27,7 +27,7 @@ export default function StockOverview({
         summary.variants - summary.low - summary.out - summary.unknown,
       ),
       color: "#354ba7",
-      href: "/gestor/estoque/",
+      href: "/gestor/estoque/?stock=above",
     },
     {
       label: "Estoque baixo",
@@ -148,7 +148,7 @@ export default function StockOverview({
         className="admin-text-link"
         href={current?.href || "/gestor/estoque/"}
       >
-        {current && selected !== 0
+        {current
           ? `Conferir: ${current.label.toLowerCase()}`
           : "Explorar estoque completo"}{" "}
         →

@@ -12,6 +12,9 @@ export default async function SalesPage({
     typeof params[key] === "string" ? (params[key] as string) : "";
   const parsed = salesFilterSchema.safeParse({
     status: value("status") || "all",
+    fulfillment:
+      value("fulfillment") ||
+      (value("focus") === "operations" ? "AWAITING" : "all"),
     category: value("category"),
     delivery: value("delivery") || "all",
     start: value("start"),

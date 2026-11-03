@@ -97,6 +97,7 @@ export default function ProductList({
           options={[
             { value: "all", label: "Todo o estoque" },
             { value: "low", label: "Estoque baixo" },
+            { value: "above", label: "Acima do estoque baixo" },
             { value: "high", label: "Estoque alto" },
             { value: "out", label: "Sem estoque" },
             { value: "unknown", label: "Não informado" },

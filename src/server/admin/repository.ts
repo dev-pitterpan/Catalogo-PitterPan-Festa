@@ -1,3 +1,5 @@
+import { stockFilters, matchesStock } from "../../lib/admin/stock.ts";
+import { stockSelectionSql } from "./stock.ts";
 import { containsPattern, matchesFilter } from "../../lib/admin/filters.ts";
 import { readAnalytics } from "./analytics";
 import { requireSession } from "../auth/session";
@@ -184,7 +186,7 @@ export const adminQuerySchema = z.object({
   q: z.string().trim().max(120).default(""),
   category: z.string().max(200).default(""),
   vendor: z.string().max(200).default(""),
-  stock: z.enum(["all", "low", "high", "out", "unknown"]).default("all"),
+  stock: z.enum(stockFilters).default("all"),
   offers: z.enum(["0", "1"]).default("0"),
   page: z.coerce.number().int().min(1).max(10000).default(1),
 });
@@ -208,17 +210,12 @@ export async function adminProducts(input: AdminQuery) {
           (p.price !== undefined &&
             p.compareAtPrice &&
             moneyToMinor(p.compareAtPrice) > moneyToMinor(p.price))) &&
-        (input.stock === "all" ||
-          (input.stock === "unknown"
-            ? p.inventoryQuantity === null
-            : input.stock === "low"
-              ? p.inventoryQuantity !== null &&
-                p.inventoryQuantity > 0 &&
-                p.inventoryQuantity <= context.settings.low
-              : input.stock === "high"
-                ? p.inventoryQuantity !== null &&
-                  p.inventoryQuantity >= context.settings.high
-                : p.inventoryQuantity !== null && p.inventoryQuantity <= 0)),
+        matchesStock(
+          p.inventoryQuantity,
+          input.stock,
+          context.settings.low,
+          context.settings.high,
+        ),
     );
     const pages = Math.max(1, Math.ceil(products.length / 20));
     const page = Math.min(input.page, pages);
@@ -240,7 +237,7 @@ export async function adminProducts(input: AdminQuery) {
     context.settings.high,
   ];
   const where = `import_id=$1 AND (name ILIKE $2 OR COALESCE(sku,id) ILIKE $2 OR vendor ILIKE $2) AND ($3='%%' OR category ILIKE $3) AND ($4='%%' OR vendor ILIKE $4) AND ($5='0' OR compare_at_price>price)
- AND ($6='all' OR ($6='unknown' AND inventory_quantity IS NULL) OR ($6='out' AND inventory_quantity<=0) OR ($6='low' AND inventory_quantity>0 AND inventory_quantity<=$7) OR ($6='high' AND inventory_quantity>=$8))`;
+ AND ${stockSelectionSql}`;
   const count = await database().query<{ total: string }>(
     `SELECT count(*)::text AS total FROM catalog_items WHERE ${where}`,
     values,

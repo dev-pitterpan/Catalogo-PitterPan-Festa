@@ -316,3 +316,176 @@ test("auditoria somente leitura identifica pedidos ausentes, desatualizados e va
     await db.close();
   }
 });
+
+test("link aguardando atendimento: contador, lista completa, paginação, financeiro e produtos obedecem ao mesmo filtro", async () => {
+  const { readSoldProducts } =
+    await import("../src/server/sales/repository.ts");
+  const { salesLink } = await import("../src/lib/admin/sales-links.ts");
+  const { salesFilterSchema } = await import("../src/server/sales/filters.ts");
+  const db = new PGlite();
+  try {
+    await db.exec(
+      await readFile(
+        new URL("../src/server/sales/schema.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    await db.exec(
+      "CREATE TABLE catalog_items(import_id text,product_id text,category text,variant_id text,image_url text); CREATE TABLE catalog_state(singleton boolean,active_import text); INSERT INTO catalog_state VALUES(true,'active'); INSERT INTO catalog_items(import_id,product_id,category) VALUES('active','gid://shopify/Product/1','Natal'),('active','gid://shopify/Product/2','Festas')",
+    );
+    const fixtures: SalesOrder[] = [];
+    for (let id = 1; id <= 22; id++) {
+      const sale = order(id);
+      sale.shippingLines = {
+        nodes: [
+          {
+            title: id % 2 ? "Matriz - Pitter Pan Festas" : "Envio via Motoboy",
+            code: null,
+            source: null,
+            deliveryCategory: null,
+          },
+        ],
+        pageInfo: { hasNextPage: false, endCursor: null },
+      };
+      sale.lineItems.nodes = [
+        {
+          id: `gid://shopify/LineItem/${id}`,
+          title: `Produto ${id}`,
+          sku: `SKU${id}`,
+          quantity: 1,
+          currentQuantity: 1,
+          variant: { id: `gid://shopify/ProductVariant/${id}` },
+          product: { id: `gid://shopify/Product/${id % 2 ? 1 : 2}` },
+        },
+      ];
+      if (id === 15) {
+        sale.displayFinancialStatus = "PARTIALLY_REFUNDED";
+        sale.totalRefundedSet = money("40");
+        sale.netPaymentSet = money("60");
+      }
+      if (id === 16) sale.displayFulfillmentStatus = "READY_FOR_PICKUP";
+      if (id === 17) sale.displayFulfillmentStatus = "FULFILLED";
+      if (id === 18) {
+        sale.displayFinancialStatus = "PENDING";
+        sale.totalReceivedSet = money("0");
+        sale.netPaymentSet = money("0");
+      }
+      if (id === 19) sale.cancelledAt = sale.processedAt;
+      if (id === 20) {
+        sale.displayFinancialStatus = "REFUNDED";
+        sale.totalRefundedSet = money("100");
+        sale.netPaymentSet = money("0");
+      }
+      if (id === 21) sale.displayFulfillmentStatus = "PARTIALLY_FULFILLED";
+      if (id === 22) sale.displayFulfillmentStatus = "FULFILLMENT_NOT_REQUIRED";
+      await saveOrder(db, store, sale);
+      fixtures.push(sale);
+    }
+    const open = (sale: SalesOrder) =>
+      !sale.cancelledAt &&
+      ["PAID", "PARTIALLY_REFUNDED"].includes(
+        sale.displayFinancialStatus || "",
+      ) &&
+      Number(sale.totalReceivedSet.shopMoney.amount) >
+        Number(sale.totalRefundedSet.shopMoney.amount) &&
+      !["FULFILLED", "FULFILLMENT_NOT_REQUIRED"].includes(
+        sale.displayFulfillmentStatus,
+      );
+    const link = new URL(
+      salesLink(
+        new URLSearchParams({ start: filters.start, end: filters.end }),
+        { fulfillment: "AWAITING" },
+        "recent-orders",
+      ),
+      "https://local.test",
+    );
+    const selected = salesFilterSchema.parse(
+      Object.fromEntries(link.searchParams),
+    );
+    const overview = await readSalesOperations(db, store, 30, filters);
+    const expectedOpen = fixtures.filter(open).length;
+    assert.equal(expectedOpen, 17);
+    assert.equal(Number(overview.fulfillment[0].awaiting), expectedOpen);
+    let cursor: string | undefined;
+    const ids: string[] = [];
+    do {
+      const page = await readSalesOrders(db, store, 30, selected, cursor);
+      assert.ok(page.orders.length <= 10);
+      ids.push(...page.orders.map((o) => o.id));
+      cursor = page.nextCursor || undefined;
+    } while (cursor);
+    assert.equal(ids.length, expectedOpen);
+    assert.equal(new Set(ids).size, expectedOpen);
+    assert.deepEqual(
+      ids.sort(),
+      fixtures
+        .filter(open)
+        .map((o) => o.id)
+        .sort(),
+    );
+    for (const category of ["", "Natal"])
+      for (const delivery of ["all", "PICKUP", "MOTOBOY"])
+        for (const status of ["all", "PAID", "REFUNDS", "CANCELLED"])
+          for (const fulfillment of [
+            "all",
+            "AWAITING",
+            "READY_FOR_PICKUP",
+            "FULFILLED",
+          ])
+            for (const day of ["2026-10-20", "2026-10-21"]) {
+              const f = salesFilterSchema.parse({
+                category,
+                delivery,
+                status,
+                fulfillment,
+                start: day,
+                end: day,
+              });
+              const expected = fixtures.filter(
+                (o) =>
+                  o.processedAt.startsWith(day) &&
+                  (!category || Number(o.id.split("/").at(-1)) % 2 === 1) &&
+                  (delivery === "all" ||
+                    (delivery === "PICKUP") ===
+                      (Number(o.id.split("/").at(-1)) % 2 === 1)) &&
+                  (status === "all" ||
+                    (status === "CANCELLED"
+                      ? !!o.cancelledAt
+                      : status === "REFUNDS"
+                        ? Number(o.totalRefundedSet.shopMoney.amount) > 0
+                        : o.displayFinancialStatus === status)) &&
+                  (fulfillment === "all" ||
+                    (fulfillment === "AWAITING"
+                      ? open(o)
+                      : o.displayFulfillmentStatus === fulfillment)),
+              );
+              const finance = await readSalesFinance(db, store, 30, f);
+              assert.equal(
+                Number(finance.totals[0]?.orders || 0),
+                expected.length,
+                JSON.stringify(f),
+              );
+              const operations = await readSalesOperations(db, store, 30, f);
+              assert.equal(
+                Number(operations.fulfillment[0]?.awaiting || 0),
+                expected.filter(open).length,
+                JSON.stringify(f),
+              );
+              const products = await readSoldProducts(db, store, 30, f);
+              assert.equal(
+                products.total,
+                expected.filter(
+                  (o) =>
+                    !o.cancelledAt &&
+                    ["PAID", "PARTIALLY_REFUNDED"].includes(
+                      o.displayFinancialStatus || "",
+                    ) &&
+                    Number(o.totalReceivedSet.shopMoney.amount) > 0,
+                ).length,
+                JSON.stringify(f),
+              );
+            }
+  } finally {
+    await db.close();
+  }
+});

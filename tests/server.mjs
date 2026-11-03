@@ -110,6 +110,46 @@ try {
       /url=\/gestor\/vendas\/\?days=7(?:&amp;|&)delivery=SEDEX#sold-products/,
     );
   }
+  const adminRoutes = [
+    "/gestor/",
+    "/gestor/produtos/",
+    "/gestor/vendas/",
+    "/gestor/mapa/",
+    "/gestor/estoque/",
+    "/gestor/ofertas/",
+    "/gestor/catalogos/",
+    "/gestor/agenda/",
+    "/gestor/alteracoes/",
+    "/gestor/sincronizacoes/",
+    "/gestor/analises/",
+    "/gestor/relatorios/",
+    "/gestor/usuarios/",
+    "/gestor/configuracoes/",
+    "/gestor/calendario/",
+  ];
+  const seenLinks = new Set();
+  for (const route of adminRoutes) {
+    const response = await fetch(base + route);
+    assert.equal(response.status, 200, route);
+    const html = await response.text();
+    assert.ok(!html.includes("Não foi possível abrir esta seção."), route);
+    assert.ok(!new URL(response.url).pathname.startsWith("/login"), route);
+    for (const match of html.matchAll(/href="([^"#]+)"/g)) {
+      const href = match[1].replaceAll("&amp;", "&");
+      if (href.startsWith("/gestor/") && !href.includes("["))
+        seenLinks.add(href);
+    }
+  }
+  for (const href of seenLinks) {
+    const response = await fetch(base + href);
+    assert.equal(response.status, 200, href);
+    assert.ok(!new URL(response.url).pathname.startsWith("/login"), href);
+    const html = await response.text();
+    assert.ok(!html.includes("Não foi possível abrir esta seção."), href);
+  }
+  console.log(
+    `Navegação administrativa OK: ${adminRoutes.length} seções e ${seenLinks.size} destinos internos, sem 404 ou erro de seção.`,
+  );
   const managerEntry = await hostEntry("gestaopitterpan.vercel.app");
   assert.equal(managerEntry.status, 307);
   assert.equal(new URL(managerEntry.location, base).pathname, "/gestor/");

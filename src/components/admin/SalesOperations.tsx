@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Clock3, RefreshCw, Undo2 } from "lucide-react";
 import type { readSalesOperations } from "../../server/sales/repository";
+import { salesLink, salesOverviewCards } from "../../lib/admin/sales-links";
 import { fulfillmentLabels } from "../../lib/admin/fulfillment";
 import DeliveryMark from "./DeliveryMark";
 import PitterSpinner from "./PitterSpinner";
@@ -55,13 +56,16 @@ export default function SalesOperations({
     return () => controller.abort();
   }, [params, revision]);
   const filters = new URLSearchParams(params);
-  filters.delete("revision");
-  const salesHref = `/gestor/vendas/?${filters}`;
-  const operationFilters = new URLSearchParams(filters);
-  operationFilters.set("focus", "operations");
-  const operationHref = `/gestor/vendas/?${operationFilters}#sales-operations`;
-  const refundsFilter = new URLSearchParams(filters);
-  refundsFilter.set("status", "REFUNDS");
+  const operationHref = salesLink(
+    filters,
+    { fulfillment: "AWAITING" },
+    "recent-orders",
+  );
+  const refundsHref = salesLink(
+    filters,
+    { status: "REFUNDS" },
+    "recent-orders",
+  );
   const orderHref = (id: string) =>
     `https://${data!.store}/admin/orders/${id.split("/").at(-1)}`;
   return (
@@ -127,47 +131,42 @@ export default function SalesOperations({
                   key={t.currency}
                   className="admin-stats sales-operations-stats"
                 >
-                  {[
-                    {
-                      label: "Recebido confirmado",
-                      value: money(t.received, t.currency),
-                      hint: `${count(t.orders)} pedidos no período`,
-                      href: salesHref,
-                    },
-                    {
-                      label: "Líquido após reembolsos",
-                      value: money(t.net, t.currency),
-                      hint: "Recebido − reembolsado; não é lucro",
-                      href: "/gestor/analises/",
-                    },
-                    {
-                      label: "Reembolsos",
-                      value: money(t.refunded, t.currency),
-                      hint: `${count(t.refunded_orders)} pedidos · total ou parcial`,
-                      href: `/gestor/vendas/?${refundsFilter}`,
-                    },
-                    {
-                      label: "Atendimento em aberto",
-                      value: count(f?.awaiting || 0),
-                      hint: `Pagos com saldo líquido positivo · ${count(f?.ready || 0)} prontos para retirada`,
-                      href: salesHref,
-                    },
-                  ].map((card) => (
-                    <Link
-                      className="admin-stat admin-stat--blue"
-                      href={card.href}
-                      key={card.label}
-                    >
-                      <div>
-                        <span className="admin-stat-icon blue">
-                          <ArrowUpRight size={20} />
-                        </span>
-                      </div>
-                      <span>{card.label}</span>
-                      <strong>{card.value}</strong>
-                      <small>{card.hint}</small>
-                    </Link>
-                  ))}
+                  {salesOverviewCards(filters).map((card) => {
+                    const metrics = {
+                      received: {
+                        value: money(t.received, t.currency),
+                        hint: `${count(t.orders)} pedidos no período`,
+                      },
+                      net: {
+                        value: money(t.net, t.currency),
+                        hint: "Recebido − reembolsado; não é lucro",
+                      },
+                      refunds: {
+                        value: money(t.refunded, t.currency),
+                        hint: `${count(t.refunded_orders)} pedidos · total ou parcial`,
+                      },
+                      awaiting: {
+                        value: count(f?.awaiting || 0),
+                        hint: `Pagos com saldo líquido positivo · ${count(f?.ready || 0)} prontos para retirada`,
+                      },
+                    }[card.key];
+                    return (
+                      <Link
+                        className="admin-stat admin-stat--blue"
+                        href={card.href}
+                        key={card.label}
+                      >
+                        <div>
+                          <span className="admin-stat-icon blue">
+                            <ArrowUpRight size={20} />
+                          </span>
+                        </div>
+                        <span>{card.label}</span>
+                        <strong>{metrics.value}</strong>
+                        <small>{metrics.hint}</small>
+                      </Link>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -291,10 +290,7 @@ export default function SalesOperations({
                     </table>
                   </DragScroll>
                 )}
-                <Link
-                  className="admin-text-link"
-                  href={`/gestor/vendas/?${refundsFilter}#recent-orders`}
-                >
+                <Link className="admin-text-link" href={refundsHref}>
                   Ver todos os pedidos com reembolso <ArrowUpRight size={14} />
                 </Link>
               </section>

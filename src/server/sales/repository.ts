@@ -3,6 +3,7 @@ import {
   officialOutstandingSql,
   currentTotalSql,
 } from "./financial.ts";
+import { awaitingFulfillmentSql } from "./fulfillment.ts";
 import { orderDeliverySql } from "./delivery.ts";
 import { customerColumns, customerJoin } from "./customers.ts";
 import { todayDate, shiftDate } from "../../lib/admin/date-range.ts";
@@ -114,7 +115,10 @@ export async function saveOrder(
 /** Category membership is resolved over the complete published snapshot, never a top-N list. */
 function selection(filters: SalesFilters) {
   const endIndex =
-    4 + (filters.category ? 1 : 0) + (filters.delivery !== "all" ? 1 : 0);
+    4 +
+    (filters.category ? 1 : 0) +
+    (filters.delivery !== "all" ? 1 : 0) +
+    (filters.fulfillment !== "all" ? 1 : 0);
   const period = filters.start
     ? `o.processed_at>=($2::date::timestamp AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((($${endIndex}::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')`
     : "o.processed_at>=((((now() AT TIME ZONE 'America/Sao_Paulo')::date-($2::int-1))::timestamp) AT TIME ZONE 'America/Sao_Paulo') AND o.processed_at<((((now() AT TIME ZONE 'America/Sao_Paulo')::date+1)::timestamp) AT TIME ZONE 'America/Sao_Paulo')";
@@ -130,7 +134,13 @@ function selection(filters: SalesFilters) {
     WHERE si.store=o.store AND si.order_id=o.id AND ci.category ILIKE $4
   )`
     : "";
-  return `o.store=$1 AND NOT o.test AND ${period} AND ${status}${category}${delivery}`;
+  const fulfillmentIndex =
+    4 + (filters.category ? 1 : 0) + (filters.delivery !== "all" ? 1 : 0);
+  const fulfillment =
+    filters.fulfillment === "all"
+      ? ""
+      : ` AND (($${fulfillmentIndex}='AWAITING' AND ${awaitingFulfillmentSql}) OR ($${fulfillmentIndex}<>'AWAITING' AND o.fulfillment_status=$${fulfillmentIndex}))`;
+  return `o.store=$1 AND NOT o.test AND ${period} AND ${status}${category}${delivery}${fulfillment}`;
 }
 function filterValues(store: string, days: number, filters: SalesFilters) {
   return [
@@ -139,6 +149,7 @@ function filterValues(store: string, days: number, filters: SalesFilters) {
     filters.status,
     ...(filters.category ? [containsPattern(filters.category)] : []),
     ...(filters.delivery !== "all" ? [filters.delivery] : []),
+    ...(filters.fulfillment !== "all" ? [filters.fulfillment] : []),
     ...(filters.start ? [filters.end] : []),
   ];
 }
@@ -392,8 +403,7 @@ export async function readSalesOperations(
   const filters = salesFilterSchema.parse({ ...input, start, end });
   const values = filterValues(store, period, filters),
     where = selection(filters);
-  const open = `o.cancelled_at IS NULL AND o.financial_status IN ('PAID','PARTIALLY_REFUNDED')
-    AND o.received>o.refunded AND o.fulfillment_status NOT IN ('FULFILLED','FULFILLMENT_NOT_REQUIRED')`;
+  const open = awaitingFulfillmentSql;
   const totals = await financialTotals(db, values, where);
   const fulfillment = await db.query<Record<string, string>>(
     `SELECT o.currency,count(*) FILTER(WHERE ${open})::text AS awaiting,

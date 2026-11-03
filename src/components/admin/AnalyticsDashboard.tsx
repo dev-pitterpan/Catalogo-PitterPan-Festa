@@ -16,6 +16,7 @@ import {
   Search,
   ExternalLink,
 } from "lucide-react";
+import { salesLink } from "../../lib/admin/sales-links";
 import AdminSelect from "./AdminSelect";
 import DateRangePicker from "./DateRangePicker";
 import PitterSpinner from "./PitterSpinner";
@@ -358,7 +359,13 @@ export default function AnalyticsDashboard() {
                 key={id}
                 onClick={() =>
                   id === "sales-product"
-                    ? router.push(`/gestor/vendas/?${params}#sold-products`)
+                    ? router.push(
+                        salesLink(
+                          new URLSearchParams(params),
+                          {},
+                          "sold-products",
+                        ),
+                      )
                     : setReportId(id)
                 }
               >

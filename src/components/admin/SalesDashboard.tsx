@@ -1,5 +1,11 @@
 "use client";
-import { fulfillmentLabels } from "../../lib/admin/fulfillment";
+import {
+  fulfillmentLabels,
+  fulfillmentFilters,
+  fulfillmentFilterLabels,
+  type FulfillmentFilter,
+} from "../../lib/admin/fulfillment";
+import { salesSectionFromHash } from "../../lib/admin/sales-links";
 import SalesOperations from "./SalesOperations";
 import SoldProductsHistory from "./SoldProductsHistory";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -80,10 +86,10 @@ export default function SalesDashboard({
   const entryPositioned = useRef(false);
   useEffect(() => {
     if (entryPositioned.current) return;
-    const hash = window.location.hash;
-    if (hash === "#sales-operations" || hash === "#recent-orders") {
+    const section = salesSectionFromHash(window.location.hash);
+    if (section) {
       if (!data) return;
-      const target = document.getElementById(hash.slice(1));
+      const target = document.getElementById(section);
       if (!target) return;
       target.scrollIntoView({ block: "start" });
     } else {
@@ -136,6 +142,7 @@ export default function SalesDashboard({
           start: filters.start || "",
           end: filters.end || "",
           status: filters.status,
+          fulfillment: filters.fulfillment || "all",
           category: filters.category,
           delivery: filters.delivery || "all",
         });
@@ -209,6 +216,7 @@ export default function SalesDashboard({
         start: filters.start || "",
         end: filters.end || "",
         status: filters.status,
+        fulfillment: filters.fulfillment || "all",
         category: filters.category,
         delivery: filters.delivery || "all",
         orderCursor: data.nextCursor,
@@ -318,6 +326,25 @@ export default function SalesDashboard({
             onChange={(status) => {
               resetList();
               setFilters((old) => ({ ...old, status }));
+            }}
+          />
+        </div>
+        <div>
+          <label htmlFor="sales-fulfillment">Situação do atendimento</label>
+          <AdminSelect
+            id="sales-fulfillment"
+            label="Situação do atendimento"
+            value={filters.fulfillment || "all"}
+            options={fulfillmentFilters.map((value) => ({
+              value,
+              label: fulfillmentFilterLabels[value],
+            }))}
+            onValueChange={(fulfillment) => {
+              resetList();
+              setFilters((old) => ({
+                ...old,
+                fulfillment: fulfillment as FulfillmentFilter,
+              }));
             }}
           />
         </div>
@@ -569,7 +596,7 @@ export default function SalesDashboard({
               </header>
               <div className="sales-orders-status-filter">
                 <label htmlFor="recent-orders-status">
-                  Buscar situação do pedido
+                  Buscar pagamento ou cancelamento
                 </label>
                 <OrderStatusSearch
                   value={filters.status}
@@ -732,6 +759,7 @@ export default function SalesDashboard({
           </div>
           {(initialOperations ||
             filters.status !== "all" ||
+            (filters.fulfillment || "all") !== "all" ||
             filters.delivery !== "all" ||
             !!filters.category ||
             !!filters.start ||
@@ -742,6 +770,7 @@ export default function SalesDashboard({
                 start: filters.start || "",
                 end: filters.end || "",
                 status: filters.status,
+                fulfillment: filters.fulfillment || "all",
                 delivery: filters.delivery || "all",
                 category: filters.category,
                 revision: String(revision),

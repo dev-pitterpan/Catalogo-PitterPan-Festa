@@ -40,6 +40,7 @@ export async function GET(request: Request) {
     start: url.searchParams.get("start") || "",
     end: url.searchParams.get("end") || "",
     status: url.searchParams.get("status") || "all",
+    fulfillment: url.searchParams.get("fulfillment") || "all",
     delivery: url.searchParams.get("delivery") || "all",
     category: url.searchParams.get("category") || "",
   });

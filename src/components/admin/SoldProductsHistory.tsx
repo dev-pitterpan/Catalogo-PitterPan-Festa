@@ -42,6 +42,7 @@ export default function SoldProductsHistory({
       view: "sold-products",
       days: String(days),
       status: filters.status,
+      fulfillment: filters.fulfillment || "all",
       category: filters.category,
       delivery: filters.delivery || "all",
       start: filters.start || "",

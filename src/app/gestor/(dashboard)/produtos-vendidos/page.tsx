@@ -14,6 +14,7 @@ export default async function SoldProductsRedirect({
     "start",
     "end",
     "status",
+    "fulfillment",
     "category",
     "delivery",
   ]) {

@@ -1,3 +1,4 @@
+import { allowed } from "../../../server/auth/crypto";
 import SalesOperations from "../../../components/admin/SalesOperations";
 import StockOverview from "../../../components/admin/StockOverview";
 import Image from "next/image";
@@ -88,7 +89,7 @@ export default async function Overview() {
         </span>
       </header>
       <DataNotice context={context} />
-      {(user.role === "admin" || user.role === "gestor") && (
+      {allowed(user.role, ["admin", "gestor"]) && (
         <SalesOperations overview params="days=30" />
       )}
       <section className="admin-hero">

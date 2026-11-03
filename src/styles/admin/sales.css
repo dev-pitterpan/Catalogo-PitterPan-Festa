@@ -511,3 +511,50 @@
 .admin-app .sold-history .sales-product-deliveries .delivery-mark > b small {
   color: #6676ad;
 }
+.admin-app .sold-history .delivery-mark--motoboy {
+  --sold-delivery-color: #6077ad;
+}
+.admin-app .sold-history .delivery-mark--sedex {
+  --sold-delivery-color: #967211;
+}
+.admin-app .sold-history .delivery-mark--pickup {
+  --sold-delivery-color: #55836c;
+}
+.admin-app
+  .sold-history
+  .sales-product-deliveries
+  .delivery-mark:is(
+    .delivery-mark--motoboy,
+    .delivery-mark--sedex,
+    .delivery-mark--pickup
+  ),
+.admin-app
+  .sold-history
+  .sales-product-deliveries
+  .delivery-mark:is(
+    .delivery-mark--motoboy,
+    .delivery-mark--sedex,
+    .delivery-mark--pickup
+  )
+  > span,
+.admin-app
+  .sold-history
+  .sales-product-deliveries
+  .delivery-mark:is(
+    .delivery-mark--motoboy,
+    .delivery-mark--sedex,
+    .delivery-mark--pickup
+  )
+  > b,
+.admin-app
+  .sold-history
+  .sales-product-deliveries
+  .delivery-mark:is(
+    .delivery-mark--motoboy,
+    .delivery-mark--sedex,
+    .delivery-mark--pickup
+  )
+  > b
+  small {
+  color: var(--sold-delivery-color);
+}

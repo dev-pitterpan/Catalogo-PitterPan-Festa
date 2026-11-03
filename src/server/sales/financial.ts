@@ -11,5 +11,7 @@ export const currentTotalSql =
 export async function ensureFinancialFields(db: SqlClient) {
   await db.query(`ALTER TABLE pitterpan_sales_orders
     ADD COLUMN IF NOT EXISTS outstanding numeric(18,2),
-    ADD COLUMN IF NOT EXISTS current_total numeric(18,2)`);
+    ADD COLUMN IF NOT EXISTS current_total numeric(18,2),
+    ADD COLUMN IF NOT EXISTS shipping_charge numeric(18,2),
+    ADD COLUMN IF NOT EXISTS shipping_charge_checked boolean NOT NULL DEFAULT false`);
 }

@@ -6,6 +6,7 @@ import type { readSalesOperations } from "../../server/sales/repository";
 import { salesLink, salesOverviewCards } from "../../lib/admin/sales-links";
 import { fulfillmentLabels } from "../../lib/admin/fulfillment";
 import OrderFulfillmentDetails from "./OrderFulfillmentDetails";
+import ShippingCharge from "./ShippingCharge";
 import DeliveryMark from "./DeliveryMark";
 import PitterSpinner from "./PitterSpinner";
 import DragScroll from "./DragScroll";
@@ -219,6 +220,7 @@ export default function SalesOperations({
                         </div>
                         <div>
                           <DeliveryMark kind={o.delivery_kind} />
+                          <ShippingCharge order={o} />
                           <small>
                             {fulfillmentLabels[o.fulfillment_status] ||
                               o.fulfillment_status}

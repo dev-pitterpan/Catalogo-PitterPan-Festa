@@ -168,7 +168,7 @@ export async function syncSalesPage() {
       const missing = await pool.query<{ needed: boolean }>(
         `SELECT EXISTS(SELECT 1 FROM pitterpan_sales_orders
          WHERE store=$1 AND NOT test AND processed_at>=now()-interval '60 days'
-         AND (outstanding IS NULL OR current_total IS NULL)) AS needed`,
+         AND (outstanding IS NULL OR current_total IS NULL OR NOT shipping_charge_checked)) AS needed`,
         [store],
       );
       await pool.query(

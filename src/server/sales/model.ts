@@ -43,6 +43,7 @@ export const orderSchema = z
             source: z.string().nullable(),
             deliveryCategory: z.string().nullable(),
             isRemoved: z.boolean().optional(),
+            discountedPriceSet: money.optional(),
           }),
         ),
         pageInfo: z.object({
@@ -73,6 +74,9 @@ export const orderSchema = z
       order.netPaymentSet,
       ...(order.totalOutstandingSet ? [order.totalOutstandingSet] : []),
       ...(order.currentTotalPriceSet ? [order.currentTotalPriceSet] : []),
+      ...(order.shippingLines?.nodes.flatMap((line) =>
+        line.discountedPriceSet ? [line.discountedPriceSet] : [],
+      ) || []),
     ].map((m) => m.shopMoney.currencyCode);
     if (new Set(currencies).size !== 1)
       ctx.addIssue({
@@ -84,7 +88,7 @@ export type SalesOrder = z.infer<typeof orderSchema>;
 export type SalesLine = z.infer<typeof lineSchema>;
 export const paidStatuses = ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"];
 export const lineFields = `id title sku quantity currentQuantity image { url } variant { id } product { id }`;
-export const shippingFields = `title code source deliveryCategory isRemoved`;
+export const shippingFields = `title code source deliveryCategory isRemoved discountedPriceSet { shopMoney { amount currencyCode } }`;
 export const orderFields = `id name processedAt updatedAt cancelledAt test displayFinancialStatus displayFulfillmentStatus
  shippingLines(first:20) { nodes { ${shippingFields} } pageInfo { hasNextPage endCursor } }
  totalOutstandingSet { shopMoney { amount currencyCode } }

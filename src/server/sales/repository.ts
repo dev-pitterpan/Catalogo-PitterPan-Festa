@@ -3,6 +3,7 @@ import {
   officialOutstandingSql,
   currentTotalSql,
 } from "./financial.ts";
+import { shippingCharge } from "./shipping.ts";
 import { awaitingFulfillmentSql } from "./fulfillment.ts";
 import { orderDeliverySql } from "./delivery.ts";
 import { customerColumns, customerJoin } from "./customers.ts";
@@ -37,15 +38,16 @@ export async function saveOrder(
   if (order.shippingLines?.pageInfo.hasNextPage)
     throw new Error("Pedido com entregas incompletas.");
   const delivery = classifyDelivery(order.shippingLines?.nodes || []);
+  const shipping = shippingCharge(order.shippingLines);
   const result = await db.query<{ id: string }>(
     `INSERT INTO pitterpan_sales_orders
-    (store,id,name,processed_at,updated_at,financial_status,fulfillment_status,cancelled_at,test,currency,total,received,refunded,net,delivery_kind,delivery_label,destination,customer,outstanding,current_total)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb,$19,$20)
+    (store,id,name,processed_at,updated_at,financial_status,fulfillment_status,cancelled_at,test,currency,total,received,refunded,net,delivery_kind,delivery_label,destination,customer,outstanding,current_total,shipping_charge,shipping_charge_checked)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb,$19,$20,$21,$22)
     ON CONFLICT(store,id) DO UPDATE SET name=EXCLUDED.name,processed_at=EXCLUDED.processed_at,
     updated_at=EXCLUDED.updated_at,financial_status=EXCLUDED.financial_status,
     fulfillment_status=EXCLUDED.fulfillment_status,cancelled_at=EXCLUDED.cancelled_at,
     test=EXCLUDED.test,currency=EXCLUDED.currency,total=EXCLUDED.total,received=EXCLUDED.received,
-    refunded=EXCLUDED.refunded,net=EXCLUDED.net,delivery_kind=EXCLUDED.delivery_kind,delivery_label=EXCLUDED.delivery_label,destination=COALESCE(EXCLUDED.destination,pitterpan_sales_orders.destination),customer=COALESCE(EXCLUDED.customer,pitterpan_sales_orders.customer),outstanding=EXCLUDED.outstanding,current_total=EXCLUDED.current_total,imported_at=now()
+    refunded=EXCLUDED.refunded,net=EXCLUDED.net,delivery_kind=EXCLUDED.delivery_kind,delivery_label=EXCLUDED.delivery_label,destination=COALESCE(EXCLUDED.destination,pitterpan_sales_orders.destination),customer=COALESCE(EXCLUDED.customer,pitterpan_sales_orders.customer),outstanding=EXCLUDED.outstanding,current_total=EXCLUDED.current_total,shipping_charge=CASE WHEN EXCLUDED.shipping_charge_checked THEN EXCLUDED.shipping_charge ELSE pitterpan_sales_orders.shipping_charge END,shipping_charge_checked=(EXCLUDED.shipping_charge_checked OR pitterpan_sales_orders.shipping_charge_checked),imported_at=now()
     WHERE pitterpan_sales_orders.updated_at<=EXCLUDED.updated_at RETURNING id`,
     [
       store,
@@ -68,6 +70,8 @@ export async function saveOrder(
       order.customerInfo ? JSON.stringify(order.customerInfo) : null,
       order.totalOutstandingSet?.shopMoney.amount ?? null,
       order.currentTotalPriceSet?.shopMoney.amount ?? null,
+      shipping.amount,
+      shipping.checked,
     ],
   );
   if (!result.rows.length) return false;
@@ -169,7 +173,7 @@ export async function readSalesOrders(
     boundary = ` AND (o.processed_at,o.id)<($${values.length - 1}::timestamptz,$${values.length}::text)`;
   }
   const { rows } = await db.query<Record<string, string>>(
-    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.fulfillment_status,o.cancelled_at::text,o.currency,o.total::text,${currentTotalSql}::text AS current_total,${officialOutstandingSql}::text AS outstanding,o.received::text,o.refunded::text,(o.received-o.refunded)::text AS net,${orderDeliverySql} AS delivery_kind,COALESCE(to_jsonb(o)->>'delivery_label','') AS delivery_label,${customerColumns}
+    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.fulfillment_status,o.cancelled_at::text,o.currency,o.total::text,${currentTotalSql}::text AS current_total,${officialOutstandingSql}::text AS outstanding,o.received::text,o.refunded::text,(o.received-o.refunded)::text AS net,${orderDeliverySql} AS delivery_kind,to_jsonb(o)->>'shipping_charge' AS shipping_charge,COALESCE(to_jsonb(o)->>'shipping_charge_checked','false') AS shipping_charge_checked,COALESCE(to_jsonb(o)->>'delivery_label','') AS delivery_label,${customerColumns}
      FROM pitterpan_sales_orders o ${customerJoin}
      WHERE ${selection(filters)}${boundary}
      ORDER BY o.processed_at DESC,o.id DESC LIMIT ${SALES_PAGE_SIZE + 1}`,
@@ -412,7 +416,7 @@ export async function readSalesOperations(
     values,
   );
   const awaiting = await db.query<Record<string, string>>(
-    `SELECT o.id,o.name,o.processed_at::text,o.currency,o.fulfillment_status,${orderDeliverySql} AS delivery_kind
+    `SELECT o.id,o.name,o.processed_at::text,o.currency,o.fulfillment_status,to_jsonb(o)->>'shipping_charge' AS shipping_charge,COALESCE(to_jsonb(o)->>'shipping_charge_checked','false') AS shipping_charge_checked,${orderDeliverySql} AS delivery_kind
      FROM pitterpan_sales_orders o WHERE ${where} AND ${open}
      ORDER BY o.processed_at,o.id LIMIT 10`,
     values,

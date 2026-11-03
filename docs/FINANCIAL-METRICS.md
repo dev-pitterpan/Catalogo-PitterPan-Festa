@@ -50,3 +50,11 @@ Conferir itens abre uma janela de consulta somente leitura à Shopify, sob a mes
 Aguardando preparo corresponde a UNFULFILLED; Em preparo a IN_PROGRESS; Parcialmente atendido a PARTIALLY_FULFILLED; Atendido a FULFILLED. Esses nomes não afirmam entrega física. A quantidade Atendido soma somente registros SUCCESS por ID do item, excluindo cancelados e falhas. A atender usa unfulfilledQuantity oficial. Quantidade atual, original e unidades fora do saldo são preservadas separadamente; itens removidos ou reembolsados não são transformados em pendência por subtração. O histórico de atendimentos pode incluir unidades depois reembolsadas ou reenviadas.
 
 A janela indica a data da conferência e avisa se o estado atual difere do resumo importado. Nenhum botão marca produtos como enviados ou altera a Shopify. Não é necessário migrar o banco para esses detalhes.
+
+## Modalidade e frete cobrado
+
+Entrega local continua sendo uma modalidade distinta de retirada na loja. A lista mostra o frete por pedido, sem presumir que toda entrega local seja gratuita. O valor é a soma de discountedPriceSet.shopMoney das linhas de frete ativas, incluindo descontos de frete e excluindo linhas removidas. Usa o preço após descontos e antes de reembolsos, para não chamar de grátis um frete originalmente cobrado e depois devolvido. Os valores são somados em centavos inteiros.
+
+Zero confirmado aparece como Frete grátis; retirada com zero aparece como Sem cobrança de frete. Dados antigos ainda não consultados aparecem como Frete a conferir; ausência de linhas ativas, como Frete não informado. O valor já integra o total do pedido e não é somado novamente a recebimentos ou vendas. Não representa o custo de entrega pago pela loja.
+
+A próxima sincronização adiciona os campos de forma compatível e faz a passagem de preenchimento no histórico recente. Um marcador de conferência distingue ausência legítima de metadados antigos, evitando repetir a importação por um pedido sem linha de frete. Nenhuma tarifa ou modalidade é alterada na Shopify.

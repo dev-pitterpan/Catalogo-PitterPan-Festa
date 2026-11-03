@@ -23,6 +23,7 @@ import OrderStatusSearch from "./OrderStatusSearch";
 import SalesStatusSelect from "./SalesStatusSelect";
 import OrderCustomer from "./OrderCustomer";
 import OrderCustomerRefresh from "./OrderCustomerRefresh";
+import ShippingCharge from "./ShippingCharge";
 import DeliveryMark from "./DeliveryMark";
 import DragScroll from "./DragScroll";
 import {
@@ -699,7 +700,8 @@ export default function SalesDashboard({
                         </td>
                         <td>
                           <DeliveryMark kind={o.delivery_kind} />
-                          {o.delivery_label && (
+                          <ShippingCharge order={o} />
+                          {o.delivery_label && o.delivery_kind !== "LOCAL" && (
                             <small>{o.delivery_label}</small>
                           )}
                           <small>

@@ -1,3 +1,4 @@
+import { readJsonBody } from "../../../../server/http/body";
 import { apiSession, sameOrigin } from "../../../../server/auth/session";
 import { database } from "../../../../server/database/client";
 import {
@@ -75,22 +76,9 @@ export async function POST(request: Request) {
       { error: "Solicitação inválida." },
       { status: 403, headers },
     );
-  const body = await request.text();
-  if (body.length > 1500000)
-    return Response.json(
-      { error: "Arquivo muito grande." },
-      { status: 413, headers },
-    );
-  let raw: unknown;
-  try {
-    raw = JSON.parse(body);
-  } catch {
-    return Response.json(
-      { error: "Dados inválidos." },
-      { status: 400, headers },
-    );
-  }
-  const input = mutationSchema.safeParse(raw);
+  const body = await readJsonBody(request, 1500000);
+  if (body.response) return body.response;
+  const input = mutationSchema.safeParse(body.value);
   if (!input.success)
     return Response.json(
       { error: input.error.issues[0]?.message || "Confira os dados." },

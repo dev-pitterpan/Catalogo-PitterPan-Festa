@@ -1,3 +1,4 @@
+import { readJsonBody } from "../../../../server/http/body";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { apiSession, sameOrigin } from "../../../../server/auth/session";
@@ -18,9 +19,9 @@ export async function POST(request: Request) {
   if (auth.error) return auth.error;
   if (!sameOrigin(request))
     return Response.json({ error: "Solicitação inválida." }, { status: 403 });
-  const parsed = campaignSchema.safeParse(
-    await request.json().catch(() => null),
-  );
+  const body = await readJsonBody(request);
+  if (body.response) return body.response;
+  const parsed = campaignSchema.safeParse(body.value);
   if (!parsed.success)
     return Response.json(
       { error: "Confira o título e a data da campanha." },
@@ -56,9 +57,11 @@ export async function PATCH(request: Request) {
   if (auth.error) return auth.error;
   if (!sameOrigin(request))
     return Response.json({ error: "Solicitação inválida." }, { status: 403 });
+  const body = await readJsonBody(request);
+  if (body.response) return body.response;
   const parsed = z
     .object({ id: z.uuid(), status: z.enum(["planned", "ready", "archived"]) })
-    .safeParse(await request.json().catch(() => null));
+    .safeParse(body.value);
   if (!parsed.success)
     return Response.json({ error: "Dados inválidos." }, { status: 400 });
   if (!process.env.DATABASE_URL)

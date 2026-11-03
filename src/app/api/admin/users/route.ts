@@ -1,3 +1,4 @@
+import { readJsonBody } from "../../../../server/http/body";
 import { randomUUID } from "node:crypto";
 import { apiSession, sameOrigin } from "../../../../server/auth/session";
 import { hashPassword } from "../../../../server/auth/crypto";
@@ -19,9 +20,9 @@ export async function POST(request: Request) {
   if (auth.error) return auth.error;
   if (!sameOrigin(request))
     return Response.json({ error: "Solicitação inválida." }, { status: 403 });
-  const parsed = userCreateSchema.safeParse(
-    await request.json().catch(() => null),
-  );
+  const body = await readJsonBody(request);
+  if (body.response) return body.response;
+  const parsed = userCreateSchema.safeParse(body.value);
   if (!parsed.success)
     return Response.json(
       {
@@ -89,9 +90,9 @@ export async function PATCH(request: Request) {
   if (auth.error) return auth.error;
   if (!sameOrigin(request))
     return Response.json({ error: "Solicitação inválida." }, { status: 403 });
-  const parsed = userUpdateSchema.safeParse(
-    await request.json().catch(() => null),
-  );
+  const body = await readJsonBody(request);
+  if (body.response) return body.response;
+  const parsed = userUpdateSchema.safeParse(body.value);
   if (!parsed.success)
     return Response.json({ error: "Dados inválidos." }, { status: 400 });
   if (parsed.data.id === auth.session.sub)

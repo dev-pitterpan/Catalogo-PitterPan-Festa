@@ -1,3 +1,4 @@
+import { readJsonBody } from "../../../../../server/http/body";
 import { z } from "zod";
 import { apiSession, sameOrigin } from "../../../../../server/auth/session";
 import { database } from "../../../../../server/database/client";
@@ -12,6 +13,8 @@ export async function POST(request: Request) {
   if (auth.error) return auth.error;
   if (!sameOrigin(request))
     return Response.json({ error: "Solicitação inválida." }, { status: 403 });
+  const body = await readJsonBody(request);
+  if (body.response) return body.response;
   const input = z
     .object({
       ids: z
@@ -19,7 +22,7 @@ export async function POST(request: Request) {
         .min(1)
         .max(10),
     })
-    .safeParse(await request.json().catch(() => null));
+    .safeParse(body.value);
   if (!input.success)
     return Response.json({ error: "Escolha até 10 pedidos." }, { status: 400 });
   if (!salesReady())

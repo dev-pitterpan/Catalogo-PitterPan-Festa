@@ -1,3 +1,4 @@
+import { readJsonBody } from "../../../../server/http/body";
 import { z } from "zod";
 import { apiSession, sameOrigin } from "../../../../server/auth/session";
 import { database } from "../../../../server/database/client";
@@ -12,7 +13,9 @@ export async function POST(request: Request) {
   if (auth.error) return auth.error;
   if (!sameOrigin(request))
     return Response.json({ error: "Solicitação inválida." }, { status: 403 });
-  const parsed = schema.safeParse(await request.json().catch(() => null));
+  const body = await readJsonBody(request);
+  if (body.response) return body.response;
+  const parsed = schema.safeParse(body.value);
   if (!parsed.success)
     return Response.json(
       {

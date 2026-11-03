@@ -1,3 +1,4 @@
+import { readJsonBody } from "../../../../server/http/body";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { authConfigured, sameOrigin } from "../../../../server/auth/session";
@@ -25,7 +26,9 @@ export async function POST(request: Request) {
       { error: "O acesso administrativo ainda não foi ativado." },
       { status: 503 },
     );
-  const parsed = schema.safeParse(await request.json().catch(() => null));
+  const body = await readJsonBody(request);
+  if (body.response) return body.response;
+  const parsed = schema.safeParse(body.value);
   if (!parsed.success)
     return Response.json(
       { error: "Confira o e-mail e a senha." },

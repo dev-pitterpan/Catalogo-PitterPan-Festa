@@ -81,7 +81,7 @@ export async function apiSession(
     return {
       error: Response.json(
         { error: "Você não tem permissão para esta ação." },
-        { status: 403 },
+        { status: 403, headers: { "Cache-Control": "no-store" } },
       ),
     };
   return { session };

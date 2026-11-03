@@ -286,6 +286,26 @@ try {
     ).status,
     403,
   );
+  for (const route of [
+    "/api/auth/login/",
+    "/api/cart/",
+    "/api/checkout/",
+    "/api/admin/settings/",
+  ]) {
+    const response = await fetch(base + route, {
+      method: "POST",
+      headers: { origin: base, "content-type": "application/json" },
+      body: JSON.stringify({ oversized: "x".repeat(33_000) }),
+    });
+    assert.equal(response.status, 413, route);
+  }
+  const deniedHeaders = await rawFetch(base + "/api/admin/users/");
+  assert.match(deniedHeaders.headers.get("cache-control") || "", /no-store/);
+  assert.match(
+    deniedHeaders.headers.get("content-security-policy") || "",
+    /frame-ancestors 'none'/,
+  );
+  assert.match(deniedHeaders.headers.get("x-robots-tag") || "", /noindex/);
   const login = await rawFetch(base + "/api/auth/login/", {
     method: "POST",
     headers: { origin: base, "content-type": "application/json" },

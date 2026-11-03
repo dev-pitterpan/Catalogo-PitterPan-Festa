@@ -1,3 +1,4 @@
+import { readJsonBody } from "../../../server/http/body";
 import { z } from "zod";
 import { getSelectedProducts, getConfig } from "../../../server/catalogs";
 import { CheckoutError, prepareCheckout } from "../../../lib/checkout";
@@ -16,16 +17,9 @@ const inputSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json(
-      { error: "Seleção inválida. Revise seu carrinho." },
-      { status: 400 },
-    );
-  }
-  const parsed = inputSchema.safeParse(body);
+  const body = await readJsonBody(request);
+  if (body.response) return body.response;
+  const parsed = inputSchema.safeParse(body.value);
   if (!parsed.success)
     return Response.json(
       {
@@ -51,7 +45,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof CheckoutError)
       return Response.json({ error: error.message }, { status: 422 });
-    console.error("Falha ao preparar checkout do catálogo", error);
+    console.error("catalog_checkout_failed");
     return Response.json(
       {
         error:

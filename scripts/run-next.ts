@@ -25,6 +25,15 @@ const env = z
 console.log(
   `Fonte do catálogo (.env): ${localEnv.CATALOG_DATA_SOURCE || process.env.CATALOG_DATA_SOURCE || "json"}`,
 );
+// Falha cedo com orientação útil se o checkout local ainda não instalou as dependências.
+try {
+  require.resolve("leaflet/dist/leaflet.css");
+} catch {
+  console.error(
+    "Dependências locais incompletas: execute npm ci na pasta do projeto e inicie novamente. O arquivo leaflet/dist/leaflet.css não foi encontrado.",
+  );
+  process.exit(1);
+}
 // O mesmo comando funciona em Windows e Linux, sem sintaxe de shell específica.
 const child = spawn(
   process.execPath,

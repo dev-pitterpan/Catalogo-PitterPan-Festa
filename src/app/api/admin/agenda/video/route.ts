@@ -1,3 +1,4 @@
+import { readJsonBody } from "../../../../../server/http/body";
 import { z } from "zod";
 import { apiSession, sameOrigin } from "../../../../../server/auth/session";
 import { database } from "../../../../../server/database/client";
@@ -20,23 +21,11 @@ export async function POST(request: Request) {
       { error: "Solicitação inválida." },
       { status: 403, headers },
     );
-  const body = await request.text();
-  if (body.length > 2000)
-    return Response.json(
-      { error: "Solicitação muito grande." },
-      { status: 413, headers },
-    );
+  const body = await readJsonBody(request, 2000);
+  if (body.response) return body.response;
   const input = z
     .object({ id: z.uuid(), revision: z.number().int().positive() })
-    .safeParse(
-      (() => {
-        try {
-          return JSON.parse(body);
-        } catch {
-          return null;
-        }
-      })(),
-    );
+    .safeParse(body.value);
   if (!input.success)
     return Response.json(
       { error: "Reabra um compromisso salvo para criar a sala." },

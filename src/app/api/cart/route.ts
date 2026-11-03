@@ -1,9 +1,12 @@
+import { readJsonBody } from "../../../server/http/body";
 import { z } from "zod";
 import { getSelectedProducts } from "../../../server/catalogs";
 const schema = z.object({ ids: z.array(z.string().min(1).max(100)).max(100) });
 export async function POST(request: Request) {
   try {
-    const parsed = schema.safeParse(await request.json().catch(() => null));
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const parsed = schema.safeParse(body.value);
     if (!parsed.success)
       return Response.json({ error: "Seleção inválida" }, { status: 400 });
     return Response.json(

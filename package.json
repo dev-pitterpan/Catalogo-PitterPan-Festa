@@ -50,5 +50,9 @@
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "overrides": {
+    "zod": "$zod",
+    "undici": "^7.30.1"
   }
 }

@@ -24,10 +24,7 @@ export const salesFilterSchema = z
         "CANCELLED",
       ])
       .default("all"),
-    delivery: z
-      .enum(["all", ...deliveryKinds])
-      .default("all")
-      .transform((value) => (value === "OTHER" ? ("PICKUP" as const) : value)),
+    delivery: z.enum(["all", ...deliveryKinds]).default("all"),
     category: z.string().trim().max(200).default(""),
   })
   .refine((r) => dateRangeSchema.safeParse(r).success, {

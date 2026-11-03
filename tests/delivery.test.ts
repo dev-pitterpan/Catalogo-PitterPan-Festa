@@ -1,27 +1,31 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  classifyDelivery,
   deliveryFilterKinds,
   deliveryLabels,
-  classifyDelivery,
 } from "../src/lib/admin/delivery.ts";
-test("modalidade respeita Motoboy/Sedex e a regra da loja para as demais opções", () => {
-  assert.equal(
-    classifyDelivery([{ title: "Retirada na Loja América" }]).kind,
-    "PICKUP",
-  );
+test("serviços reais da Shopify são distintos: PAC, Sedex, Motoboy, retirada, entrega local e Jadlog", () => {
+  for (const [title, code, source, expected] of [
+    [
+      "Matriz - Pitter Pan Festas",
+      "Matriz - Pitter Pan Festas",
+      "shopify",
+      "PICKUP",
+    ],
+    ["Envio Normal (PAC)", "03298", "Frenet", "PAC"],
+    ["Envio Expresso (Sedex)", "03220", "Frenet", "SEDEX"],
+    ["Envio via Motoboy", "OWNE", "Frenet", "MOTOBOY"],
+    ["Jadlog Package", "F_3", "Frenet", "JADLOG"],
+    ["Local Delivery", "Local Delivery", "shopify", "LOCAL"],
+    ["Retirada na Loja América", "", "", "PICKUP"],
+    ["Frete grátis", "", "", "OTHER"],
+  ])
+    assert.equal(classifyDelivery([{ title, code, source }]).kind, expected);
   assert.equal(
     classifyDelivery([{ title: "", deliveryCategory: "LOCAL_PICKUP" }]).kind,
     "PICKUP",
   );
-  assert.equal(
-    classifyDelivery([{ title: "Entrega por motoboy" }]).kind,
-    "MOTOBOY",
-  );
-  assert.equal(classifyDelivery([{ title: "Correios SEDEX10" }]).kind, "SEDEX");
-  assert.equal(classifyDelivery([{ title: "Frete grátis" }]).kind, "PICKUP");
-  assert.equal(classifyDelivery([{ title: "Entrega local" }]).kind, "PICKUP");
-  assert.equal(classifyDelivery([{ title: "Correios PAC" }]).kind, "PICKUP");
   assert.equal(classifyDelivery([]).kind, "UNKNOWN");
   assert.equal(
     classifyDelivery([{ title: "Retirada ou motoboy" }]).kind,
@@ -39,24 +43,10 @@ test("modalidade respeita Motoboy/Sedex e a regra da loja para as demais opçõe
     "PICKUP",
   );
 });
-
-test("filtro mostra uma única opção de retirada e admite o código legado", () => {
+test("modalidades possuem opções distintas nos filtros", () => {
   assert.equal(
     new Set(deliveryFilterKinds.map((kind) => deliveryLabels[kind])).size,
     deliveryFilterKinds.length,
   );
-  assert.equal(deliveryLabels.PICKUP, "Retirada na loja");
-  assert.equal(deliveryLabels.OTHER, "Retirada na loja");
-});
-
-test("nomes legados e outras opções representam retirada conforme regra da loja", () => {
-  for (const title of [
-    "Local Delivery",
-    "LocalDelivery",
-    "local_delivery",
-    "Local-Delivery",
-  ])
-    assert.equal(classifyDelivery([{ title }]).kind, "PICKUP");
-  assert.equal(classifyDelivery([{ title: "Entrega local" }]).kind, "PICKUP");
-  assert.equal(classifyDelivery([{ title: "Correios PAC" }]).kind, "PICKUP");
+  assert.equal(deliveryLabels.OTHER, "Outras entregas");
 });

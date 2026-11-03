@@ -583,13 +583,14 @@ test("vendas preservam fotos, agrupam modalidades por produto e filtram entregas
     }
     const all = await readSales(db, store, 30);
     assert.equal(all.top[0].units, "15");
-    assert.equal(all.top[0].pickup_units, "6");
+    assert.equal(all.top[0].pickup_units, "3");
     assert.equal(all.top[0].sedex_units, "3");
     assert.equal(all.top[0].motoboy_units, "3");
     assert.equal(all.top[0].other_units, null);
+    assert.equal(all.top[0].pac_units, "3");
     assert.equal(all.top[0].unknown_units, "3");
     assert.match(all.top[0].image, /cdn.shopify.com/);
-    assert.equal(all.deliveries.length, 4);
+    assert.equal(all.deliveries.length, 5);
     const sedex = await readSales(db, store, 30, undefined, {
       status: "PAID",
       category: "",
@@ -1194,7 +1195,7 @@ test("matriz de filtros: entrega, situação, categoria e data selecionam os mes
           });
           const expected = fixtures.filter(
             (f) =>
-              (f.kind === "OTHER" ? "PICKUP" : f.kind) === filters.delivery &&
+              f.kind === filters.delivery &&
               (!category || f.category.toLowerCase().includes(category)) &&
               (status === "all" || f.status === status),
           );
@@ -1223,9 +1224,7 @@ test("matriz de filtros: entrega, situação, categoria e data selecionam os mes
       assert.equal(
         Number(result.totals[0]?.orders || 0),
         fixtures.filter(
-          (f) =>
-            (f.kind === "OTHER" ? "PICKUP" : f.kind) === filters.delivery &&
-            f.day === "2026-10-01",
+          (f) => f.kind === filters.delivery && f.day === "2026-10-01",
         ).length,
       );
     }
@@ -1234,7 +1233,7 @@ test("matriz de filtros: entrega, situação, categoria e data selecionam os mes
   }
 });
 
-test("retirada encontra Local Delivery já importado em pedidos, totais, produtos e mapa", async () => {
+test("histórico corrigido distingue retirada, PAC, Jadlog e Local Delivery sem reimportação", async () => {
   const db = new PGlite();
   try {
     await db.exec(
@@ -1245,8 +1244,10 @@ test("retirada encontra Local Delivery já importado em pedidos, totais, produto
     );
     for (const [id, title] of [
       ["1", "Local Delivery"],
-      ["2", "Retirada na Loja"],
-      ["3", "Correios PAC"],
+      ["2", "Matriz - Pitter Pan Festas"],
+      ["3", "Envio Normal (PAC)"],
+      ["4", "Jadlog Package"],
+      ["5", "Retirada na loja"],
     ]) {
       const sale = order(id);
       sale.shippingLines = {
@@ -1255,37 +1256,39 @@ test("retirada encontra Local Delivery já importado em pedidos, totais, produto
       };
       await saveOrder(db, store, sale);
     }
-    // Reproduce pre-fix imported rows without changing/re-fetching Shopify data.
-    await db.query(
-      "UPDATE pitterpan_sales_orders SET delivery_kind='OTHER' WHERE id=$1",
-      ["gid://shopify/Order/1"],
+    // Previous versions incorrectly persisted these services as pickup or OTHER.
+    await db.exec(
+      "UPDATE pitterpan_sales_orders SET delivery_kind='PICKUP' WHERE id IN ('gid://shopify/Order/1','gid://shopify/Order/3','gid://shopify/Order/4'); UPDATE pitterpan_sales_orders SET delivery_kind='OTHER' WHERE id='gid://shopify/Order/2'",
     );
-    const filter = salesFilterSchema.parse({ delivery: "PICKUP" });
-    const result = await readSales(db, store, 30, undefined, filter);
-    assert.equal(result.orders.length, 3);
-    assert.ok(result.orders.every((o) => o.delivery_kind === "PICKUP"));
-    assert.equal(result.totals[0].orders, "3");
-    const products = await readSoldProducts(db, store, 30, filter);
-    assert.equal(products.items[0].pickup_units, "9");
-    assert.equal(products.items[0].units, "9");
-    assert.equal(products.items[0].other_units, null);
-    const other = await readSalesOrders(
-      db,
-      store,
-      30,
-      salesFilterSchema.parse({ delivery: "OTHER" }),
-    );
-    assert.equal(other.orders.length, 3);
-    assert.ok(other.orders.every((o) => o.delivery_kind === "PICKUP"));
-    const { readDestinations, destinationFilterSchema } =
-      await import("../src/server/sales/destinations.ts");
-    const map = await readDestinations(
-      db,
-      store,
-      destinationFilterSchema.parse({ delivery: "PICKUP" }),
-    );
-    assert.equal(map.pickup, 3);
-    assert.equal(map.total, 0);
+    for (const [kind, expected] of [
+      ["PICKUP", 2],
+      ["PAC", 1],
+      ["JADLOG", 1],
+      ["LOCAL", 1],
+      ["OTHER", 0],
+    ] as const) {
+      const filter = salesFilterSchema.parse({ delivery: kind });
+      const result = await readSales(db, store, 30, undefined, filter);
+      assert.equal(result.orders.length, expected, kind);
+      assert.ok(result.orders.every((o) => o.delivery_kind === kind));
+      assert.equal(Number(result.totals[0]?.orders || 0), expected, kind);
+      const products = await readSoldProducts(db, store, 30, filter);
+      assert.equal(products.total, expected ? 1 : 0);
+      if (expected)
+        assert.equal(
+          products.items[0][`${kind.toLowerCase()}_units`],
+          String(expected * 3),
+        );
+      const { readDestinations, destinationFilterSchema } =
+        await import("../src/server/sales/destinations.ts");
+      const map = await readDestinations(
+        db,
+        store,
+        destinationFilterSchema.parse({ delivery: kind }),
+      );
+      assert.equal(map.pickup, kind === "PICKUP" ? expected : 0);
+      assert.equal(map.total, kind === "PICKUP" ? 0 : expected);
+    }
   } finally {
     await db.close();
   }

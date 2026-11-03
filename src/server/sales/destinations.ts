@@ -59,9 +59,19 @@ export const destinationFilterSchema = z
       .refine((n) => [7, 30, 60].includes(n))
       .default(30),
     delivery: z
-      .enum(["all", "PICKUP", "SEDEX", "MOTOBOY", "OTHER", "MIXED", "UNKNOWN"])
-      .default("all")
-      .transform((value) => (value === "OTHER" ? ("PICKUP" as const) : value)),
+      .enum([
+        "all",
+        "PICKUP",
+        "SEDEX",
+        "PAC",
+        "JADLOG",
+        "LOCAL",
+        "MOTOBOY",
+        "OTHER",
+        "MIXED",
+        "UNKNOWN",
+      ])
+      .default("all"),
     fulfillment: z
       .enum(["all", "FULFILLED", "UNFULFILLED", "PARTIALLY_FULFILLED"])
       .default("all"),

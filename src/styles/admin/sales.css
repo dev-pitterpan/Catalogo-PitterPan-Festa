@@ -426,7 +426,8 @@
   width: 25px;
   height: 22px;
 }
-.sales-product-deliveries .delivery-mark--sedex > svg {
+.sales-product-deliveries .delivery-mark--sedex > svg,
+.sales-product-deliveries .delivery-mark--pac > svg {
   width: 35px;
 }
 .sales-cart {

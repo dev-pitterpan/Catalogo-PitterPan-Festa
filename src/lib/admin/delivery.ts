@@ -2,19 +2,23 @@ export const deliveryKinds = [
   "PICKUP",
   "MOTOBOY",
   "SEDEX",
+  "PAC",
+  "JADLOG",
+  "LOCAL",
   "OTHER",
   "MIXED",
   "UNKNOWN",
 ] as const;
-export const deliveryFilterKinds = deliveryKinds.filter(
-  (kind) => kind !== "OTHER",
-);
+export const deliveryFilterKinds = deliveryKinds;
 export type DeliveryKind = (typeof deliveryKinds)[number];
 export const deliveryLabels: Record<DeliveryKind, string> = {
   PICKUP: "Retirada na loja",
   MOTOBOY: "Motoboy",
   SEDEX: "Sedex",
-  OTHER: "Retirada na loja",
+  PAC: "PAC",
+  JADLOG: "Jadlog",
+  LOCAL: "Entrega local",
+  OTHER: "Outras entregas",
   MIXED: "Modalidades múltiplas",
   UNKNOWN: "Não identificado",
 };
@@ -31,7 +35,7 @@ const normalize = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/_/g, " ");
-/** Store rule: services other than explicit Motoboy/Sedex are store pickup. */
+/** Names verified against Shopify shipping lines; never infer pickup from an unknown service. */
 export function classifyDelivery(lines: ShippingLine[]): {
   kind: DeliveryKind;
   label: string;
@@ -45,14 +49,25 @@ export function classifyDelivery(lines: ShippingLine[]): {
     if (
       /\b(retirada|retirar|pickup|pick[ -]?up)\b/.test(text) ||
       [line.title, line.code].some(
-        (value) => !!value && /^local[ _-]*delivery$/i.test(value.trim()),
+        (value) =>
+          normalize(value || "").trim() === "matriz - pitter pan festas",
       )
     )
       matches.push("PICKUP");
+    if (/\bpac\b/.test(text)) matches.push("PAC");
+    if (/\bjadlog\b/.test(text)) matches.push("JADLOG");
+    if (
+      [line.title, line.code].some((value) =>
+        /^local[ _-]*delivery$/i.test((value || "").trim()),
+      ) ||
+      /\bentrega local\b/.test(text)
+    )
+      matches.push("LOCAL");
+
     if (/\b(motoboy|moto[ -]?boy|moto|motocicleta)\b/.test(text))
       matches.push("MOTOBOY");
     if (/\bsedex(?:\s*1[02])?\b/.test(text)) matches.push("SEDEX");
-    return matches.length > 1 ? "UNKNOWN" : matches[0] || "PICKUP";
+    return matches.length > 1 ? "UNKNOWN" : matches[0] || "OTHER";
   });
   const distinct = [...new Set(kinds)];
   return {

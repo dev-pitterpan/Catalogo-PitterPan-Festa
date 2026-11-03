@@ -214,6 +214,9 @@ export async function readSoldProducts(
     sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='PICKUP')::text AS pickup_units,
     sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='MOTOBOY')::text AS motoboy_units,
     sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='SEDEX')::text AS sedex_units,
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='PAC')::text AS pac_units,
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='JADLOG')::text AS jadlog_units,
+    sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='LOCAL')::text AS local_units,
     sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='OTHER')::text AS other_units,
     sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='MIXED')::text AS mixed_units,
     sum(i.current_quantity) FILTER(WHERE ${orderDeliverySql}='UNKNOWN')::text AS unknown_units

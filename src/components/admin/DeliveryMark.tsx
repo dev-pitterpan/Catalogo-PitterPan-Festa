@@ -45,7 +45,7 @@ export default function DeliveryMark({
             strokeWidth="2"
           />
         </svg>
-      ) : safe === "SEDEX" ? (
+      ) : safe === "SEDEX" || safe === "PAC" ? (
         <svg viewBox="0 0 76 44" aria-hidden="true">
           <path d="M4 8H49V32H4Z" fill="#ffd51a" />
           <path d="M49 17H61L71 27V33H49Z" fill="#354ba7" />
@@ -60,7 +60,7 @@ export default function DeliveryMark({
             fontWeight="800"
             textAnchor="middle"
           >
-            SEDEX
+            {safe === "PAC" ? "PAC" : "SEDEX"}
           </text>
         </svg>
       ) : safe === "PICKUP" ? (
@@ -121,7 +121,7 @@ export default function DeliveryMark({
             strokeLinecap="round"
           />
         </svg>
-      ) : safe === "MIXED" ? (
+      ) : ["MIXED", "JADLOG", "LOCAL", "OTHER"].includes(safe) ? (
         <Package aria-hidden="true" />
       ) : (
         <HelpCircle aria-hidden="true" />

@@ -85,6 +85,10 @@ export default function DestinationsDashboard() {
             { value: "PICKUP", label: deliveryLabels.PICKUP },
             { value: "MOTOBOY", label: "Motoboy" },
             { value: "SEDEX", label: "Sedex" },
+            { value: "PAC", label: deliveryLabels.PAC },
+            { value: "JADLOG", label: deliveryLabels.JADLOG },
+            { value: "LOCAL", label: deliveryLabels.LOCAL },
+            { value: "OTHER", label: deliveryLabels.OTHER },
             { value: "MIXED", label: "Modalidades múltiplas" },
             { value: "UNKNOWN", label: "Não identificado" },
           ]}

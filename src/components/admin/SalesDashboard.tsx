@@ -667,9 +667,25 @@ export default function SalesDashboard({
                         <td>
                           <strong>{o.name}</strong>
                           <small>
-                            {new Date(o.processed_at).toLocaleDateString(
-                              "pt-BR",
-                            )}
+                            <time
+                              dateTime={new Date(o.processed_at).toISOString()}
+                              title="Horário do pedido registrado na Shopify · Brasília"
+                            >
+                              {new Date(o.processed_at).toLocaleDateString(
+                                "pt-BR",
+                                { timeZone: "America/Sao_Paulo" },
+                              )}
+                              <br />
+                              {new Date(o.processed_at).toLocaleTimeString(
+                                "pt-BR",
+                                {
+                                  timeZone: "America/Sao_Paulo",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: false,
+                                },
+                              )}
+                            </time>
                           </small>
                         </td>
                         <td>

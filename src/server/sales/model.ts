@@ -51,6 +51,8 @@ export const orderSchema = z
         }),
       })
       .optional(),
+    totalOutstandingSet: money.optional(),
+    currentTotalPriceSet: money.optional(),
     totalPriceSet: money,
     totalReceivedSet: money,
     totalRefundedSet: money,
@@ -69,6 +71,8 @@ export const orderSchema = z
       order.totalReceivedSet,
       order.totalRefundedSet,
       order.netPaymentSet,
+      ...(order.totalOutstandingSet ? [order.totalOutstandingSet] : []),
+      ...(order.currentTotalPriceSet ? [order.currentTotalPriceSet] : []),
     ].map((m) => m.shopMoney.currencyCode);
     if (new Set(currencies).size !== 1)
       ctx.addIssue({
@@ -83,6 +87,8 @@ export const lineFields = `id title sku quantity currentQuantity image { url } v
 export const shippingFields = `title code source deliveryCategory isRemoved`;
 export const orderFields = `id name processedAt updatedAt cancelledAt test displayFinancialStatus displayFulfillmentStatus
  shippingLines(first:20) { nodes { ${shippingFields} } pageInfo { hasNextPage endCursor } }
+ totalOutstandingSet { shopMoney { amount currencyCode } }
+ currentTotalPriceSet { shopMoney { amount currencyCode } }
  totalPriceSet { shopMoney { amount currencyCode } }
  totalReceivedSet { shopMoney { amount currencyCode } }
  totalRefundedSet { shopMoney { amount currencyCode } }

@@ -187,8 +187,10 @@ export default function FinanceOverview({ params }: { params: string }) {
           },
           {
             key: "outstanding",
-            label: "Saldo não pago (calculado)",
-            hint: `Total do pedido antes de devoluções − recebido em ${totals.pending} pendentes, autorizados ou parcialmente pagos não cancelados. Não é saldo bancário.`,
+            label: Number(totals.outstanding_estimated)
+              ? "Saldo não pago (parte calculada)"
+              : "Saldo não pago · Shopify",
+            hint: `Saldo dos ${totals.pending} pedidos pendentes, autorizados ou parcialmente pagos não cancelados. ${Number(totals.outstanding_estimated) ? `${totals.outstanding_estimated} ainda usam cálculo anterior; sincronize para consultar o saldo oficial.` : "Valor oficial informado pela Shopify."} Não é saldo bancário.`,
             Icon: ArrowDownLeft,
             tone: "gold",
           },

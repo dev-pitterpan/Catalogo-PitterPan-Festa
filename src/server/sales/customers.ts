@@ -1,3 +1,4 @@
+import { outstandingBalanceSql } from "./financial.ts";
 import { z } from "zod";
 import { ShopifyGraphQLError } from "../shopify/client.ts";
 import type { SqlClient } from "../database/catalog-repository.ts";
@@ -52,7 +53,7 @@ export async function ensureOrderCustomers(db: SqlClient) {
 }
 export const customerColumns = `COALESCE(to_jsonb(o)->'customer'->>'id','') AS customer_id,COALESCE(to_jsonb(o)->'customer'->>'name','') AS customer_name,
  peers.paid_orders::text AS customer_paid_orders,peers.pending_orders::text AS customer_pending_orders,peers.pending_value::text AS customer_pending_value`;
-export const customerJoin = `LEFT JOIN LATERAL (SELECT count(*) FILTER(WHERE p.financial_status='PAID' AND p.cancelled_at IS NULL) AS paid_orders, count(*) FILTER(WHERE p.financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND p.cancelled_at IS NULL) AS pending_orders, COALESCE(sum(GREATEST(p.total-p.received,0)) FILTER(WHERE p.financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND p.cancelled_at IS NULL),0) AS pending_value
+export const customerJoin = `LEFT JOIN LATERAL (SELECT count(*) FILTER(WHERE p.financial_status='PAID' AND p.cancelled_at IS NULL) AS paid_orders, count(*) FILTER(WHERE p.financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND p.cancelled_at IS NULL) AS pending_orders, COALESCE(sum(GREATEST(${outstandingBalanceSql("p")},0)) FILTER(WHERE p.financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND p.cancelled_at IS NULL),0) AS pending_value
  FROM pitterpan_sales_orders p WHERE p.store=o.store AND p.test=false AND p.currency=o.currency AND to_jsonb(o)->'customer'->>'id' IS NOT NULL AND to_jsonb(p)->'customer'->>'id'=to_jsonb(o)->'customer'->>'id') peers ON true`;
 export async function readCustomerFields(
   db: SqlClient,

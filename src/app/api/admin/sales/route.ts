@@ -6,6 +6,7 @@ import {
   decodeOrderCursor,
 } from "../../../../server/sales/filters";
 import {
+  readSalesOperations,
   readSalesFinance,
   readSalesOrders,
   readSales,
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
   if (
     !parsed.success ||
     (url.searchParams.has("view") &&
-      !["orders", "finance", "sold-products"].includes(
+      !["orders", "finance", "sold-products", "operations"].includes(
         url.searchParams.get("view") || "",
       ))
   )
@@ -70,37 +71,44 @@ export async function GET(request: Request) {
     try {
       await db.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
       const data =
-        url.searchParams.get("view") === "sold-products"
-          ? await readSoldProducts(
+        url.searchParams.get("view") === "operations"
+          ? await readSalesOperations(
               db,
               salesConfig().SHOPIFY_SALES_STORE_DOMAIN,
               days,
               parsed.data,
-              productPage,
-              productSearch,
             )
-          : url.searchParams.get("view") === "finance"
-            ? await readSalesFinance(
+          : url.searchParams.get("view") === "sold-products"
+            ? await readSoldProducts(
                 db,
                 salesConfig().SHOPIFY_SALES_STORE_DOMAIN,
                 days,
                 parsed.data,
+                productPage,
+                productSearch,
               )
-            : url.searchParams.get("view") === "orders"
-              ? await readSalesOrders(
+            : url.searchParams.get("view") === "finance"
+              ? await readSalesFinance(
                   db,
                   salesConfig().SHOPIFY_SALES_STORE_DOMAIN,
                   days,
                   parsed.data,
-                  orderCursor,
                 )
-              : await readSales(
-                  db,
-                  salesConfig().SHOPIFY_SALES_STORE_DOMAIN,
-                  days,
-                  after,
-                  parsed.data,
-                );
+              : url.searchParams.get("view") === "orders"
+                ? await readSalesOrders(
+                    db,
+                    salesConfig().SHOPIFY_SALES_STORE_DOMAIN,
+                    days,
+                    parsed.data,
+                    orderCursor,
+                  )
+                : await readSales(
+                    db,
+                    salesConfig().SHOPIFY_SALES_STORE_DOMAIN,
+                    days,
+                    after,
+                    parsed.data,
+                  );
       await db.query("COMMIT");
       return Response.json(data, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {

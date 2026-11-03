@@ -1,3 +1,8 @@
+import {
+  outstandingSql,
+  officialOutstandingSql,
+  currentTotalSql,
+} from "./financial.ts";
 import { orderDeliverySql } from "./delivery.ts";
 import { customerColumns, customerJoin } from "./customers.ts";
 import { todayDate, shiftDate } from "../../lib/admin/date-range.ts";
@@ -33,13 +38,13 @@ export async function saveOrder(
   const delivery = classifyDelivery(order.shippingLines?.nodes || []);
   const result = await db.query<{ id: string }>(
     `INSERT INTO pitterpan_sales_orders
-    (store,id,name,processed_at,updated_at,financial_status,fulfillment_status,cancelled_at,test,currency,total,received,refunded,net,delivery_kind,delivery_label,destination,customer)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb)
+    (store,id,name,processed_at,updated_at,financial_status,fulfillment_status,cancelled_at,test,currency,total,received,refunded,net,delivery_kind,delivery_label,destination,customer,outstanding,current_total)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb,$19,$20)
     ON CONFLICT(store,id) DO UPDATE SET name=EXCLUDED.name,processed_at=EXCLUDED.processed_at,
     updated_at=EXCLUDED.updated_at,financial_status=EXCLUDED.financial_status,
     fulfillment_status=EXCLUDED.fulfillment_status,cancelled_at=EXCLUDED.cancelled_at,
     test=EXCLUDED.test,currency=EXCLUDED.currency,total=EXCLUDED.total,received=EXCLUDED.received,
-    refunded=EXCLUDED.refunded,net=EXCLUDED.net,delivery_kind=EXCLUDED.delivery_kind,delivery_label=EXCLUDED.delivery_label,destination=COALESCE(EXCLUDED.destination,pitterpan_sales_orders.destination),customer=COALESCE(EXCLUDED.customer,pitterpan_sales_orders.customer),imported_at=now()
+    refunded=EXCLUDED.refunded,net=EXCLUDED.net,delivery_kind=EXCLUDED.delivery_kind,delivery_label=EXCLUDED.delivery_label,destination=COALESCE(EXCLUDED.destination,pitterpan_sales_orders.destination),customer=COALESCE(EXCLUDED.customer,pitterpan_sales_orders.customer),outstanding=EXCLUDED.outstanding,current_total=EXCLUDED.current_total,imported_at=now()
     WHERE pitterpan_sales_orders.updated_at<=EXCLUDED.updated_at RETURNING id`,
     [
       store,
@@ -60,6 +65,8 @@ export async function saveOrder(
       delivery.label,
       order.destination ? JSON.stringify(order.destination) : null,
       order.customerInfo ? JSON.stringify(order.customerInfo) : null,
+      order.totalOutstandingSet?.shopMoney.amount ?? null,
+      order.currentTotalPriceSet?.shopMoney.amount ?? null,
     ],
   );
   if (!result.rows.length) return false;
@@ -151,7 +158,7 @@ export async function readSalesOrders(
     boundary = ` AND (o.processed_at,o.id)<($${values.length - 1}::timestamptz,$${values.length}::text)`;
   }
   const { rows } = await db.query<Record<string, string>>(
-    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.fulfillment_status,o.cancelled_at::text,o.currency,o.total::text,o.received::text,o.refunded::text,(o.received-o.refunded)::text AS net,${orderDeliverySql} AS delivery_kind,COALESCE(to_jsonb(o)->>'delivery_label','') AS delivery_label,${customerColumns}
+    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.fulfillment_status,o.cancelled_at::text,o.currency,o.total::text,${currentTotalSql}::text AS current_total,${officialOutstandingSql}::text AS outstanding,o.received::text,o.refunded::text,(o.received-o.refunded)::text AS net,${orderDeliverySql} AS delivery_kind,COALESCE(to_jsonb(o)->>'delivery_label','') AS delivery_label,${customerColumns}
      FROM pitterpan_sales_orders o ${customerJoin}
      WHERE ${selection(filters)}${boundary}
      ORDER BY o.processed_at DESC,o.id DESC LIMIT ${SALES_PAGE_SIZE + 1}`,
@@ -315,7 +322,8 @@ async function financialTotals(
  COALESCE(sum(received),0)::text AS received,COALESCE(sum(refunded),0)::text AS refunded,
  COALESCE(sum(received-refunded),0)::text AS net,
  COALESCE(sum(total) FILTER(WHERE financial_status='PAID' AND cancelled_at IS NULL),0)::text AS paid_value,
- COALESCE(sum(GREATEST(total-received,0)) FILTER(WHERE financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND cancelled_at IS NULL),0)::text AS outstanding,
+ COALESCE(sum(GREATEST(${outstandingSql},0)) FILTER(WHERE financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND cancelled_at IS NULL),0)::text AS outstanding,
+ count(*) FILTER(WHERE financial_status IN ('PENDING','AUTHORIZED','PARTIALLY_PAID') AND cancelled_at IS NULL AND ${officialOutstandingSql} IS NULL)::text AS outstanding_estimated,
  COALESCE(sum(total) FILTER(WHERE financial_status='EXPIRED'),0)::text AS expired_value,
  COALESCE(sum(total) FILTER(WHERE financial_status='VOIDED'),0)::text AS voided_value,
  COALESCE(sum(total) FILTER(WHERE cancelled_at IS NOT NULL),0)::text AS cancelled_value,
@@ -368,5 +376,62 @@ export async function readSalesFinance(
     window: { start, end },
     timezone: "America/Sao_Paulo",
     source: "shopify_orders" as const,
+  };
+}
+
+/** Operational view of the same filtered snapshot, without counting cancellations as refunds. */
+export async function readSalesOperations(
+  db: SqlClient,
+  store: string,
+  days: number,
+  input: SalesFilters = { status: "all", category: "", delivery: "all" },
+) {
+  const period = Math.max(1, Math.min(60, Math.floor(days) || 30));
+  const end = input.end || todayDate(),
+    start = input.start || shiftDate(end, 1 - period);
+  const filters = salesFilterSchema.parse({ ...input, start, end });
+  const values = filterValues(store, period, filters),
+    where = selection(filters);
+  const open = `o.cancelled_at IS NULL AND o.financial_status IN ('PAID','PARTIALLY_REFUNDED')
+    AND o.received>o.refunded AND o.fulfillment_status NOT IN ('FULFILLED','FULFILLMENT_NOT_REQUIRED')`;
+  const totals = await financialTotals(db, values, where);
+  const fulfillment = await db.query<Record<string, string>>(
+    `SELECT o.currency,count(*) FILTER(WHERE ${open})::text AS awaiting,
+     count(*) FILTER(WHERE ${open} AND o.fulfillment_status='READY_FOR_PICKUP')::text AS ready
+     FROM pitterpan_sales_orders o WHERE ${where} GROUP BY o.currency ORDER BY o.currency`,
+    values,
+  );
+  const awaiting = await db.query<Record<string, string>>(
+    `SELECT o.id,o.name,o.processed_at::text,o.currency,o.fulfillment_status,${orderDeliverySql} AS delivery_kind
+     FROM pitterpan_sales_orders o WHERE ${where} AND ${open}
+     ORDER BY o.processed_at,o.id LIMIT 10`,
+    values,
+  );
+  const refunds = await db.query<Record<string, string>>(
+    `SELECT o.id,o.name,o.processed_at::text,o.financial_status,o.cancelled_at::text,o.currency,
+     o.received::text,o.refunded::text,(o.received-o.refunded)::text AS net
+     FROM pitterpan_sales_orders o WHERE ${where} AND o.refunded>0
+     ORDER BY o.processed_at DESC,o.id DESC LIMIT 10`,
+    values,
+  );
+  const state = await db.query<Record<string, string | null>>(
+    "SELECT completed_at::text,until_at::text,last_webhook_at::text FROM pitterpan_sales_sync WHERE store=$1",
+    [store],
+  );
+  const queue = await db.query<{ pending: string; failed: string }>(
+    "SELECT count(*)::text AS pending,count(*) FILTER(WHERE attempts>=10)::text AS failed FROM pitterpan_sales_inbox WHERE store=$1 AND done_at IS NULL",
+    [store],
+  );
+  return {
+    totals: totals.rows,
+    fulfillment: fulfillment.rows,
+    awaiting: awaiting.rows,
+    refunds: refunds.rows,
+    state: state.rows[0] || null,
+    pending: Number(queue.rows[0].pending),
+    failed: Number(queue.rows[0].failed),
+    window: { start, end },
+    timezone: "America/Sao_Paulo",
+    store,
   };
 }

@@ -42,3 +42,7 @@ ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS destination jsonb;
 
 ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS customer jsonb;
 CREATE INDEX IF NOT EXISTS pitterpan_sales_customer ON pitterpan_sales_orders(store,(customer->>'id'));
+
+-- Official balances remain nullable until refreshed; zero must never mean not imported.
+ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS outstanding numeric(18,2);
+ALTER TABLE pitterpan_sales_orders ADD COLUMN IF NOT EXISTS current_total numeric(18,2);

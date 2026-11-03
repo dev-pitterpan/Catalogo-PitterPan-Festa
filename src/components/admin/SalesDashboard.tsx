@@ -1,4 +1,6 @@
 "use client";
+import { fulfillmentLabels } from "../../lib/admin/fulfillment";
+import SalesOperations from "./SalesOperations";
 import SoldProductsHistory from "./SoldProductsHistory";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -456,7 +458,7 @@ export default function SalesDashboard({
                   {
                     label: "Estornos / reembolsos",
                     value: money(t.refunded, t.currency),
-                    detail: `Recebido: ${money(t.received, t.currency)}`,
+                    detail: `${count(t.refunded_orders)} pedidos com reembolso total ou parcial`,
                     icon: ArrowDownLeft,
                   },
                 ].map(({ label, value, detail, icon: Icon }) => (
@@ -475,7 +477,9 @@ export default function SalesDashboard({
               <div className="sales-status-values">
                 {[
                   {
-                    label: "Saldo não pago (calculado)",
+                    label: Number(t.outstanding_estimated)
+                      ? "Saldo não pago (parte calculada)"
+                      : "Saldo não pago · Shopify",
                     count: t.pending,
                     value: t.outstanding,
                     status: "PENDING",
@@ -532,6 +536,20 @@ export default function SalesDashboard({
               </p>
             </div>
           )}
+          <SalesOperations
+            params={new URLSearchParams({
+              days: String(days),
+              start: filters.start || "",
+              end: filters.end || "",
+              status: filters.status,
+              delivery: filters.delivery || "all",
+              category: filters.category,
+              revision: String(revision),
+              snapshot: data.state?.completed_at || "",
+              webhook: data.state?.last_webhook_at || "",
+              cursor: data.cursor,
+            }).toString()}
+          />
           <div className="admin-overview-grid sales-comparison-grid">
             <SoldProductsHistory
               key={JSON.stringify([filters, days])}
@@ -652,16 +670,19 @@ export default function SalesDashboard({
                             <small>{o.delivery_label}</small>
                           )}
                           <small>
-                            {o.fulfillment_status === "FULFILLED"
-                              ? "Atendimento concluído"
-                              : o.fulfillment_status === "PARTIALLY_FULFILLED"
-                                ? "Atendimento parcial"
-                                : o.fulfillment_status === "UNFULFILLED"
-                                  ? "Atendimento pendente"
-                                  : o.fulfillment_status}
+                            {fulfillmentLabels[o.fulfillment_status] ||
+                              o.fulfillment_status}
                           </small>
                         </td>
-                        <td>{money(o.total, o.currency)}</td>
+                        <td>
+                          {money(o.total, o.currency)}
+                          {o.current_total != null &&
+                            Number(o.current_total) !== Number(o.total) && (
+                              <small className="sales-current-total">
+                                Atual: {money(o.current_total, o.currency)}
+                              </small>
+                            )}
+                        </td>
                         <td>{money(o.received, o.currency)}</td>
                         <td>{money(o.refunded, o.currency)}</td>
                         <td>{money(o.net, o.currency)}</td>

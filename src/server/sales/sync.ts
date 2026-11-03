@@ -12,6 +12,7 @@ import {
   lineSchema,
   type SalesOrder,
 } from "./model.ts";
+import { ensureFinancialFields } from "./financial.ts";
 import { saveOrder } from "./repository.ts";
 
 const pageInfo = z.object({
@@ -101,6 +102,7 @@ export async function syncSalesPage() {
     store = api.domain,
     lease = randomUUID();
   await ensureOrderCustomers(pool);
+  await ensureFinancialFields(pool);
   await pool.query(
     "INSERT INTO pitterpan_sales_sync(store) VALUES($1) ON CONFLICT DO NOTHING",
     [store],
@@ -162,9 +164,16 @@ export async function syncSalesPage() {
     }
     const state = acquired.rows[0];
     if (!state.until_at) {
+      // Existing snapshots need one complete pass to populate the official balances.
+      const missing = await pool.query<{ needed: boolean }>(
+        `SELECT EXISTS(SELECT 1 FROM pitterpan_sales_orders
+         WHERE store=$1 AND NOT test AND processed_at>=now()-interval '60 days'
+         AND (outstanding IS NULL OR current_total IS NULL)) AS needed`,
+        [store],
+      );
       await pool.query(
-        `UPDATE pitterpan_sales_sync SET since_at=GREATEST(COALESCE(completed_at-interval '5 minutes',now()-interval '60 days'),now()-interval '60 days'),until_at=now(),cursor=NULL WHERE store=$1 AND lease_id=$2`,
-        [store, lease],
+        `UPDATE pitterpan_sales_sync SET since_at=GREATEST(CASE WHEN $3::boolean THEN now()-interval '60 days' ELSE COALESCE(completed_at-interval '5 minutes',now()-interval '60 days') END,now()-interval '60 days'),until_at=now(),cursor=NULL WHERE store=$1 AND lease_id=$2`,
+        [store, lease, missing.rows[0].needed],
       );
     }
     const current = (

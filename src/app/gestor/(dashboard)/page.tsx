@@ -1,3 +1,4 @@
+import SalesOperations from "../../../components/admin/SalesOperations";
 import StockOverview from "../../../components/admin/StockOverview";
 import Image from "next/image";
 import PartyChart from "../../../components/admin/PartyChart";
@@ -40,7 +41,7 @@ export default async function Overview() {
       href: "/gestor/produtos/",
     },
     {
-      label: "Produtos em oferta",
+      label: "Variantes em oferta",
       value: s?.offers,
       detail: "Preço menor que o preço anterior",
       icon: BadgePercent,
@@ -87,6 +88,9 @@ export default async function Overview() {
         </span>
       </header>
       <DataNotice context={context} />
+      {(user.role === "admin" || user.role === "gestor") && (
+        <SalesOperations overview params="days=30" />
+      )}
       <section className="admin-hero">
         <div>
           <span className="admin-hero-tag">

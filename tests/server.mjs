@@ -170,6 +170,7 @@ try {
     "/api/admin/sync/",
     "/api/admin/sales/",
     "/api/admin/sales/?view=sold-products",
+    "/api/admin/sales/?view=operations",
     "/api/admin/destinations/",
     "/api/admin/analytics/",
     "/api/admin/overview/",

@@ -23,7 +23,8 @@
     "sales:sync": "node scripts/sales/sync.ts",
     "sales:setup": "node scripts/sales/setup.ts",
     "sales:webhooks": "node scripts/sales/webhooks.ts",
-    "sales:retry": "node scripts/sales/retry.ts"
+    "sales:retry": "node scripts/sales/retry.ts",
+    "sales:audit": "node scripts/sales/audit.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.5",

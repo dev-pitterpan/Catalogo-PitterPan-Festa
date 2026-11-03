@@ -2,7 +2,13 @@
 
 import { useRef, type ReactNode } from "react";
 
-export default function DragScroll({ children }: { children: ReactNode }) {
+export default function DragScroll({
+  children,
+  label = "Pedidos com rolagem. Clique e arraste para navegar pela tabela.",
+}: {
+  children: ReactNode;
+  label?: string;
+}) {
   const gesture = useRef<{
     id: number;
     x: number;
@@ -18,7 +24,7 @@ export default function DragScroll({ children }: { children: ReactNode }) {
       className="admin-table-scroll finance-table-viewport drag-scroll"
       role="region"
       tabIndex={0}
-      aria-label="Pedidos com rolagem. Clique e arraste para navegar pela tabela."
+      aria-label={label}
       onPointerDown={(event) => {
         if (event.pointerType !== "mouse" || event.button !== 0) return;
         const node = event.currentTarget;

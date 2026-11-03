@@ -460,30 +460,6 @@
 .admin-app .sold-history .sales-toolbar {
   margin-bottom: 16px;
 }
-.admin-app .sold-history-product {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 220px;
-}
-.admin-app .sold-history-product img {
-  object-fit: contain;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: white;
-}
-.admin-app .sold-history-product strong {
-  display: block;
-  max-width: 420px;
-  white-space: normal;
-}
-.admin-app .sold-history-table td {
-  vertical-align: middle;
-}
-.admin-app .sold-history-table .sales-product-deliveries {
-  align-items: flex-start;
-  min-width: 170px;
-}
 .admin-app .sold-history-status {
   display: flex;
   align-items: center;

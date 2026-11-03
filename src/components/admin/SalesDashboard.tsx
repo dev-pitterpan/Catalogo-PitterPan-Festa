@@ -1,11 +1,10 @@
 "use client";
-import Link from "next/link";
+import SoldProductsHistory from "./SoldProductsHistory";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
   BadgeCheck,
-  Boxes,
   CircleDollarSign,
   Package,
   RefreshCw,
@@ -22,7 +21,6 @@ import {
   deliveryLabels,
   type DeliveryKind,
 } from "../../lib/admin/delivery";
-import { cardImage } from "../../lib/catalog/image";
 import PitterSpinner from "./PitterSpinner";
 import type { SalesFilters } from "../../server/sales/filters";
 import AdminSelect from "./AdminSelect";
@@ -535,74 +533,12 @@ export default function SalesDashboard({
             </div>
           )}
           <div className="admin-overview-grid sales-comparison-grid">
-            <section className="admin-panel" id="sold-products">
-              <header>
-                <div>
-                  <span className="admin-eyebrow">PRODUTOS VENDIDOS</span>
-                  <h2>Os favoritos da festa</h2>
-                </div>
-                <Boxes size={22} />
-              </header>
-              <Link
-                className="admin-text-link"
-                href={`/gestor/produtos-vendidos/?${new URLSearchParams({ days: String(days), status: filters.status, category: filters.category, delivery: filters.delivery || "all", start: filters.start || "", end: filters.end || "" })}`}
-              >
-                Ver histórico de produtos vendidos <ArrowUpRight size={16} />
-              </Link>
-              <p className="sales-definition">
-                Top 10 por unidades atuais em pedidos com recebimento, pagos ou
-                reembolsados parcialmente. Unidades removidas e reembolsadas são
-                descontadas; cancelados não entram.
-              </p>
-              {data.top.length ? (
-                <ol className="sales-ranking">
-                  {data.top.map((p, i) => (
-                    <li key={p.id}>
-                      <span className="sales-product-photo">
-                        <img
-                          src={cardImage(
-                            p.image ||
-                              "/assets/images/brand/product-placeholder.svg",
-                            120,
-                          )}
-                          alt={p.title}
-                          width={48}
-                          height={48}
-                          loading="lazy"
-                          onError={(event) => {
-                            event.currentTarget.onerror = null;
-                            event.currentTarget.src =
-                              "/assets/images/brand/product-placeholder.svg";
-                          }}
-                        />
-                        <small>{i + 1}</small>
-                      </span>
-                      <div>
-                        <strong>{p.title}</strong>
-                        <small>SKU {p.sku || "não informado"}</small>
-                      </div>
-                      <div className="sales-product-deliveries">
-                        <b>
-                          {count(p.units)} <small>un.</small>
-                        </b>
-                        {deliveryKinds.map((kind) => {
-                          const value = p[`${kind.toLowerCase()}_units`];
-                          return Number(value) > 0 ? (
-                            <DeliveryMark
-                              key={kind}
-                              kind={kind}
-                              label={false}
-                            />
-                          ) : null;
-                        })}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p>Sem unidades vendidas para este período.</p>
-              )}
-            </section>
+            <SoldProductsHistory
+              key={JSON.stringify([filters, days])}
+              filters={filters}
+              days={days}
+              revision={revision}
+            />
             <section className="admin-panel sales-orders-panel">
               <header>
                 <h2>Pedidos recentes</h2>

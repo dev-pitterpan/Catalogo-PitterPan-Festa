@@ -90,6 +90,26 @@ try {
       request.on("error", reject);
       request.end();
     });
+  const oldSoldHistory = await fetch(
+    base + "/gestor/produtos-vendidos/?days=7&delivery=SEDEX",
+    { redirect: "manual" },
+  );
+  if (oldSoldHistory.status === 307) {
+    const destination = new URL(oldSoldHistory.headers.get("location"), base);
+    assert.equal(destination.pathname, "/gestor/vendas/");
+    assert.equal(destination.searchParams.get("delivery"), "SEDEX");
+    assert.equal(destination.searchParams.get("days"), "7");
+    assert.equal(destination.hash, "#sold-products");
+  } else {
+    // Layout streaming can emit Next's redirect as an HTML refresh instead of HTTP 307.
+    assert.equal(oldSoldHistory.status, 200);
+    const html = await oldSoldHistory.text();
+    assert.match(html, /http-equiv="refresh"/);
+    assert.match(
+      html,
+      /url=\/gestor\/vendas\/\?days=7(?:&amp;|&)delivery=SEDEX#sold-products/,
+    );
+  }
   const managerEntry = await hostEntry("gestaopitterpan.vercel.app");
   assert.equal(managerEntry.status, 307);
   assert.equal(new URL(managerEntry.location, base).pathname, "/gestor/");

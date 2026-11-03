@@ -38,12 +38,6 @@ const links = [
     financial: true,
   },
   {
-    href: "/gestor/produtos-vendidos/",
-    label: "Produtos vendidos",
-    icon: Package,
-    financial: true,
-  },
-  {
     href: "/gestor/mapa/",
     label: "Mapa de entregas",
     icon: MapPinned,
@@ -85,7 +79,6 @@ const navigationGroups = [
     paths: [
       "/gestor/",
       "/gestor/vendas/",
-      "/gestor/produtos-vendidos/",
       "/gestor/mapa/",
       "/gestor/estoque/",
       "/gestor/ofertas/",

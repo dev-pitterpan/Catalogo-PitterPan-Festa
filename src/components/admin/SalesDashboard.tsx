@@ -6,6 +6,7 @@ import {
   type FulfillmentFilter,
 } from "../../lib/admin/fulfillment";
 import { salesSectionFromHash } from "../../lib/admin/sales-links";
+import OrderFulfillmentDetails from "./OrderFulfillmentDetails";
 import SalesOperations from "./SalesOperations";
 import SoldProductsHistory from "./SoldProductsHistory";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -705,6 +706,11 @@ export default function SalesDashboard({
                             {fulfillmentLabels[o.fulfillment_status] ||
                               o.fulfillment_status}
                           </small>
+                          <OrderFulfillmentDetails
+                            id={o.id}
+                            name={o.name}
+                            storedStatus={o.fulfillment_status}
+                          />
                         </td>
                         <td>
                           {money(o.total, o.currency)}

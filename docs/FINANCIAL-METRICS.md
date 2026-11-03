@@ -42,3 +42,11 @@ A Visão geral mostra um resumo de 30 dias apenas para administrador/gestor. Ven
 ## Filtro de atendimento
 
 O campo `fulfillment` é independente do pagamento. A seleção `AWAITING` corresponde exatamente ao contador de atendimentos em aberto: pedidos não cancelados, pagos ou parcialmente reembolsados, com saldo líquido positivo e situação de atendimento diferente de FULFILLED/FULFILLMENT_NOT_REQUIRED. Inclui pronto para retirada. As demais opções filtram a situação específica de atendimento sem impor pagamento. Pedidos, totais, produtos vendidos e paginação aplicam o mesmo filtro. Um pagamento PENDING não equivale a atendimento pendente.
+
+## Conferência de itens do atendimento
+
+Conferir itens abre uma janela de consulta somente leitura à Shopify, sob a mesma autorização de vendas. A consulta é carregada sob demanda, pagina produtos e itens de cada atendimento e confere as versões antes de retornar o resultado. Nomes e quantidades não são inferidos de percentuais de pagamento.
+
+Aguardando preparo corresponde a UNFULFILLED; Em preparo a IN_PROGRESS; Parcialmente atendido a PARTIALLY_FULFILLED; Atendido a FULFILLED. Esses nomes não afirmam entrega física. A quantidade Atendido soma somente registros SUCCESS por ID do item, excluindo cancelados e falhas. A atender usa unfulfilledQuantity oficial. Quantidade atual, original e unidades fora do saldo são preservadas separadamente; itens removidos ou reembolsados não são transformados em pendência por subtração. O histórico de atendimentos pode incluir unidades depois reembolsadas ou reenviadas.
+
+A janela indica a data da conferência e avisa se o estado atual difere do resumo importado. Nenhum botão marca produtos como enviados ou altera a Shopify. Não é necessário migrar o banco para esses detalhes.

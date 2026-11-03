@@ -211,6 +211,7 @@ try {
     "/api/admin/sales/",
     "/api/admin/sales/?view=sold-products",
     "/api/admin/sales/?view=operations",
+    "/api/admin/sales/fulfillment/?id=gid://shopify/Order/1",
     "/api/admin/destinations/",
     "/api/admin/analytics/",
     "/api/admin/overview/",
@@ -442,6 +443,18 @@ try {
     403,
   );
   assert.equal((await fetch(base + "/api/admin/sales/")).status, 503);
+  assert.equal(
+    (await fetch(base + "/api/admin/sales/fulfillment/?id=invalid")).status,
+    400,
+  );
+  assert.equal(
+    (
+      await fetch(
+        base + "/api/admin/sales/fulfillment/?id=gid://shopify/Order/1",
+      )
+    ).status,
+    503,
+  );
   assert.equal((await rawFetch(base + "/api/cron/sales/")).status, 401);
   assert.equal(
     (

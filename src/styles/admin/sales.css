@@ -617,3 +617,119 @@
     grid-template-columns: 1fr;
   }
 }
+
+.fulfillment-details-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.fulfillment-dialog {
+  border: 1px solid #dce6f1;
+  border-radius: 20px;
+  padding: 25px;
+  width: min(900px, calc(100vw - 32px));
+  max-height: 88dvh;
+  color: #315b84;
+  background: #fbfdff;
+  box-shadow: 0 24px 80px #15385833;
+}
+.fulfillment-dialog::backdrop {
+  background: rgb(24 43 66 / 38%);
+}
+.fulfillment-dialog-heading,
+.fulfillment-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.fulfillment-dialog-heading h2 {
+  font-size: 22px;
+  margin: 8px 0;
+}
+.fulfillment-dialog-note,
+.fulfillment-dialog-state p,
+.fulfillment-dialog-footer small {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #728ba4;
+  white-space: normal;
+}
+.fulfillment-dialog-state {
+  padding: 15px;
+  margin: 15px 0;
+  background: #f0f6fd;
+  border: 1px solid #dce8f7;
+  border-radius: 12px;
+}
+.fulfillment-dialog-state p {
+  margin: 6px 0 0;
+}
+.fulfillment-dialog-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.fulfillment-dialog-totals > div {
+  border: 1px solid #e2eaf4;
+  border-radius: 12px;
+  padding: 14px;
+}
+.fulfillment-dialog-totals span {
+  display: block;
+  font-size: 11px;
+  color: #728ba4;
+}
+.fulfillment-dialog-totals strong {
+  display: block;
+  font-size: 23px;
+  margin-top: 8px;
+  color: #2a5ca5;
+}
+.fulfillment-dialog-table {
+  max-height: 45dvh;
+  overflow: auto;
+  border: 1px solid #dce6f1;
+  border-radius: 12px;
+}
+.fulfillment-dialog-table table {
+  width: 100%;
+  min-width: 550px;
+}
+.fulfillment-dialog-table td:first-child {
+  min-width: 250px;
+  white-space: normal;
+}
+.fulfillment-dialog-table td .admin-badge {
+  display: inline-block;
+  margin-top: 8px;
+}
+.fulfillment-dialog-table td:not(:first-child),
+.fulfillment-dialog-table th:not(:first-child) {
+  text-align: center;
+}
+.fulfillment-dialog-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f2f7fd;
+  z-index: 1;
+}
+@media (max-width: 580px) {
+  .fulfillment-dialog {
+    padding: 16px;
+  }
+  .fulfillment-dialog-totals {
+    gap: 7px;
+  }
+  .fulfillment-dialog-totals > div {
+    padding: 9px;
+  }
+  .fulfillment-dialog-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

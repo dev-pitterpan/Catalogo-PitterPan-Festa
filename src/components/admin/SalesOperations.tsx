@@ -5,6 +5,7 @@ import { ArrowUpRight, Clock3, RefreshCw, Undo2 } from "lucide-react";
 import type { readSalesOperations } from "../../server/sales/repository";
 import { salesLink, salesOverviewCards } from "../../lib/admin/sales-links";
 import { fulfillmentLabels } from "../../lib/admin/fulfillment";
+import OrderFulfillmentDetails from "./OrderFulfillmentDetails";
 import DeliveryMark from "./DeliveryMark";
 import PitterSpinner from "./PitterSpinner";
 import DragScroll from "./DragScroll";
@@ -181,7 +182,7 @@ export default function SalesOperations({
                 <header>
                   <div>
                     <span className="admin-eyebrow">PAGAMENTO CONFIRMADO</span>
-                    <h3>Aguardando atendimento</h3>
+                    <h3>Atendimentos em aberto</h3>
                   </div>
                   <Clock3 size={19} />
                 </header>
@@ -210,6 +211,11 @@ export default function SalesOperations({
                             </span>
                           </a>
                           <small>{date(o.processed_at)}</small>
+                          <OrderFulfillmentDetails
+                            id={o.id}
+                            name={o.name}
+                            storedStatus={o.fulfillment_status}
+                          />
                         </div>
                         <div>
                           <DeliveryMark kind={o.delivery_kind} />
@@ -272,6 +278,10 @@ export default function SalesOperations({
                                 </span>
                               </a>
                               <small>{date(o.processed_at)}</small>
+                              <OrderFulfillmentDetails
+                                id={o.id}
+                                name={o.name}
+                              />
                               <small>
                                 {o.financial_status === "REFUNDED"
                                   ? "Reembolso total"

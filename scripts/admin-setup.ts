@@ -6,7 +6,7 @@ import { Writable } from "node:stream";
 import {
   hashPassword,
   environmentPasswordHash,
-} from "../src/server/auth/crypto.ts";
+} from "../packages/shared/src/server/auth/crypto.ts";
 if (!process.stdin.isTTY) {
   console.error("Execute npm run admin:setup em um terminal interativo.");
   process.exit(1);

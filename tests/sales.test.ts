@@ -6,18 +6,21 @@ import { PGlite } from "@electric-sql/pglite";
 import {
   validSignature,
   webhookOrderId,
-} from "../src/server/sales/security.ts";
+} from "../packages/shared/src/server/sales/security.ts";
 import {
   saveOrder,
   readSales,
   readSalesOrders,
   readSalesFinance,
   readSoldProducts,
-} from "../src/server/sales/repository.ts";
-import { deliveryKinds } from "../src/lib/admin/delivery.ts";
-import { salesFilterSchema } from "../src/server/sales/filters.ts";
-import { orderSchema, type SalesOrder } from "../src/server/sales/model.ts";
-import { ShopifyClient } from "../src/server/shopify/client.ts";
+} from "../packages/shared/src/server/sales/repository.ts";
+import { deliveryKinds } from "../packages/shared/src/lib/admin/delivery.ts";
+import { salesFilterSchema } from "../packages/shared/src/server/sales/filters.ts";
+import {
+  orderSchema,
+  type SalesOrder,
+} from "../packages/shared/src/server/sales/model.ts";
+import { ShopifyClient } from "../packages/shared/src/server/shopify/client.ts";
 const store = "fixture.myshopify.com";
 function order(id = "1"): SalesOrder {
   const m = (amount: string) => ({
@@ -82,7 +85,10 @@ test("vendas: reenvio, eventos atrasados, reembolso, cancelamento, teste e outra
       "CREATE TABLE unrelated(id int PRIMARY KEY); INSERT INTO unrelated VALUES(7);",
     );
     const sql = await readFile(
-      new URL("../src/server/sales/schema.sql", import.meta.url),
+      new URL(
+        "../packages/shared/src/server/sales/schema.sql",
+        import.meta.url,
+      ),
       "utf8",
     );
     await db.exec(sql);
@@ -193,7 +199,10 @@ test("worker retoma cursor, completa itens, deduplica pagamento e preserva check
   const db = new PGlite();
   await db.exec(
     await readFile(
-      new URL("../src/server/sales/schema.sql", import.meta.url),
+      new URL(
+        "../packages/shared/src/server/sales/schema.sql",
+        import.meta.url,
+      ),
       "utf8",
     ),
   );
@@ -222,7 +231,8 @@ test("worker retoma cursor, completa itens, deduplica pagamento e preserva check
     });
     await db.close();
   });
-  const { syncSalesPage } = await import("../src/server/sales/sync.ts");
+  const { syncSalesPage } =
+    await import("../packages/shared/src/server/sales/sync.ts");
   let fail = false,
     pageCalls = 0;
   t.mock.method(
@@ -445,7 +455,10 @@ test("vendas pagina de dez em dez, combina situação/categoria e mantém totais
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -470,7 +483,7 @@ test("vendas pagina de dez em dez, combina situação/categoria e mantém totais
     fake.test = true;
     await saveOrder(db, store, fake);
     const { readSalesOrders } =
-      await import("../src/server/sales/repository.ts");
+      await import("../packages/shared/src/server/sales/repository.ts");
     const filter = { status: "PAID" as const, category: "fest" };
     const first = await readSales(db, store, 30, undefined, filter);
     assert.equal(first.totals[0].orders, "24");
@@ -557,7 +570,10 @@ test("vendas preservam fotos, agrupam modalidades por produto e filtram entregas
   const db = new PGlite();
   try {
     const schema = await readFile(
-      new URL("../src/server/sales/schema.sql", import.meta.url),
+      new URL(
+        "../packages/shared/src/server/sales/schema.sql",
+        import.meta.url,
+      ),
       "utf8",
     );
     await db.exec(schema);
@@ -666,7 +682,10 @@ test("financeiro separa recebido, estorno e expirado, preservando reembolsos de 
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -875,7 +894,10 @@ test("clientes: compara por ID, separa moeda e loja e mantém pendências indepe
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -914,7 +936,7 @@ test("clientes: compara por ID, separa moeda e loja e mantém pendências indepe
     };
     await saveOrder(db, store, foreign);
     const { readSalesOrders } =
-      await import("../src/server/sales/repository.ts");
+      await import("../packages/shared/src/server/sales/repository.ts");
     const data = await readSalesOrders(db, store, 30, {
       status: "PAID",
       category: "",
@@ -928,7 +950,7 @@ test("clientes: compara por ID, separa moeda e loja e mantém pendências indepe
     assert.equal(data.orders[0].customer_pending_value, "100.00");
     assert.equal(data.orders[0].customer_paid_orders, "1");
     const { readOrderCustomer, refreshOrderCustomers } =
-      await import("../src/server/sales/customers.ts");
+      await import("../packages/shared/src/server/sales/customers.ts");
     const restricted = {
       query: async <T>(q: string): Promise<T> => {
         if (q.includes("displayName")) throw Error("restricted");
@@ -970,7 +992,7 @@ test("clientes: compara por ID, separa moeda e loja e mantém pendências indepe
     assert.equal(result.orders[0].customer_name, "Nome atualizado");
     assert.equal(result.diagnostics[paid.id], "identified");
     const { ShopifyGraphQLError } =
-      await import("../src/server/shopify/client.ts");
+      await import("../packages/shared/src/server/shopify/client.ts");
     const denied = await refreshOrderCustomers(
       db,
       {
@@ -1047,7 +1069,10 @@ test("produtos vendidos: páginas completas, busca literal, entregas e período 
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -1133,7 +1158,10 @@ test("matriz de filtros: entrega, situação, categoria e data selecionam os mes
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -1238,7 +1266,10 @@ test("histórico corrigido distingue retirada, PAC, Jadlog e Local Delivery sem 
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -1280,7 +1311,7 @@ test("histórico corrigido distingue retirada, PAC, Jadlog e Local Delivery sem 
           String(expected * 3),
         );
       const { readDestinations, destinationFilterSchema } =
-        await import("../src/server/sales/destinations.ts");
+        await import("../packages/shared/src/server/sales/destinations.ts");
       const map = await readDestinations(
         db,
         store,

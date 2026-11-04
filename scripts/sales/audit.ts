@@ -1,8 +1,11 @@
 import { existsSync } from "node:fs";
-import { database } from "../../src/server/database/client.ts";
-import { salesClient } from "../../src/server/sales/config.ts";
-import { auditSalesSnapshot } from "../../src/server/sales/audit.ts";
-import { todayDate, shiftDate } from "../../src/lib/admin/date-range.ts";
+import { database } from "../../packages/shared/src/server/database/client.ts";
+import { salesClient } from "../../packages/shared/src/server/sales/config.ts";
+import { auditSalesSnapshot } from "../../packages/shared/src/server/sales/audit.ts";
+import {
+  todayDate,
+  shiftDate,
+} from "../../packages/shared/src/lib/admin/date-range.ts";
 if (existsSync(".env")) process.loadEnvFile(".env");
 const end = process.argv[3] || todayDate(),
   start = process.argv[2] || shiftDate(end, -59);

@@ -1,21 +1,25 @@
-# Pitter Pan Festas — Next.js + TypeScript
+# Pitter Pan Festas — Catálogo Digital e Gestão Comercial
 
 Catálogos sazonais migrados para **Next.js App Router**, React e TypeScript estrito. Esta versão substitui a estrutura anterior com Vite. O documento HTML é definido em `src/app/layout.tsx`; não há `index.html` manual.
 
+## Aplicações separadas
+
+O mesmo repositório mantém dois projetos independentes, com código comum em `packages/shared`. Consulte [SEPARACAO-APLICACOES.md](docs/SEPARACAO-APLICACOES.md) para configuração da Vercel, variáveis e transição dos endereços atuais.
+
 ## Executar no Windows
 
-Instale Node.js 24 ou superior. Extraia o ZIP em uma pasta nova e abra o PowerShell na pasta que contém `package.json`:
+Dentro da pasta do repositório em `C:\Projetos\bruno`, instale Node.js 24 ou superior e execute:
 
 ```powershell
 npm ci
-npm run dev
+Copy-Item apps/catalogo-digital/.env.example apps/catalogo-digital/.env
+Copy-Item apps/gestao-comercial/.env.example apps/gestao-comercial/.env
+npm run dev:catalogo
 ```
 
-Abra `http://127.0.0.1:3000/`. O ZIP inclui `.env` com valores locais e `.env.example` como modelo. Para recriar a configuração local:
+Em outro terminal, execute `npm run dev:gestao`. Catálogo: `http://127.0.0.1:3000/`; gestão: `http://127.0.0.1:3001/`. Preencha as variáveis reais conforme a fonte de dados utilizada. Nunca substitua um `.env` existente sem preservar suas configurações.
 
-```powershell
-Copy-Item .env.example .env
-```
+`npm run dev`, `npm run build` e `npm start` na raiz mantêm a aplicação de compatibilidade durante a migração da publicação.
 
 A instalação inicial requer internet para baixar os pacotes npm. Depois de instaladas as dependências, o código, os estilos e ícones são servidos pela aplicação, sem bibliotecas via CDN e sem fontes remotas. No modo JSON, as fotos são locais; no modo Shopify, as fotos são obtidas pelo servidor da origem Shopify e servidas com cache. Site da loja e WhatsApp continuam sendo links externos.
 

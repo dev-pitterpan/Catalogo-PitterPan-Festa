@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { containsPattern, matchesFilter } from "../src/lib/admin/filters.ts";
+import {
+  containsPattern,
+  matchesFilter,
+} from "../packages/shared/src/lib/admin/filters.ts";
 test("filtros de marca e categoria aceitam trechos e ignoram maiúsculas", () => {
   assert.equal(matchesFilter("Silver Plastic", "plastic"), true);
   assert.equal(matchesFilter("Confeitaria", " confei "), true);

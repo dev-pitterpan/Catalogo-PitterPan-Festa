@@ -2,13 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { orderSchema, type SalesOrder } from "../src/server/sales/model.ts";
+import {
+  orderSchema,
+  type SalesOrder,
+} from "../packages/shared/src/server/sales/model.ts";
 import {
   saveOrder,
   readSalesFinance,
   readSalesOperations,
   readSalesOrders,
-} from "../src/server/sales/repository.ts";
+} from "../packages/shared/src/server/sales/repository.ts";
 const store = "fixture.myshopify.com";
 const money = (amount: string, currencyCode = "BRL") => ({
   shopMoney: { amount, currencyCode },
@@ -50,7 +53,10 @@ test("saldos oficiais preservam centavos, distinguem estimativa e rejeitam moeda
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -127,7 +133,10 @@ test("operação separa reembolso de cancelamento e pagamento de atendimento, re
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -229,14 +238,17 @@ test("operação separa reembolso de cancelamento e pagamento de atendimento, re
 
 test("auditoria somente leitura identifica pedidos ausentes, desatualizados e valores diferentes sem alterar o histórico", async () => {
   const { auditSalesSnapshot, financialCents } =
-    await import("../src/server/sales/audit.ts");
+    await import("../packages/shared/src/server/sales/audit.ts");
   assert.equal(financialCents("-0.01"), -1n);
   assert.equal(financialCents("9999999999999999.99"), 999999999999999999n);
   const db = new PGlite();
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -319,14 +331,19 @@ test("auditoria somente leitura identifica pedidos ausentes, desatualizados e va
 
 test("link aguardando atendimento: contador, lista completa, paginação, financeiro e produtos obedecem ao mesmo filtro", async () => {
   const { readSoldProducts } =
-    await import("../src/server/sales/repository.ts");
-  const { salesLink } = await import("../src/lib/admin/sales-links.ts");
-  const { salesFilterSchema } = await import("../src/server/sales/filters.ts");
+    await import("../packages/shared/src/server/sales/repository.ts");
+  const { salesLink } =
+    await import("../packages/shared/src/lib/admin/sales-links.ts");
+  const { salesFilterSchema } =
+    await import("../packages/shared/src/server/sales/filters.ts");
   const db = new PGlite();
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );

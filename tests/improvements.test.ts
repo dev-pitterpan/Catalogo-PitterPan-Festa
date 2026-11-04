@@ -2,21 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { normalizeVariant } from "../src/server/shopify/normalize.ts";
+import { normalizeVariant } from "../packages/shared/src/server/shopify/normalize.ts";
 import {
   activeCollections,
   findByIds,
   findPage,
   stageItems,
   publishSnapshot,
-} from "../src/server/database/catalog-repository.ts";
-import { categoryPage } from "../src/server/database/category-repository.ts";
-import { catalogQuerySchema } from "../src/lib/catalog/query.ts";
-import { productSearchScore } from "../src/lib/search.ts";
-import { cardImage } from "../src/lib/catalog/image.ts";
-import { publicCatalogUrl } from "../src/lib/routes.ts";
-import { loadSelection } from "../src/lib/quote.ts";
-import { ShopifyClient } from "../src/server/shopify/client.ts";
+} from "../packages/shared/src/server/database/catalog-repository.ts";
+import { categoryPage } from "../packages/shared/src/server/database/category-repository.ts";
+import { catalogQuerySchema } from "../packages/shared/src/lib/catalog/query.ts";
+import { productSearchScore } from "../packages/shared/src/lib/search.ts";
+import { cardImage } from "../packages/shared/src/lib/catalog/image.ts";
+import { publicCatalogUrl } from "../packages/shared/src/lib/routes.ts";
+import { loadSelection } from "../packages/shared/src/lib/quote.ts";
+import { ShopifyClient } from "../packages/shared/src/server/shopify/client.ts";
 
 const parent = {
   id: "gid://shopify/Product/1",
@@ -41,7 +41,10 @@ test("PostgreSQL preserva SKU compartilhado/vazio, união de coleções e carrin
   const db = new PGlite();
   try {
     const schema = await readFile(
-      new URL("../src/server/database/schema.sql", import.meta.url),
+      new URL(
+        "../packages/shared/src/server/database/schema.sql",
+        import.meta.url,
+      ),
       "utf8",
     );
     await db.exec(schema);

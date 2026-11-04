@@ -3,13 +3,13 @@ import assert from "node:assert/strict";
 import {
   shopifyReports,
   reportCategories,
-} from "../src/lib/admin/shopify-reports.ts";
+} from "../packages/shared/src/lib/admin/shopify-reports.ts";
 import {
   reportQuery,
   prepareReportTable,
   readShopifyReport,
   readShopifyOverview,
-} from "../src/server/sales/reports.ts";
+} from "../packages/shared/src/server/sales/reports.ts";
 const range = { start: "2026-10-01", end: "2026-10-07" };
 const table = (row: Record<string, string | number | null>) => ({
   columns: Object.keys(row).map((name) => ({

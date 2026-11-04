@@ -5,10 +5,13 @@ import {
   salesLink,
   salesOverviewCards,
   salesSectionFromHash,
-} from "../src/lib/admin/sales-links.ts";
-import { salesFilterSchema } from "../src/server/sales/filters.ts";
-import { stockFilters, matchesStock } from "../src/lib/admin/stock.ts";
-import { stockSelectionSql } from "../src/server/admin/stock.ts";
+} from "../packages/shared/src/lib/admin/sales-links.ts";
+import { salesFilterSchema } from "../packages/shared/src/server/sales/filters.ts";
+import {
+  stockFilters,
+  matchesStock,
+} from "../packages/shared/src/lib/admin/stock.ts";
+import { stockSelectionSql } from "../packages/shared/src/server/admin/stock.ts";
 test("atalhos de vendas aplicam o filtro anunciado e preservam só o contexto comercial", () => {
   const source = new URLSearchParams({
     days: "7",

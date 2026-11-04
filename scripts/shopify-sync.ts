@@ -4,14 +4,14 @@ import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
 import { createInterface } from "node:readline";
 import { z } from "zod";
-import { database } from "../src/server/database/client.ts";
-import { stageItems } from "../src/server/database/catalog-repository.ts";
+import { database } from "../packages/shared/src/server/database/client.ts";
+import { stageItems } from "../packages/shared/src/server/database/catalog-repository.ts";
 import {
   ShopifyClient,
   BULK_PRODUCTS_QUERY,
   delay,
-} from "../src/server/shopify/client.ts";
-import { normalizeVariant } from "../src/server/shopify/normalize.ts";
+} from "../packages/shared/src/server/shopify/client.ts";
+import { normalizeVariant } from "../packages/shared/src/server/shopify/normalize.ts";
 if (existsSync(new URL("../.env", import.meta.url)))
   process.loadEnvFile(new URL("../.env", import.meta.url));
 const db = database();

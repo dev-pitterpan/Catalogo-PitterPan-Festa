@@ -1,7 +1,7 @@
 import {
   environmentPasswordHash,
   isPasswordHash,
-} from "../src/server/auth/crypto.ts";
+} from "../packages/shared/src/server/auth/crypto.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseEnv } from "node:util";

@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:server": "node tests/server.mjs",
-    "format": "prettier --write src scripts tests *.json *.ts *.mjs",
-    "format:check": "prettier --check src scripts tests *.json *.ts *.mjs",
+    "format": "prettier --write src apps packages scripts tests *.json *.ts *.mjs",
+    "format:check": "prettier --check src apps packages scripts tests *.json *.ts *.mjs",
     "env:setup": "node scripts/setup-env.ts",
     "db:migrate": "node scripts/database/migrate.ts",
     "shopify:sync": "node scripts/shopify-sync.ts",
@@ -24,7 +24,14 @@
     "sales:setup": "node scripts/sales/setup.ts",
     "sales:webhooks": "node scripts/sales/webhooks.ts",
     "sales:retry": "node scripts/sales/retry.ts",
-    "sales:audit": "node scripts/sales/audit.ts"
+    "sales:audit": "node scripts/sales/audit.ts",
+    "dev:catalogo": "node scripts/run-app.ts catalogo-digital dev",
+    "build:catalogo": "node scripts/run-app.ts catalogo-digital build",
+    "start:catalogo": "node scripts/run-app.ts catalogo-digital start",
+    "dev:gestao": "node scripts/run-app.ts gestao-comercial dev",
+    "build:gestao": "node scripts/run-app.ts gestao-comercial build",
+    "start:gestao": "node scripts/run-app.ts gestao-comercial start",
+    "test:apps": "node tests/apps.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.5",
@@ -55,5 +62,9 @@
   "overrides": {
     "zod": "$zod",
     "undici": "^7.30.1"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

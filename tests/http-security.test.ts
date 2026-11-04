@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readJsonBody } from "../src/server/http/body.ts";
+import { readJsonBody } from "../packages/shared/src/server/http/body.ts";
 
 test("JSON reader bounds bytes, rejects malformed JSON and preserves valid input", async () => {
   const valid = await readJsonBody(

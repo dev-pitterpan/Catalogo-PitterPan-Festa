@@ -1,0 +1,26 @@
+{
+  "name": "@pitterpan/gestao-comercial",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../scripts/run-app.ts gestao-comercial dev",
+    "build": "node ../../scripts/run-app.ts gestao-comercial build",
+    "start": "node ../../scripts/run-app.ts gestao-comercial start"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.104.5",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.60.0",
+    "next": "^16.4.2",
+    "pg": "^8.23.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "workflow": "^5.2.3",
+    "zod": "^4.6.7",
+    "@pitterpan/shared": "3.0.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

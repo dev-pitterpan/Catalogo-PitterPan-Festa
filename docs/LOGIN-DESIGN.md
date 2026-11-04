@@ -5,8 +5,8 @@ A tela `/login/` segue a proposta aprovada: coluna azul com título branco/amare
 ## Arquivos
 
 - `src/app/login/page.tsx`: estrutura, metadados e verificação da sessão.
-- `src/components/admin/LoginForm.tsx`: campos, exibição da senha, ajuda e envio de login.
-- `src/styles/admin/login.css`: acabamento isolado com `.party-login`.
+- `packages/shared/src/components/admin/LoginForm.tsx`: campos, exibição da senha, ajuda e envio de login.
+- `packages/shared/src/styles/admin/login.css`: acabamento isolado com `.party-login`.
 - `public/assets/images/admin/login-party.webp`: arte local, 1536 × 1024, alpha preservado, aproximadamente 190 KB. O Next também oferece versões responsivas.
 
 A imagem foi preparada com a ferramenta integrada `image_gen`, usando a imagem aprovada como referência visual; a versão WebP otimiza a entrega da mesma composição. O original gerado foi preservado fora do código publicado. Não há motor 3D, fonte remota ou dependência de CDN para compor a interface.

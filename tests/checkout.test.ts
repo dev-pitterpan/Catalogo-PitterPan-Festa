@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { prepareCheckout } from "../src/lib/checkout.ts";
-import type { Product } from "../src/types/catalog.ts";
+import { prepareCheckout } from "../packages/shared/src/lib/checkout.ts";
+import type { Product } from "../packages/shared/src/types/catalog.ts";
 const product: Product = {
   id: "8936",
   name: "Frank",

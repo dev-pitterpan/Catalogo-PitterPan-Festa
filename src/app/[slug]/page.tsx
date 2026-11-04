@@ -1,8 +1,11 @@
-import { currentSession } from "../../server/auth/session";
+import { currentSession } from "../../../packages/shared/src/server/auth/session";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import CatalogApp from "../../components/CatalogApp";
-import { getManifest, getPageData } from "../../server/catalogs";
+import CatalogApp from "../../../packages/shared/src/components/CatalogApp";
+import {
+  getManifest,
+  getPageData,
+} from "../../../packages/shared/src/server/catalogs";
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ slug: string }>;

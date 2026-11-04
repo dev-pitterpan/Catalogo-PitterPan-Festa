@@ -1,9 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { productSearchScore } from "../src/lib/search.ts";
-import { loadSelection, totalQuantity, whatsappUrl } from "../src/lib/quote.ts";
-import type { Catalog, QuoteItem, SiteConfig } from "../src/types/catalog.ts";
+import { productSearchScore } from "../packages/shared/src/lib/search.ts";
+import {
+  loadSelection,
+  totalQuantity,
+  whatsappUrl,
+} from "../packages/shared/src/lib/quote.ts";
+import type {
+  Catalog,
+  QuoteItem,
+  SiteConfig,
+} from "../packages/shared/src/types/catalog.ts";
 const catalog: Catalog = JSON.parse(
   await readFile(
     new URL("../public/data/catalogs/halloween.json", import.meta.url),

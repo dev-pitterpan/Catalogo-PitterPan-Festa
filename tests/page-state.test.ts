@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { matchesCatalogRoute } from "../src/lib/catalog/page-state.ts";
-import type { CatalogPageData } from "../src/types/catalog.ts";
+import { matchesCatalogRoute } from "../packages/shared/src/lib/catalog/page-state.ts";
+import type { CatalogPageData } from "../packages/shared/src/types/catalog.ts";
 const natal: CatalogPageData = {
   catalogs: [],
   config: null,

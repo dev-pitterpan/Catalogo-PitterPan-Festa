@@ -6,8 +6,8 @@ import {
   storefrontNavigation,
   uniqueVariants,
   brandHandles,
-} from "../src/lib/catalog/departments.ts";
-import type { Product } from "../src/types/catalog.ts";
+} from "../packages/shared/src/lib/catalog/departments.ts";
+import type { Product } from "../packages/shared/src/types/catalog.ts";
 const summary = (slug: string) => ({
   slug,
   name: slug,

@@ -6,19 +6,19 @@ import {
   readWorkspace,
   saveWorkspace,
   AgendaError,
-} from "../src/server/agenda/repository.ts";
+} from "../packages/shared/src/server/agenda/repository.ts";
 import {
   supplierSchema,
   appointmentSchema,
   whatsappLink,
   importSchema,
-} from "../src/lib/agenda/validation.ts";
+} from "../packages/shared/src/lib/agenda/validation.ts";
 import {
   monthDays,
   monthShift,
   localDay,
   localTime,
-} from "../src/lib/agenda/calendar.ts";
+} from "../packages/shared/src/lib/agenda/calendar.ts";
 const supplier = {
   code: "123",
   name: "Fornecedor exemplo",
@@ -257,7 +257,7 @@ test("agenda: validação de links, telefone brasileiro e calendário", () => {
 
 test("agenda: datas anuais corretas, planejamento editável e referência preservada", async () => {
   const { referenceOccasions, calendarOccasions } =
-    await import("../src/lib/agenda/occasions.ts");
+    await import("../packages/shared/src/lib/agenda/occasions.ts");
   const references = referenceOccasions(2026);
   assert.equal(
     references.find((row) => row.id.endsWith("-easter"))?.event_date,

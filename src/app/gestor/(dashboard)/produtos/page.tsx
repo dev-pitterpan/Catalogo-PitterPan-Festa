@@ -1,2 +1,2 @@
-import ProductsPage from "../../../../components/admin/ProductsPage";
-export default ProductsPage;
+// Adaptador temporário para as publicações atuais. Implementação em apps/.
+export { default } from "../../../../../apps/gestao-comercial/src/app/gestor/(dashboard)/produtos/page";

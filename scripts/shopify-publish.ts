@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { z } from "zod";
-import { database } from "../src/server/database/client.ts";
-import { publishSnapshot } from "../src/server/database/catalog-repository.ts";
+import { database } from "../packages/shared/src/server/database/client.ts";
+import { publishSnapshot } from "../packages/shared/src/server/database/catalog-repository.ts";
 if (existsSync(new URL("../.env", import.meta.url)))
   process.loadEnvFile(new URL("../.env", import.meta.url));
 const run = z.uuid().parse(process.argv[2]);

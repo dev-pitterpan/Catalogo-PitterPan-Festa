@@ -1,4 +1,2 @@
-/** Diagnóstico do processo Node que executa o Next.js. Não expõe configuração ou segredos. */
-export function GET() {
-  return Response.json({ status: "ok" });
-}
+// Adaptador temporário para as publicações atuais. Implementação em apps/.
+export { GET } from "../../../../apps/catalogo-digital/src/app/api/health/route";

@@ -4,8 +4,8 @@ import {
   drain,
   loadShopifyCatalog,
   getShopifySelectedProducts,
-} from "../src/server/shopify/catalog.ts";
-import { prepareCheckout } from "../src/lib/checkout.ts";
+} from "../packages/shared/src/server/shopify/catalog.ts";
+import { prepareCheckout } from "../packages/shared/src/lib/checkout.ts";
 
 const connection = <T>(nodes: T[], cursor: string | null = null) => ({
   nodes,

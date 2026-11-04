@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
-import { database } from "../../src/server/database/client.ts";
-import { salesConfig } from "../../src/server/sales/config.ts";
+import { database } from "../../packages/shared/src/server/database/client.ts";
+import { salesConfig } from "../../packages/shared/src/server/sales/config.ts";
 if (existsSync(".env")) process.loadEnvFile(".env");
 const db = database();
 try {

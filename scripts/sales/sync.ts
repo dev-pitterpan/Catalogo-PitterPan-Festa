@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
-import { syncSalesPage } from "../../src/server/sales/sync.ts";
-import { salesConfig } from "../../src/server/sales/config.ts";
-import { database } from "../../src/server/database/client.ts";
+import { syncSalesPage } from "../../packages/shared/src/server/sales/sync.ts";
+import { salesConfig } from "../../packages/shared/src/server/sales/config.ts";
+import { database } from "../../packages/shared/src/server/database/client.ts";
 if (existsSync(".env")) process.loadEnvFile(".env");
 try {
   if (process.argv.includes("--refresh-details")) {

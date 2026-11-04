@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { z } from "zod";
-import { database } from "../src/server/database/client.ts";
+import { database } from "../packages/shared/src/server/database/client.ts";
 if (existsSync(new URL("../.env", import.meta.url)))
   process.loadEnvFile(new URL("../.env", import.meta.url));
 const db = database();

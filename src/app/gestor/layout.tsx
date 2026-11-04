@@ -1,13 +1,6 @@
-import type { ReactNode } from "react";
-import type { Metadata } from "next";
-import { requireSession } from "../../server/auth/session";
+// Adaptador temporário para as publicações atuais. Implementação em apps/.
+export {
+  default,
+  metadata,
+} from "../../../apps/gestao-comercial/src/app/gestor/layout";
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { robots: { index: false, follow: false } };
-export default async function ManagerLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  await requireSession();
-  return children;
-}

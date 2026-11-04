@@ -7,7 +7,7 @@ import {
   hashPassword,
   signSession,
   credentialVersion,
-} from "../src/server/auth/crypto.ts";
+} from "../packages/shared/src/server/auth/crypto.ts";
 const testSecret = randomBytes(48).toString("hex");
 const testPassword = "test-only-password-2026";
 const testHash = await hashPassword(testPassword);

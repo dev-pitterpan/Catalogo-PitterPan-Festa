@@ -1,6 +1,2 @@
-import { redirect } from "next/navigation";
-import { requireSession } from "../../../../server/auth/session";
-export default async function LegacyCalendar() {
-  await requireSession(["admin", "gestor"]);
-  redirect("/gestor/analises/");
-}
+// Adaptador temporário para as publicações atuais. Implementação em apps/.
+export { default } from "../../../../../apps/gestao-comercial/src/app/gestor/(dashboard)/calendario/page";

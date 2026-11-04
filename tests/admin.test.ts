@@ -12,13 +12,13 @@ import {
   safeDestination,
   allowed,
   SESSION_SECONDS,
-} from "../src/server/auth/crypto.ts";
-import { readAnalytics } from "../src/server/admin/analytics.ts";
-import { normalizeVariant } from "../src/server/shopify/normalize.ts";
+} from "../packages/shared/src/server/auth/crypto.ts";
+import { readAnalytics } from "../packages/shared/src/server/admin/analytics.ts";
+import { normalizeVariant } from "../packages/shared/src/server/shopify/normalize.ts";
 import {
   stageItems,
   publishSnapshot,
-} from "../src/server/database/catalog-repository.ts";
+} from "../packages/shared/src/server/database/catalog-repository.ts";
 const secret = "test-key-with-more-than-thirty-two-characters";
 test("senha usa salt distinto e não aceita texto/hash inválido", async () => {
   const password = "a-test-password-for-fixtures";
@@ -93,7 +93,10 @@ test("dashboard distingue variantes, ofertas, estoque desconhecido e histórico 
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/database/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/database/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -177,7 +180,7 @@ test("dashboard distingue variantes, ofertas, estoque desconhecido e histórico 
 });
 
 test("CSV não executa fórmulas e mantém valores com aspas", async () => {
-  const { csvCell } = await import("../src/lib/admin/csv.ts");
+  const { csvCell } = await import("../packages/shared/src/lib/admin/csv.ts");
   assert.equal(
     csvCell('=HYPERLINK("https://example.test")'),
     '"\'=HYPERLINK(""https://example.test"")"',
@@ -187,12 +190,16 @@ test("CSV não executa fórmulas e mantém valores com aspas", async () => {
   assert.equal(csvCell(12), '"12"');
 });
 test("limite de login é compartilhado no banco e renova a janela", async () => {
-  const { consumeLoginBucket } = await import("../src/server/auth/limits.ts");
+  const { consumeLoginBucket } =
+    await import("../packages/shared/src/server/auth/limits.ts");
   const db = new PGlite();
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/database/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/database/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );
@@ -212,7 +219,10 @@ test("migração admite Gerente de Compras sem alterar contas existentes e sess�
       "CREATE TABLE pitterpan_admin_users(id uuid PRIMARY KEY,email text NOT NULL UNIQUE,name text NOT NULL,role text NOT NULL CHECK(role IN ('admin','gestor','atendimento')),password_hash text NOT NULL,disabled boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now()); INSERT INTO pitterpan_admin_users(id,email,name,role,password_hash) VALUES('11111111-1111-4111-8111-111111111111','existing@example.test','Equipe','gestor','fixture');",
     );
     const schema = await readFile(
-      new URL("../src/server/database/schema.sql", import.meta.url),
+      new URL(
+        "../packages/shared/src/server/database/schema.sql",
+        import.meta.url,
+      ),
       "utf8",
     );
     await db.exec(schema);

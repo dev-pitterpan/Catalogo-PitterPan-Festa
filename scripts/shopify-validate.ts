@@ -1,9 +1,12 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { ShopifyClient } from "../src/server/shopify/client.ts";
-import { drain, getShopifyCollections } from "../src/server/shopify/catalog.ts";
-import { moneyToMinor } from "../src/lib/money.ts";
-import { shopifyImageUrl } from "../src/server/shopify/media.ts";
+import { ShopifyClient } from "../packages/shared/src/server/shopify/client.ts";
+import {
+  drain,
+  getShopifyCollections,
+} from "../packages/shared/src/server/shopify/catalog.ts";
+import { moneyToMinor } from "../packages/shared/src/lib/money.ts";
+import { shopifyImageUrl } from "../packages/shared/src/server/shopify/media.ts";
 if (existsSync(".env")) process.loadEnvFile(".env");
 type Variant = {
   id: string;

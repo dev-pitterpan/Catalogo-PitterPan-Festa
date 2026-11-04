@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFulfillmentDetails } from "../src/server/sales/fulfillment-details.ts";
+import { readFulfillmentDetails } from "../packages/shared/src/server/sales/fulfillment-details.ts";
 const info = (more = false, cursor: string | null = null) => ({
   hasNextPage: more,
   endCursor: cursor,

@@ -1,6 +1,3 @@
-import CatalogApp from "../components/CatalogApp";
-import { getPageData } from "../server/catalogs";
+// Adaptador temporário para as publicações atuais. Implementação em apps/.
+export { default } from "../../apps/catalogo-digital/src/app/page";
 export const dynamic = "force-dynamic";
-export default async function HomePage() {
-  return <CatalogApp initialData={await getPageData()} />;
-}

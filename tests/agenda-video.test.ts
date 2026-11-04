@@ -1,9 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
-import { jitsiOrigin, jitsiRoom } from "../src/lib/agenda/video.ts";
-import { ensureAgenda } from "../src/server/agenda/repository.ts";
-import { createAppointmentRoom } from "../src/server/agenda/video/rooms.ts";
+import {
+  jitsiOrigin,
+  jitsiRoom,
+} from "../packages/shared/src/lib/agenda/video.ts";
+import { ensureAgenda } from "../packages/shared/src/server/agenda/repository.ts";
+import { createAppointmentRoom } from "../packages/shared/src/server/agenda/video/rooms.ts";
 test("vídeo aceita somente origem HTTPS configurada e sala aleatória do próprio servidor", () => {
   assert.equal(
     jitsiOrigin("https://video.example.com"),

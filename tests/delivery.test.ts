@@ -4,7 +4,7 @@ import {
   classifyDelivery,
   deliveryFilterKinds,
   deliveryLabels,
-} from "../src/lib/admin/delivery.ts";
+} from "../packages/shared/src/lib/admin/delivery.ts";
 test("serviços reais da Shopify são distintos: PAC, Sedex, Motoboy, retirada, entrega local e Jadlog", () => {
   for (const [title, code, source, expected] of [
     [

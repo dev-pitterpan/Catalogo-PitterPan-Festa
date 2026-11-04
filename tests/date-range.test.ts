@@ -1,9 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { dateRangeSchema, todayDate } from "../src/lib/admin/date-range.ts";
-import { analyticsWindow } from "../src/server/sales/analytics.ts";
-import { destinationFilterSchema } from "../src/server/sales/destinations.ts";
-import { salesFilterSchema } from "../src/server/sales/filters.ts";
+import {
+  dateRangeSchema,
+  todayDate,
+} from "../packages/shared/src/lib/admin/date-range.ts";
+import { analyticsWindow } from "../packages/shared/src/server/sales/analytics.ts";
+import { destinationFilterSchema } from "../packages/shared/src/server/sales/destinations.ts";
+import { salesFilterSchema } from "../packages/shared/src/server/sales/filters.ts";
 test("calendário valida datas reais, par completo, ordem e limite de 366 dias", () => {
   for (const schema of [
     dateRangeSchema,

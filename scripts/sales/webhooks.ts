@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { salesClient } from "../../src/server/sales/config.ts";
+import { salesClient } from "../../packages/shared/src/server/sales/config.ts";
 if (existsSync(".env")) process.loadEnvFile(".env");
 // Only this new app's subscriptions are visible; never delete or edit any subscription.
 const target = new URL(

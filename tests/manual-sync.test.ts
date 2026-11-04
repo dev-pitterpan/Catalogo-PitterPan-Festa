@@ -7,21 +7,21 @@ import {
   stageItems,
   publishSnapshot,
   type ItemRow,
-} from "../src/server/database/catalog-repository.ts";
+} from "../packages/shared/src/server/database/catalog-repository.ts";
 import {
   ensureJobs,
   reserveJob,
   syncStatus,
   progress,
   failJob,
-} from "../src/server/sync/jobs.ts";
+} from "../packages/shared/src/server/sync/jobs.ts";
 import {
   beginCatalog,
   catalogReady,
   downloadCatalog,
   normalizeCatalogPage,
   completeCatalog,
-} from "../src/server/sync/catalog.ts";
+} from "../packages/shared/src/server/sync/catalog.ts";
 const id = "11111111-1111-4111-8111-111111111111",
   id2 = "22222222-2222-4222-8222-222222222222";
 test("sincronização mantém exclusividade, retoma lotes e publica somente a versão completa", async () => {
@@ -33,7 +33,10 @@ test("sincronização mantém exclusividade, retoma lotes e publica somente a ve
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/database/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/database/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );

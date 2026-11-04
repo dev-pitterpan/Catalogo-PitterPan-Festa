@@ -1,1 +1,2 @@
-export { default } from "../../components/LoadingState";
+// Adaptador temporário para as publicações atuais. Implementação em apps/.
+export { default } from "../../../apps/catalogo-digital/src/app/[slug]/loading";

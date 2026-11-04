@@ -10,3 +10,11 @@ dist/
 /.swc
 
 .workflow-data/
+
+# Recursos materializados por scripts/run-app.ts para cada aplicação.
+/apps/*/public/
+/apps/*/config/
+/apps/*/.swc/
+# Workflow SDK gera esses endpoints a cada build.
+/apps/*/src/app/.well-known/
+/src/app/.well-known/

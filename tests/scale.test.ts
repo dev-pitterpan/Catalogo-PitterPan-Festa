@@ -8,12 +8,15 @@ import {
   stageItems,
   publishSnapshot,
   type ItemRow,
-} from "../src/server/database/catalog-repository.ts";
-import { catalogQuerySchema, normalizeText } from "../src/lib/catalog/query.ts";
-import { normalizeVariant } from "../src/server/shopify/normalize.ts";
-import { shopifyImageUrl } from "../src/server/shopify/media.ts";
-import { categoryPage } from "../src/server/database/category-repository.ts";
-import { moneyToMinor, formatMinor } from "../src/lib/money.ts";
+} from "../packages/shared/src/server/database/catalog-repository.ts";
+import {
+  catalogQuerySchema,
+  normalizeText,
+} from "../packages/shared/src/lib/catalog/query.ts";
+import { normalizeVariant } from "../packages/shared/src/server/shopify/normalize.ts";
+import { shopifyImageUrl } from "../packages/shared/src/server/shopify/media.ts";
+import { categoryPage } from "../packages/shared/src/server/database/category-repository.ts";
+import { moneyToMinor, formatMinor } from "../packages/shared/src/lib/money.ts";
 const first = "11111111-1111-4111-8111-111111111111",
   second = "22222222-2222-4222-8222-222222222222";
 
@@ -22,7 +25,10 @@ test("13.518 registros: paginação, separação de coleções, busca, checkout 
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/database/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/database/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );

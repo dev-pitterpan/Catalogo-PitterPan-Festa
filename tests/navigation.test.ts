@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { collectionGroups } from "../src/lib/catalog/navigation.ts";
+import { collectionGroups } from "../packages/shared/src/lib/catalog/navigation.ts";
 const item = (slug: string, name: string) => ({
   slug,
   name,

@@ -2,14 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { shippingCharge } from "../src/server/sales/shipping.ts";
-import { shippingChargeLabel } from "../src/lib/admin/shipping-charge.ts";
-import { orderSchema, type SalesOrder } from "../src/server/sales/model.ts";
+import { shippingCharge } from "../packages/shared/src/server/sales/shipping.ts";
+import { shippingChargeLabel } from "../packages/shared/src/lib/admin/shipping-charge.ts";
+import {
+  orderSchema,
+  type SalesOrder,
+} from "../packages/shared/src/server/sales/model.ts";
 import {
   saveOrder,
   readSalesOrders,
   readSalesOperations,
-} from "../src/server/sales/repository.ts";
+} from "../packages/shared/src/server/sales/repository.ts";
 const money = (amount: string, currencyCode = "BRL") => ({
   shopMoney: { amount, currencyCode },
 });
@@ -99,7 +102,10 @@ test("pedido preserva modalidade e preço cobrado antes dos reembolsos, sem soma
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );

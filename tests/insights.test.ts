@@ -6,15 +6,15 @@ import {
   readOrderDestination,
   readDestinations,
   destinationFilterSchema,
-} from "../src/server/sales/destinations.ts";
+} from "../packages/shared/src/server/sales/destinations.ts";
 import {
   analyticsWindow,
   queryAnalyticsTable,
   readShopifyAnalytics,
   analyticsFailure,
   AnalyticsResponseError,
-} from "../src/server/sales/analytics.ts";
-import { ShopifyGraphQLError } from "../src/server/shopify/client.ts";
+} from "../packages/shared/src/server/sales/analytics.ts";
+import { ShopifyGraphQLError } from "../packages/shared/src/server/shopify/client.ts";
 test("diagnóstico distingue acesso, consulta e formato sem revelar mensagens externas", () => {
   assert.equal(
     analyticsFailure(new ShopifyGraphQLError(["ACCESS_DENIED"])).code,
@@ -85,7 +85,10 @@ test("mapa contabiliza cidade, unidades, retirada, internacional e destino ausen
   try {
     await db.exec(
       await readFile(
-        new URL("../src/server/sales/schema.sql", import.meta.url),
+        new URL(
+          "../packages/shared/src/server/sales/schema.sql",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );

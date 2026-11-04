@@ -3,23 +3,23 @@
 | Mudança                         | Arquivo/pasta                        |
 | ------------------------------- | ------------------------------------ |
 | Rotas e documento raiz          | `src/app/`                           |
-| Tela compartilhada do catálogo  | `src/components/CatalogApp.tsx`      |
+| Tela compartilhada do catálogo  | `packages/shared/src/components/CatalogApp.tsx`      |
 | Produtos da coleção             | `public/data/catalogs/<slug>.json`   |
 | Lista de coleções               | `public/data/catalogs/manifest.json` |
 | Contato e domínio padrão        | `public/data/config/site.json`       |
 | Fotos e banners                 | `public/assets/images/catalogs/`     |
-| Card e quantidade               | `src/components/ProductCard.tsx`     |
-| Painel de orçamento             | `src/components/QuoteCart.tsx`       |
-| Busca                           | `src/lib/search.ts`                  |
-| Texto do WhatsApp               | `src/lib/quote.ts`                   |
-| Persistência da seleção         | `src/hooks/useQuote.ts`              |
-| Leitura no servidor             | `src/server/catalogs.ts`             |
-| Consultas no navegador          | `src/services/catalog.ts`            |
+| Card e quantidade               | `packages/shared/src/components/ProductCard.tsx`     |
+| Painel de orçamento             | `packages/shared/src/components/QuoteCart.tsx`       |
+| Busca                           | `packages/shared/src/lib/search.ts`                  |
+| Texto do WhatsApp               | `packages/shared/src/lib/quote.ts`                   |
+| Persistência da seleção         | `packages/shared/src/hooks/useQuote.ts`              |
+| Leitura no servidor             | `packages/shared/src/server/catalogs.ts`             |
+| Consultas no navegador          | `packages/shared/src/services/catalog.ts`            |
 | Validação                       | `src/schemas/catalog.ts`             |
-| Contratos                       | `src/types/catalog.ts`               |
-| Cache                           | `src/config/query-client.ts`         |
+| Contratos                       | `packages/shared/src/types/catalog.ts`               |
+| Cache                           | `packages/shared/src/config/query-client.ts`         |
 | Cores Tailwind e imports de CSS | `src/global.css`                     |
-| Temas                           | `src/styles/catalog/themes/`         |
+| Temas                           | `packages/shared/src/styles/catalog/themes/`         |
 | Inicialização e ambiente        | `scripts/run-next.ts` e `.env`       |
 
 ## Adicionar uma coleção
@@ -54,7 +54,7 @@ Referência: https://shopify.dev/docs/apps/build/checkout/create-cart-permalinks
 
 ## Cenas sazonais
 
-`src/components/seasonal/SeasonalEffects.tsx` agenda as cenas e `SeasonalArt.tsx` contém as ilustrações SVG locais. Os movimentos ficam isolados em `src/styles/catalog/seasonal-effects.css`, sem CDN, áudio ou biblioteca de animação. O catálogo público ativa a coleção correspondente; o gestor permanece sem efeitos.
+`packages/shared/src/components/seasonal/SeasonalEffects.tsx` agenda as cenas e `SeasonalArt.tsx` contém as ilustrações SVG locais. Os movimentos ficam isolados em `packages/shared/src/styles/catalog/seasonal-effects.css`, sem CDN, áudio ou biblioteca de animação. O catálogo público ativa a coleção correspondente; o gestor permanece sem efeitos.
 
 - Halloween: teias descendo nos cantos, aranha suspensa, morcego e até duas aranhas nas fotos visíveis (uma no celular).
 - Natal: Papai Noel acenando na lateral, rena e poucos flocos de neve.

@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { compactQuantity, exactQuantity } from "../src/lib/admin/quantity.ts";
+import {
+  compactQuantity,
+  exactQuantity,
+} from "../packages/shared/src/lib/admin/quantity.ts";
 test("quantidades compactas distinguem mil e milhão e preservam o total exato", () => {
   for (const [input, expected] of [
     [0, "0"],

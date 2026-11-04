@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { searchOrderStatus } from "../src/lib/admin/order-status-search.ts";
+import { searchOrderStatus } from "../packages/shared/src/lib/admin/order-status-search.ts";
 test("busca de situação reconhece digitação, plurais, acentos e estornos sem transformar erro em todos", () => {
   for (const value of ["pago", "PAGOS", "paga", "pag"])
     assert.equal(searchOrderStatus(value), "PAID");

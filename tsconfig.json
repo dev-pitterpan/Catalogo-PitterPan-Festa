@@ -18,7 +18,10 @@
         "name": "next"
       }
     ],
-    "allowJs": false
+    "allowJs": false,
+    "paths": {
+      "@shared/*": ["./packages/shared/src/*"]
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -28,7 +31,11 @@
     "tests/**/*.ts",
     "next.config.ts",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx"
   ],
   "exclude": ["node_modules"]
 }

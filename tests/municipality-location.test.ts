@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { municipalityLocation } from "../src/server/sales/municipality-location.ts";
+import { municipalityLocation } from "../packages/shared/src/server/sales/municipality-location.ts";
 test("mapa localiza município e UF sem confundir nomes iguais ou inventar destinos", () => {
   const joinville = municipalityLocation("Joinville", "SC", "BR");
   assert.ok(joinville);

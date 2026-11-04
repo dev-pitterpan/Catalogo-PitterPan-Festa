@@ -9,12 +9,12 @@ As páginas usam renderização dinâmica: o servidor lê o manifesto e os JSONs
 ## Separação de responsabilidades
 
 - `src/app`: entradas das páginas e endpoints.
-- `src/server`: operações exclusivas do servidor e leitura de arquivos.
-- `src/services`: atualização dos dados pela interface; ponto de integração para uma futura API.
+- `packages/shared/src/server`: operações exclusivas do servidor e leitura de arquivos.
+- `packages/shared/src/services`: atualização dos dados pela interface; ponto de integração para uma futura API.
 - `src/schemas`: validação dos dados em execução.
-- `src/types`: contratos usados pelo restante do código.
-- `src/hooks`: estado, persistência e consultas.
-- `src/components`: apresentação e interações.
+- `packages/shared/src/types`: contratos usados pelo restante do código.
+- `packages/shared/src/hooks`: estado, persistência e consultas.
+- `packages/shared/src/components`: apresentação e interações.
 
 O cache do React no servidor dura a requisição. O QueryClient é criado por instância do provider, sem compartilhar dados entre requisições do servidor. Dados recebidos do servidor são usados como estado inicial das consultas.
 
@@ -34,7 +34,7 @@ O processo Node roda o servidor Next.js. `scripts/run-next.ts` carrega e valida 
 
 ## Futuro painel administrativo
 
-A próxima fase deve separar autenticação, permissões, produtos, coleções e mídia. Endpoints autenticados podem ficar em `src/app/api`. As operações de banco e armazenamento ficam em `src/server`, e o frontend acessa a camada de serviços.
+A próxima fase deve separar autenticação, permissões, produtos, coleções e mídia. Endpoints autenticados podem ficar em `src/app/api`. As operações de banco e armazenamento ficam em `packages/shared/src/server`, e o frontend acessa a camada de serviços.
 
 A escolha do banco depende do uso: SQLite para um único servidor local, ou PostgreSQL para operação compartilhada. Uploads precisam validar formato/tamanho e usar um diretório próprio de mídia, fora de `.next` e do código. Não há login, upload ou gravação nesta versão.
 
@@ -42,6 +42,6 @@ A validação de existência do catálogo ocorre antes da resposta da página, s
 
 ## Catálogo com milhares de itens
 
-A fonte configurável em `src/server/catalogs.ts` mantém os JSONs como modo inicial e usa PostgreSQL quando `CATALOG_DATA_SOURCE=postgres`. `src/server/database/` concentra schema, consultas indexadas, departamentos e troca transacional de versão. `src/server/shopify/` contém cliente Admin, validação de mídia e normalização de variantes. Os scripts `shopify-sync`, `shopify-report` e `shopify-publish` separam importação, auditoria e ativação. Consulte [SHOPIFY.md](SHOPIFY.md) antes de ativar.
+A fonte configurável em `packages/shared/src/server/catalogs.ts` mantém os JSONs como modo inicial e usa PostgreSQL quando `CATALOG_DATA_SOURCE=postgres`. `packages/shared/src/server/database/` concentra schema, consultas indexadas, departamentos e troca transacional de versão. `packages/shared/src/server/shopify/` contém cliente Admin, validação de mídia e normalização de variantes. Os scripts `shopify-sync`, `shopify-report` e `shopify-publish` separam importação, auditoria e ativação. Consulte [SHOPIFY.md](SHOPIFY.md) antes de ativar.
 
 Os endpoints GET de catálogo/categorias devolvem páginas limitadas; a API de carrinho lê apenas os SKUs selecionados. Credenciais e acesso ao banco permanecem no servidor. Importação e migração são comandos locais, não rotas públicas. Não há painel de escrita autenticado implementado. O número de cards renderizados fica limitado a 48, inclusive com efeitos sazonais ligados.

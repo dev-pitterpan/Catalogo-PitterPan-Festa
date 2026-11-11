@@ -18,6 +18,19 @@ export async function GET(
     );
     const source = shopifyImageUrl(rows[0]?.image_url);
     if (!source) return new Response(null, { status: 404 });
+    const cached = await db.query<{ webp: Buffer }>(
+      "SELECT webp FROM pitterpan_catalog_images WHERE source=$1 AND status='completed'",
+      [source],
+    ).catch(() => null);
+    if (cached?.rows[0]?.webp) {
+      return new Response(new Uint8Array(cached.rows[0].webp), {
+        headers: {
+          "Content-Type": "image/webp",
+          "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=3600",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
     const upstream = await fetch(source, {
       signal: AbortSignal.timeout(12000),
       redirect: "error",
@@ -59,7 +72,7 @@ export async function GET(
       headers: {
         "Content-Type": type,
         "Cache-Control":
-          "public, max-age=3600, s-maxage=86400, stale-while-revalidate=3600",
+          "public, max-age=60, s-maxage=300",
         "X-Content-Type-Options": "nosniff",
       },
     });

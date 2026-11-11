@@ -47,7 +47,7 @@ export function toProduct(row: ItemRow): Product {
     description: row.description,
     category: row.category,
     image: row.image_url
-      ? `/api/product-image/${row.variant_id}/?v=${encodeURIComponent(row.updated_at)}`
+      ? `/api/product-image/${row.variant_id}/?v=${encodeURIComponent(row.updated_at)}&media=webp`
       : "/assets/images/brand/product-placeholder.svg",
     siteUrl: row.site_url,
     shopifyVariantId: row.variant_id,

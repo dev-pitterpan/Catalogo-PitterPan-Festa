@@ -199,6 +199,39 @@
   font-size: 0.7rem;
   color: #7b8fa2;
 }
+.manager-hub__toolbar--public {
+  flex-wrap: wrap;
+}
+.manager-hub .manager-hub__product-search {
+  flex: 1 1 18rem;
+  width: auto;
+  padding: 0.35rem 0.4rem 0.35rem 0.9rem;
+}
+.manager-hub .manager-hub__product-search button,
+.manager-hub__quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  min-height: 2.5rem;
+  border: 1px solid #d5e1ec;
+  border-radius: 0.6rem;
+  background: #fff;
+  color: #315679;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.manager-hub .manager-hub__product-search button {
+  border-color: #315679;
+  background: #315679;
+  color: #fff;
+}
+.manager-hub__campaign-link {
+  margin-top: 0.75rem;
+}
 .manager-hub__section {
   margin-top: 1.6rem;
 }

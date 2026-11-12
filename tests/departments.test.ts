@@ -4,6 +4,7 @@ import {
   departmentHandles,
   departmentSummaries,
   storefrontNavigation,
+  storefrontCollectionAliases,
   uniqueVariants,
   brandHandles,
 } from "../packages/shared/src/lib/catalog/departments.ts";
@@ -14,6 +15,28 @@ const summary = (slug: string) => ({
   description: "",
   accent: "",
   cardClass: "",
+});
+test("subcategorias reúnem handles existentes e a campanha renomeada ganha URL própria", () => {
+  const legacy = { ...summary("copa-do-mundo"), name: "7 de Setembro" };
+  const raw = [summary("formas-para-bolo"), legacy];
+  const aliases = storefrontCollectionAliases(raw);
+  assert.deepEqual(
+    aliases.map(({ slug }) => slug),
+    ["confeitaria-formas-e-moldes", "7-de-setembro"],
+  );
+  assert.deepEqual(departmentHandles("confeitaria-formas-e-moldes"), [
+    "formas-para-chocolate",
+    "formas-para-bolo",
+  ]);
+  assert.deepEqual(
+    storefrontNavigation([...raw, ...aliases]).map(({ slug }) => slug),
+    ["confeitaria-formas-e-moldes", "7-de-setembro"],
+  );
+  assert.ok(
+    storefrontNavigation([{ ...legacy, name: "Copa do Mundo" }]).some(
+      ({ slug }) => slug === "copa-do-mundo",
+    ),
+  );
 });
 test("departamentos unem coleções e preservam acesso por handles antigos", () => {
   assert.ok(departmentHandles("doces-e-guloseimas").includes("doces"));

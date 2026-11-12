@@ -6,6 +6,7 @@ import { activeCollections, findPage } from "./database/catalog-repository";
 import {
   PAGE_SIZE,
   catalogQuerySchema,
+  normalizeText,
   type CatalogQuery,
 } from "../lib/catalog/query";
 import { moneyToMinor } from "../lib/money";
@@ -16,6 +17,7 @@ import {
   departmentHandles,
   departmentSummaries,
   storefrontNavigation,
+  storefrontCollectionAliases,
   uniqueVariants,
 } from "../lib/catalog/departments";
 import { catalogSchema, configSchema, summarySchema } from "../schemas/catalog";
@@ -69,11 +71,8 @@ export const getManifest = cache(async () => {
         });
     }
   }
-  if (
-    (usesDatabase() || usesShopify()) &&
-    !catalogs.some((item) => item.slug === "todos")
-  )
-    catalogs.push({
+  if (!catalogs.some((item) => item.slug === "todos"))
+    catalogs.unshift({
       name: "Todos os produtos",
       slug: "todos",
       cardClass: "all-products",
@@ -86,6 +85,7 @@ export const getManifest = cache(async () => {
       if (index < 0) catalogs.push(summary);
       else catalogs[index] = summary;
     }
+    catalogs.push(...storefrontCollectionAliases(catalogs));
   }
   return catalogs;
 });
@@ -135,13 +135,27 @@ export async function getCatalog(
           };
   if (catalog.slug !== slug)
     throw new Error("Identificação do catálogo inválida.");
+  const collectionHandles = departmentHandles(slug);
+  const legacySeptember =
+    slug === "7-de-setembro" &&
+    manifest.some(
+      ({ slug: handle, name }) =>
+        handle === "copa-do-mundo" && normalizeText(name) === "7 de setembro",
+    );
+  const handlesForSlug = legacySeptember
+    ? [...collectionHandles, "copa-do-mundo"]
+    : collectionHandles;
   if (usesDatabase())
-    return { ...catalog, ...(await findPage(database(), slug, query)) };
+    return {
+      ...catalog,
+      ...(await findPage(database(), slug, query, handlesForSlug)),
+    };
   if (usesShopify()) {
     const collections = await getShopifyCollections();
     const mappings = await getCollectionMapping();
     const handles = new Set([
-      ...departmentHandles(slug),
+      slug,
+      ...handlesForSlug,
       ...mappings
         .filter((item) => item.catalogSlug === slug)
         .flatMap((item) =>
@@ -165,6 +179,17 @@ export async function getCatalog(
           slug === "todos" ||
           item.collections?.some((handle) => handles.has(handle)),
       ),
+    );
+  } else if (slug === "todos") {
+    const selections = await Promise.all(
+      manifest
+        .filter((item) => item.slug !== slug)
+        .map(async (item) =>
+          catalogSchema.parse(await readJson(`catalogs/${item.slug}.json`)),
+        ),
+    );
+    catalog.products = uniqueVariants(
+      selections.flatMap((item) => item.products),
     );
   }
   const categoryCounts = new Map<string, number>();
@@ -286,9 +311,11 @@ export async function getSelectedProducts(ids: string[]) {
   }
   const manifest = await getManifest();
   const catalogs = await Promise.all(
-    manifest.map(async ({ slug }) =>
-      catalogSchema.parse(await readJson(`catalogs/${slug}.json`)),
-    ),
+    manifest
+      .filter(({ slug }) => slug !== "todos")
+      .map(async ({ slug }) =>
+        catalogSchema.parse(await readJson(`catalogs/${slug}.json`)),
+      ),
   );
   return catalogs.flatMap((catalog) =>
     catalog.products.filter((product) => ids.includes(product.id)),

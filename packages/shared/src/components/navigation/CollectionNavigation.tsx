@@ -8,7 +8,11 @@ import { normalizeText } from "../../lib/catalog/query";
 import CatalogIcon from "./CatalogIcon";
 import { collectionGroups } from "../../lib/catalog/navigation";
 import { catalogVisual } from "../../lib/catalog/visual";
-import { departments, departmentHandles } from "../../lib/catalog/departments";
+import {
+  departments,
+  departmentHandles,
+  shoppingSubcategories,
+} from "../../lib/catalog/departments";
 
 function NavigationProgress() {
   const { pending } = useLinkStatus();
@@ -44,7 +48,9 @@ export default function CollectionNavigation({
   >({});
   const terms = normalizeText(query).split(" ").filter(Boolean);
   const departmentSlugs = new Set(
-    departments.map((department) => department.slug),
+    [...departments, ...shoppingSubcategories].map(
+      (department) => department.slug,
+    ),
   );
   const ecommerce = catalogs.some((item) => item.slug === "festas-e-decoracao");
   const groups = ecommerce

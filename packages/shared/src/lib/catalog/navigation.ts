@@ -35,6 +35,7 @@ export const families = [
       "carnaval",
       "saint-patricks-day-copia-1",
       "copa-do-mundo",
+      "7-de-setembro",
       "4-de-julho",
       "setembro-amarelo",
       "outubro-rosa",

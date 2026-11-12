@@ -498,8 +498,14 @@ try {
   }
   const publicHome = await rawFetch(base + "/");
   const publicHtml = await publicHome.text();
-  assert.ok(publicHtml.includes('href="/halloween/"'));
+  assert.match(publicHtml, /Buscar produtos por nome ou SKU/);
+  assert.match(publicHtml, /Datas especiais/);
   assert.ok(!publicHtml.includes('href="/gestor/halloween/"'));
+  const publicSearch = await rawFetch(base + "/todos/?q=8936");
+  assert.equal(publicSearch.status, 200);
+  const publicSearchHtml = await publicSearch.text();
+  assert.match(publicSearchHtml, /value="8936"/);
+  assert.match(publicSearchHtml, /Máscara de Látex com Capuz Frank/i);
   const publicCatalog = await rawFetch(base + "/halloween/");
   assert.equal(publicCatalog.status, 200);
   assert.match(await publicCatalog.text(), /product-card/);

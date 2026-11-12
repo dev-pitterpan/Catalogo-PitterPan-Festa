@@ -14,6 +14,7 @@ export function useCatalogPage(
     sort: "name" | "price-asc" | "price-desc";
   },
   managerView?: boolean,
+  initialQuery = "",
 ) {
   const pathname = usePathname() || "/";
   const resolved = resolveCatalogRoute(pathname);
@@ -33,7 +34,7 @@ export function useCatalogPage(
     ],
     initialData:
       matchesCatalogRoute(initialData, route.slug) &&
-      !filters.q &&
+      filters.q === initialQuery &&
       !filters.category &&
       !filters.vendor &&
       filters.sort === "name" &&

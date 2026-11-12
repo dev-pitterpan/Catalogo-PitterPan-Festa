@@ -1,7 +1,7 @@
 "use client";
 
 import type { CatalogPageData } from "../types/catalog";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
 import LoadingState from "./LoadingState";
 import { useCatalogPage } from "../hooks/useCatalogPage";
 import { publicCatalogUrl } from "../lib/routes";
@@ -15,20 +15,30 @@ import ShareBar from "./ShareBar";
 import ManagerHome from "./manager/ManagerHome";
 import { useQuote } from "../hooks/useQuote";
 import { MAX_CART_ITEMS, whatsappUrl } from "../lib/quote";
+import {
+  shoppingDepartments,
+  shoppingSubcategories,
+} from "../lib/catalog/departments";
 
 export default function CatalogApp({
   initialData,
   managerView,
+  initialQuery = "",
+  campaignMonth,
 }: {
   managerView?: boolean;
   initialData: CatalogPageData;
+  initialQuery?: string;
+  campaignMonth?: number;
 }) {
   const pathname = usePathname() || "/";
   return (
     <CatalogPage
-      key={`${pathname}-${managerView}`}
+      key={`${pathname}-${managerView}-${initialQuery}`}
       initialData={initialData}
       managerView={managerView}
+      initialQuery={initialQuery}
+      campaignMonth={campaignMonth}
     />
   );
 }
@@ -36,44 +46,42 @@ export default function CatalogApp({
 function CatalogPage({
   initialData,
   managerView,
+  initialQuery,
+  campaignMonth,
 }: {
   initialData: CatalogPageData;
   managerView?: boolean;
+  initialQuery: string;
+  campaignMonth?: number;
 }) {
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
   const [vendor, setVendor] = useState("");
   const [sort, setSort] = useState<"name" | "price-asc" | "price-desc">("name");
-  const {
-    pathname,
-    isClient,
-    catalogs,
-    catalog,
-    config,
-    loading,
-    error,
-    fetching,
-  } = useCatalogPage(
-    initialData,
-    {
-      q: debouncedQuery,
-      category,
-      page,
-      vendor,
-      sort,
-    },
-    managerView,
-  );
+  const { isClient, catalogs, catalog, config, loading, error, fetching } =
+    useCatalogPage(
+      initialData,
+      {
+        q: debouncedQuery,
+        category,
+        page,
+        vendor,
+        sort,
+      },
+      managerView,
+      initialQuery,
+    );
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(query);
+      setDebouncedQuery(query.trim());
       setPage(1);
     }, 300);
     return () => clearTimeout(timer);
   }, [query]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const quote = useQuote();
@@ -87,16 +95,6 @@ function CatalogPage({
       origin: location.origin,
     });
   }, []);
-  useEffect(() => {
-    setQuery("");
-    setDebouncedQuery("");
-    setCategory("");
-    setVendor("");
-    setSort("name");
-    setPage(1);
-    setMenuOpen(false);
-    setCartOpen(false);
-  }, [pathname]);
   useEffect(() => {
     document.documentElement.className = catalog
       ? `theme-${catalog.slug}-root`
@@ -143,7 +141,11 @@ function CatalogPage({
     return (
       <>
         <div className="manager-page">
-          <ManagerHome catalogs={catalogs} publicView={isClient} />
+          <ManagerHome
+            catalogs={catalogs}
+            publicView={isClient}
+            campaignMonth={campaignMonth}
+          />
         </div>
       </>
     );
@@ -152,6 +154,11 @@ function CatalogPage({
     config.catalog.publicBaseUrl,
     browserLocation,
   );
+  const showProductTypes =
+    !isClient ||
+    ![...shoppingDepartments, ...shoppingSubcategories].some(
+      ({ slug }) => slug === catalog.slug,
+    );
   return (
     <div
       className={`catalog-page catalog-unified theme-${catalog.slug}${isClient ? " client-page" : " manager-catalog-page"}`}
@@ -194,64 +201,90 @@ function CatalogPage({
           isClient ? null : <ShareBar catalog={catalog} url={publicUrl} />
         }
       >
-        <div className="catalog-filters">
-          <div className="catalog-filter-field">
-            <span>Categoria</span>
-            <AdminSelect
-              label="Categoria"
-              value={category}
-              onValueChange={(value) => {
-                setCategory(value);
-                setPage(1);
-              }}
-              options={[
-                { value: "", label: "Todas as categorias" },
-                ...(category &&
-                !catalog.pagination?.categories.some(
-                  (item) => item.name === category,
-                )
-                  ? [{ value: category, label: category }]
-                  : []),
-                ...(catalog.pagination?.categories.map((item) => ({
-                  value: item.name,
-                  label: `${item.name} (${item.count})`,
-                })) || []),
-              ]}
-            />
-          </div>
-          <div className="catalog-filter-field">
-            <span>Marca</span>
-            <AdminSelect
-              label="Marca"
-              value={vendor}
-              onValueChange={(value) => {
-                setVendor(value);
-                setPage(1);
-              }}
-              options={[
-                { value: "", label: "Todas as marcas" },
-                ...(catalog.pagination?.vendors.map((name) => ({
-                  value: name,
-                  label: name,
-                })) || []),
-              ]}
-            />
-          </div>
-          <div className="catalog-filter-field">
-            <span>Ordenar</span>
-            <AdminSelect
-              label="Ordenar produtos"
-              value={sort}
-              onValueChange={(value) => {
-                setSort(value as typeof sort);
-                setPage(1);
-              }}
-              options={[
-                { value: "name", label: "Nome" },
-                { value: "price-asc", label: "Menor preço" },
-                { value: "price-desc", label: "Maior preço" },
-              ]}
-            />
+        <div
+          className={`catalog-filters-panel${isClient ? " catalog-filters-panel--public" : ""}`}
+        >
+          {isClient && (
+            <button
+              type="button"
+              className="catalog-mobile-filters"
+              aria-expanded={filtersOpen}
+              aria-controls="catalog-result-filters"
+              onClick={() => setFiltersOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={16} aria-hidden="true" />
+              Filtrar
+            </button>
+          )}
+          <div
+            id="catalog-result-filters"
+            className={`catalog-filters${filtersOpen ? " is-open" : ""}`}
+          >
+            {showProductTypes && (
+              <div className="catalog-filter-field">
+                <span>{isClient ? "Tipo de produto" : "Categoria"}</span>
+                <AdminSelect
+                  label={isClient ? "Tipo de produto" : "Categoria"}
+                  value={category}
+                  onValueChange={(value) => {
+                    setCategory(value);
+                    setPage(1);
+                  }}
+                  options={[
+                    {
+                      value: "",
+                      label: isClient
+                        ? "Todos os tipos"
+                        : "Todas as categorias",
+                    },
+                    ...(category &&
+                    !catalog.pagination?.categories.some(
+                      (item) => item.name === category,
+                    )
+                      ? [{ value: category, label: category }]
+                      : []),
+                    ...(catalog.pagination?.categories.map((item) => ({
+                      value: item.name,
+                      label: `${item.name} (${item.count})`,
+                    })) || []),
+                  ]}
+                />
+              </div>
+            )}
+            <div className="catalog-filter-field">
+              <span>Marca</span>
+              <AdminSelect
+                label="Marca"
+                value={vendor}
+                onValueChange={(value) => {
+                  setVendor(value);
+                  setPage(1);
+                }}
+                options={[
+                  { value: "", label: "Todas as marcas" },
+                  ...(catalog.pagination?.vendors.map((name) => ({
+                    value: name,
+                    label: name,
+                  })) || []),
+                ]}
+              />
+            </div>
+            <div className="catalog-filter-field">
+              <span>Ordenar</span>
+              <AdminSelect
+                label="Ordenar produtos"
+                value={sort}
+                onValueChange={(value) => {
+                  setSort(value as typeof sort);
+                  setPage(1);
+                }}
+                options={[
+                  { value: "name", label: "Nome" },
+                  { value: "price-asc", label: "Menor preço" },
+                  { value: "price-desc", label: "Maior preço" },
+                ]}
+              />
+            </div>
           </div>
           <span role="status">
             {fetching

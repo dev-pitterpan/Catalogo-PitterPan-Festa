@@ -8,6 +8,9 @@ export const catalogQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(10000).default(1),
 });
 export type CatalogQuery = z.infer<typeof catalogQuerySchema>;
+export function catalogSearchParam(value: string | string[] | undefined) {
+  return typeof value === "string" ? value.trim().slice(0, 120) : "";
+}
 export function normalizeText(value: string) {
   return value
     .normalize("NFD")

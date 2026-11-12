@@ -90,7 +90,14 @@ for (const [application, port] of [
       200,
     );
     if (application === "catalogo-digital") {
-      assert.equal((await get("/")).status, 200);
+      const home = await get("/");
+      assert.equal(home.status, 200);
+      assert.match(await home.text(), /Buscar produtos por nome ou SKU/);
+      const search = await get("/todos/?q=8936");
+      assert.equal(search.status, 200);
+      const searchHtml = await search.text();
+      assert.match(searchHtml, /value="8936"/);
+      assert.match(searchHtml, /Máscara de Látex com Capuz Frank/i);
       assert.equal((await get("/natal/")).status, 200);
       for (const path of [
         "/api/admin/sales/",

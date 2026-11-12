@@ -46,7 +46,11 @@ test("13.518 registros: paginação, separação de coleções, busca, checkout 
       vendor: "Marca",
       image_url: null,
       site_url: "https://www.pitterpan.com.br/products/test",
-      collections: [index % 2 ? "halloween" : "natal"],
+      collections: [
+        index % 2 ? "halloween" : "natal",
+        ...(index <= 2 ? ["formas-para-bolo"] : []),
+        ...(index === 2 ? ["formas-para-chocolate", "copa-do-mundo"] : []),
+      ],
       tags: [],
       images: [],
       search_text: normalizeText(
@@ -103,6 +107,19 @@ test("13.518 registros: paginação, separação de coleções, busca, checkout 
     );
     const natal = await findPage(db, "natal", { ...query, q: "balo" });
     assert.equal(natal.pagination.total, 6759);
+    const molds = await findPage(db, "confeitaria-formas-e-moldes", query);
+    assert.deepEqual(
+      molds.products.map(({ shopifyVariantId }) => shopifyVariantId),
+      ["100001", "100002"],
+    );
+    const september = await findPage(db, "7-de-setembro", query, [
+      "7-de-setembro",
+      "copa-do-mundo",
+    ]);
+    assert.deepEqual(
+      september.products.map(({ shopifyVariantId }) => shopifyVariantId),
+      ["100002"],
+    );
     const wrong = await findPage(db, "halloween", {
       ...query,
       category: "Balões",

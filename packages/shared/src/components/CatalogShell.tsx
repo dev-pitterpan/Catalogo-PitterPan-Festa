@@ -1,7 +1,9 @@
 import CategoryNavigation from "./navigation/CategoryNavigation";
 import CollectionNavigation from "./navigation/CollectionNavigation";
+import PublicCatalogNavigation from "./navigation/PublicCatalogNavigation";
 import CatalogIcon from "./navigation/CatalogIcon";
 import { catalogVisual } from "../lib/catalog/visual";
+import { shoppingSubcategories } from "../lib/catalog/departments";
 import { ChevronLeft, MessageCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { useState, type CSSProperties, type ReactNode } from "react";
@@ -55,7 +57,16 @@ export default function CatalogShell({
   } as CSSProperties;
   const slug = catalog.slug,
     rootPrefix = "/";
-  const brandHref = isClient ? `/${slug}/` : "/gestor/",
+  const department =
+    shoppingSubcategories.find((item) => item.slug === slug)?.parent || slug;
+  const mobileSubcategories = isClient
+    ? shoppingSubcategories.filter(
+        (item) =>
+          item.parent === department &&
+          catalogs.some((entry) => entry.slug === item.slug),
+      )
+    : [];
+  const brandHref = isClient ? "/" : "/gestor/",
     brandLabel = isClient
       ? "Pitter Pan Festas"
       : "Voltar ao gestor de catálogos";
@@ -153,49 +164,63 @@ export default function CatalogShell({
               <strong>{catalog.name}</strong>
             </div>
           </div>
-          <div className="sidebar-sections" aria-label="Tipo de navegação">
-            <button
-              type="button"
-              aria-pressed={section === "collections"}
-              onClick={() => setSection("collections")}
-            >
-              Explorar
-            </button>
-            <button
-              type="button"
-              aria-pressed={section === "categories"}
-              onClick={() => setSection("categories")}
-            >
-              Categorias
-            </button>
-          </div>
-          <div
-            className="sidebar-section-content"
-            hidden={section !== "collections"}
-          >
-            <CollectionNavigation
-              catalogs={catalogs}
-              slug={slug}
-              isClient={isClient}
-              onClose={onClose}
-              onCatalogSelect={onCatalogSelect}
-              categories={catalog.pagination?.categories}
-              selectedCategory={selectedCategory}
-              onCategorySelect={onCategorySelect}
-            />
-          </div>
-          <div
-            className="sidebar-section-content"
-            hidden={section !== "categories"}
-          >
-            <CategoryNavigation
-              active={section === "categories"}
-              key={slug}
-              slug={slug}
-              selected={selectedCategory}
-              onSelect={onCategorySelect}
-            />
-          </div>
+          {isClient ? (
+            <div className="sidebar-section-content">
+              <PublicCatalogNavigation
+                catalogs={catalogs}
+                slug={slug}
+                collapsed={collapsed}
+                onExpand={onCollapse}
+                onSelect={onClose}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="sidebar-sections" aria-label="Tipo de navegação">
+                <button
+                  type="button"
+                  aria-pressed={section === "collections"}
+                  onClick={() => setSection("collections")}
+                >
+                  Explorar
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={section === "categories"}
+                  onClick={() => setSection("categories")}
+                >
+                  Categorias
+                </button>
+              </div>
+              <div
+                className="sidebar-section-content"
+                hidden={section !== "collections"}
+              >
+                <CollectionNavigation
+                  catalogs={catalogs}
+                  slug={slug}
+                  isClient={isClient}
+                  onClose={onClose}
+                  onCatalogSelect={onCatalogSelect}
+                  categories={catalog.pagination?.categories}
+                  selectedCategory={selectedCategory}
+                  onCategorySelect={onCategorySelect}
+                />
+              </div>
+              <div
+                className="sidebar-section-content"
+                hidden={section !== "categories"}
+              >
+                <CategoryNavigation
+                  active={section === "categories"}
+                  key={slug}
+                  slug={slug}
+                  selected={selectedCategory}
+                  onSelect={onCategorySelect}
+                />
+              </div>
+            </>
+          )}
         </nav>
 
         <footer className="sidebar-signature">
@@ -276,6 +301,7 @@ export default function CatalogShell({
                   onChange={(e) => onSearch(e.target.value)}
                   data-search
                   type="search"
+                  maxLength={120}
                   placeholder={
                     slug === "todos"
                       ? "Buscar em todos os produtos: nome, SKU, marca…"
@@ -295,6 +321,31 @@ export default function CatalogShell({
               </div>
             </div>
           </section>
+
+          {mobileSubcategories.length > 0 && (
+            <nav
+              className="catalog-mobile-subcategories"
+              aria-label="Subcategorias do departamento"
+            >
+              <Link
+                href={`/${department}/`}
+                aria-current={department === slug ? "page" : undefined}
+                prefetch={false}
+              >
+                Ver tudo
+              </Link>
+              {mobileSubcategories.map((item) => (
+                <Link
+                  key={item.slug}
+                  href={`/${item.slug}/`}
+                  aria-current={item.slug === slug ? "page" : undefined}
+                  prefetch={false}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+          )}
 
           <section
             className="product-grid"

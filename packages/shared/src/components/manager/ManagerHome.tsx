@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link, { useLinkStatus } from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -25,7 +26,13 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { departments } from "../../lib/catalog/departments";
+import {
+  campaignMonths,
+  catalogCampaigns,
+  departments,
+  shoppingDepartments,
+  shoppingSubcategories,
+} from "../../lib/catalog/departments";
 import { normalizeText } from "../../lib/catalog/query";
 import type { CatalogSummary } from "../../types/catalog";
 
@@ -45,6 +52,7 @@ const icons: Record<string, LucideIcon> = {
   "festa-junina": Flame,
   "copa-do-mundo": Flag,
   "4-de-julho": Flag,
+  "7-de-setembro": Flag,
   reveillon: Sparkles,
 };
 const descriptions: Record<string, string> = {
@@ -101,11 +109,16 @@ function CatalogTile({
 export default function ManagerHome({
   catalogs,
   publicView = false,
+  campaignMonth,
 }: {
   catalogs: CatalogSummary[];
   publicView?: boolean;
+  campaignMonth?: number;
 }) {
+  const router = useRouter();
+  const [searchPending, startSearch] = useTransition();
   const [query, setQuery] = useState("");
+  const [allDatesOpen, setAllDatesOpen] = useState(false);
   const terms = normalizeText(query).split(" ").filter(Boolean);
   const matches = (catalog: CatalogSummary) =>
     terms.every((term) =>
@@ -114,17 +127,35 @@ export default function ManagerHome({
       ).includes(term),
     );
   const departmentSlugs = new Set(departments.map((item) => item.slug));
-  const departmentItems = departments.flatMap((department) =>
+  const departmentItems = (
+    publicView ? shoppingDepartments : departments
+  ).flatMap((department) =>
     catalogs.filter((catalog) => catalog.slug === department.slug),
   );
-  const seasonalItems = catalogs
+  const internalSubcategories = new Set(
+    shoppingSubcategories.map(({ slug }) => slug),
+  );
+  const seasonalItems = (publicView ? catalogCampaigns(catalogs) : catalogs)
     .filter(
       (catalog) =>
-        catalog.slug !== "todos" && !departmentSlugs.has(catalog.slug),
+        catalog.slug !== "todos" &&
+        !departmentSlugs.has(catalog.slug) &&
+        !internalSubcategories.has(catalog.slug),
     )
     .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  const filteredDepartments = departmentItems.filter(matches);
-  const filteredSeasonal = seasonalItems.filter(matches);
+  const filteredDepartments = publicView
+    ? departmentItems
+    : departmentItems.filter(matches);
+  const featured = seasonalItems.filter(({ slug }) =>
+    campaignMonths[slug]?.includes(campaignMonth ?? 0),
+  );
+  const filteredSeasonal = publicView
+    ? allDatesOpen
+      ? seasonalItems
+      : (featured.length ? featured : seasonalItems).slice(0, 4)
+    : seasonalItems.filter(matches);
+  const dates = catalogs.find((catalog) => catalog.slug === "datas-especiais");
+  const offers = catalogs.find((catalog) => catalog.slug === "ofertas");
   const total = filteredDepartments.length + filteredSeasonal.length;
   const all = catalogs.find((catalog) => catalog.slug === "todos");
   return (
@@ -189,32 +220,79 @@ export default function ManagerHome({
             </Link>
           )}
         </section>
-        <div className="manager-hub__toolbar">
-          <label className="manager-hub__search">
-            <Search size={18} aria-hidden="true" />
-            <input
-              type="search"
-              aria-label="Buscar departamentos e datas especiais"
-              placeholder="Buscar departamento ou data especial…"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                aria-label="Limpar busca"
-              >
-                <X size={16} />
+        {publicView && all ? (
+          <div className="manager-hub__toolbar manager-hub__toolbar--public">
+            <form
+              role="search"
+              action="/todos/"
+              aria-busy={searchPending}
+              className="manager-hub__search manager-hub__product-search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const value = query.trim();
+                startSearch(() =>
+                  router.push(
+                    value
+                      ? `/todos/?${new URLSearchParams({ q: value })}`
+                      : "/todos/",
+                  ),
+                );
+              }}
+            >
+              <Search size={18} aria-hidden="true" />
+              <input
+                type="search"
+                name="q"
+                maxLength={120}
+                aria-label="Buscar produtos por nome ou SKU"
+                placeholder="Buscar produto por nome ou SKU"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+              <button type="submit" disabled={searchPending}>
+                {searchPending ? "Buscando…" : "Buscar"}
               </button>
+            </form>
+            {offers && (
+              <Link
+                className="manager-hub__quick-link"
+                href="/ofertas/"
+                prefetch={false}
+              >
+                <BadgePercent size={17} aria-hidden="true" /> Ofertas
+              </Link>
             )}
-          </label>
-          <span className="manager-hub__summary" role="status">
-            {terms.length
-              ? `${total} resultados`
-              : `${departmentItems.length} departamentos · ${seasonalItems.length} datas especiais`}
-          </span>
-        </div>
+          </div>
+        ) : (
+          !publicView && (
+            <div className="manager-hub__toolbar">
+              <label className="manager-hub__search">
+                <Search size={18} aria-hidden="true" />
+                <input
+                  type="search"
+                  aria-label="Buscar departamentos e datas especiais"
+                  placeholder="Buscar departamento ou data especial…"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    aria-label="Limpar busca"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </label>
+              <span className="manager-hub__summary" role="status">
+                {terms.length
+                  ? `${total} resultados`
+                  : `${departmentItems.length} departamentos · ${seasonalItems.length} datas especiais`}
+              </span>
+            </div>
+          )
+        )}
         {filteredDepartments.length > 0 && (
           <section
             className="manager-hub__section"
@@ -222,7 +300,8 @@ export default function ManagerHome({
           >
             <div className="manager-hub__section-heading">
               <h2 id="departments-title">
-                Departamentos <span>{filteredDepartments.length}</span>
+                Departamentos{" "}
+                {!publicView && <span>{filteredDepartments.length}</span>}
               </h2>
               <p>Do que seu cliente precisa?</p>
             </div>
@@ -247,12 +326,36 @@ export default function ManagerHome({
           >
             <div className="manager-hub__section-heading">
               <h2 id="seasonal-title">
-                Datas especiais <span>{filteredSeasonal.length}</span>
+                Datas especiais{" "}
+                {!publicView && <span>{filteredSeasonal.length}</span>}
               </h2>
-              <p>Cada ocasião merece uma seleção.</p>
+              {publicView && seasonalItems.length > filteredSeasonal.length ? (
+                <button
+                  type="button"
+                  className="manager-hub__quick-link"
+                  aria-expanded={false}
+                  aria-controls="campaign-links"
+                  onClick={() => setAllDatesOpen(true)}
+                >
+                  Ver todas as datas
+                </button>
+              ) : publicView && allDatesOpen ? (
+                <button
+                  type="button"
+                  className="manager-hub__quick-link"
+                  aria-expanded={true}
+                  aria-controls="campaign-links"
+                  onClick={() => setAllDatesOpen(false)}
+                >
+                  Ver destaques
+                </button>
+              ) : !publicView ? (
+                <p>Cada ocasião merece uma seleção.</p>
+              ) : null}
             </div>
             <nav
               className="manager-hub__dates"
+              id="campaign-links"
               aria-label="Catálogos de datas especiais"
             >
               {filteredSeasonal.map((catalog) => (
@@ -264,9 +367,19 @@ export default function ManagerHome({
                 />
               ))}
             </nav>
+            {publicView && dates && (
+              <Link
+                className="manager-hub__quick-link manager-hub__campaign-link"
+                href="/datas-especiais/"
+                prefetch={false}
+              >
+                Ver produtos de todas as campanhas{" "}
+                <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+            )}
           </section>
         )}
-        {!total && (
+        {!publicView && !total && (
           <div className="manager-hub__empty">
             <Search size={28} aria-hidden="true" />
             <h2>Nenhuma seleção encontrada</h2>

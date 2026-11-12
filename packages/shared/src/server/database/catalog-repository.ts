@@ -65,11 +65,13 @@ export async function findPage(
   db: SqlClient,
   slug: string,
   query: CatalogQuery,
+  handles = departmentHandles(slug),
 ) {
   const snapshot = await activeSnapshot(db);
+  const scope = slug === "todos" ? null : [...new Set([slug, ...handles])];
   const values = [
     snapshot,
-    slug === "todos" ? null : [...new Set([slug, ...departmentHandles(slug)])],
+    scope,
     searchQuery(query.q),
     query.category,
     query.vendor,
@@ -89,21 +91,11 @@ export async function findPage(
   );
   const facets = await db.query<{ category: string; total: string }>(
     `SELECT category,count(*)::text AS total FROM catalog_items WHERE import_id=$1 AND ($2::text[] IS NULL OR collections && $2::text[]) AND category<>'' GROUP BY category ORDER BY count(*) DESC,category LIMIT 200`,
-    [
-      snapshot,
-      slug === "todos"
-        ? null
-        : [...new Set([slug, ...departmentHandles(slug)])],
-    ],
+    [snapshot, scope],
   );
   const brands = await db.query<{ vendor: string }>(
     "SELECT DISTINCT vendor FROM catalog_items WHERE import_id=$1 AND ($2::text[] IS NULL OR collections && $2::text[]) AND vendor<>'' ORDER BY vendor LIMIT 1000",
-    [
-      snapshot,
-      slug === "todos"
-        ? null
-        : [...new Set([slug, ...departmentHandles(slug)])],
-    ],
+    [snapshot, scope],
   );
   return {
     products: result.rows.map(toProduct),
